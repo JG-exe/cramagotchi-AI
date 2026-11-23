@@ -1,0 +1,214 @@
+.task-queue-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+}
+
+.active-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2xs) var(--space-sm);
+}
+
+/* Form */
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  background: var(--color-surface);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: flex-start;
+}
+
+.field-title {
+  flex: 1;
+}
+
+.field-subject {
+  width: 100%;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-text-field-wrapper {
+  background: var(--color-surface);
+}
+
+.btn-add {
+  margin-top: var(--space-2xs);
+}
+
+.form-controls {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.weight-selector {
+  display: flex;
+  gap: var(--space-2xs);
+  align-items: center;
+}
+
+.mat-mdc-radio-button label {
+  font-size: var(--text-xs);
+}
+
+/* Task list */
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.empty-state {
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.task-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  transition: box-shadow var(--duration-fast);
+}
+
+.task-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.task-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.task-title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-primary);
+}
+
+.task-badges {
+  display: flex;
+  gap: var(--space-2xs);
+  align-items: center;
+}
+
+.badge {
+  font-size: var(--text-xs);
+  padding: 1px var(--space-xs);
+  border-radius: var(--radius-pill);
+}
+
+.badge-snack {
+  background: #FFF3E0;
+  color: var(--color-accent-snack);
+}
+
+.badge-meal {
+  background: #E8F5E9;
+  color: var(--color-accent-meal);
+}
+
+.badge-subject {
+  background: hsl(var(--subject-hue, 210), 45%, 88%);
+  color: hsl(var(--subject-hue, 210), 45%, 28%);
+}
+
+.btn-delete {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  cursor: pointer;
+  padding: var(--space-2xs);
+  border-radius: var(--radius-sm);
+  transition: color var(--duration-fast);
+}
+
+.btn-delete:hover {
+  color: #E53E3E;
+}
+
+/* Devoured history */
+.devoured-section {
+  margin-top: var(--space-sm);
+}
+
+.btn-toggle-devoured {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xs) var(--space-sm);
+  background: transparent;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.devoured-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin-top: var(--space-xs);
+}
+
+.devoured-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.devoured-check {
+  color: var(--color-accent-meal);
+  font-weight: var(--weight-bold);
+}
+
+.devoured-title {
+  flex: 1;
+  text-decoration: line-through;
+}

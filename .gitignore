@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Kotlin JS
+kotlin-js-store/
+.kotlin/
+
+# Android / JDK machine-local (local.properties = SDK dir; gradle.properties holds local Java home)
+**/local.properties
+**/gradle.properties
+
+# Node / Angular
+node_modules/
+**/node_modules/
+.angular/
+**/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# OS
+Thumbs.db
+[Ee]xpress/
+.DS_Store
+
+# Vibe session artifacts
+.vibe/

@@ -1,0 +1,157 @@
+<section class="sanctuary-container" data-testid="monster-sanctuary">
+  <!-- Exam Countdown Banner -->
+  <div class="exam-banner">
+    @if (store.examCountdownDays() !== null) {
+      <span class="countdown-tag" data-testid="exam-countdown">
+        ⏳ <strong>{{ store.examCountdownDays() }}</strong> days until exam
+      </span>
+    } @else {
+      <span class="countdown-prompt">Set exam date:</span>
+    }
+    <mat-form-field appearance="outline" class="field-exam-date">
+      <mat-label>Exam date</mat-label>
+      <input
+        type="date"
+        matInput
+        [value]="store.examDateIso() ?? ''"
+        (change)="onExamDateChange($event)"
+        title="Set target exam date"
+      />
+    </mat-form-field>
+  </div>
+
+  <!-- Monster Card -->
+  <div class="monster-card">
+    <div class="monster-header">
+      <span class="monster-name">{{ store.monster().name }}</span>
+      <span
+        class="status-pill"
+        [class.status-idle]="store.monster().status === 'IDLE'"
+        [class.status-hungry]="store.monster().status === 'HUNGRY'"
+        [class.status-eating]="store.monster().status === 'EATING'"
+        [class.status-sleeping]="store.monster().status === 'SLEEPING'"
+        data-testid="status-badge"
+      >
+        @switch (store.monster().status) {
+          @case ('IDLE') { 🟢 IDLE }
+          @case ('HUNGRY') { 🔴 HUNGRY }
+          @case ('EATING') { 😋 EATING }
+          @case ('SLEEPING') { 💤 SLEEPING }
+        }
+      </span>
+    </div>
+
+    <!-- Monster Avatar Graphic -->
+    <div
+      class="monster-stage-display"
+      [class.animate-breathe]="store.monster().status === 'IDLE'"
+      [class.animate-rumble]="store.monster().status === 'HUNGRY'"
+      [class.animate-chomp]="store.monster().status === 'EATING'"
+      [class.animate-sleep]="store.monster().status === 'SLEEPING'"
+    >
+      <!-- EGG STAGE -->
+      @if (store.monster().stage === 'EGG') {
+        <svg class="monster-svg" viewBox="0 0 100 100">
+          <ellipse cx="50" cy="55" rx="30" ry="38" fill="#FDE047" stroke="#CA8A04" stroke-width="3"/>
+          <path d="M 35 45 Q 50 40 65 45" stroke="#EAB308" stroke-width="2" fill="none"/>
+          <circle cx="42" cy="50" r="3" fill="#713F12"/>
+          <circle cx="58" cy="50" r="3" fill="#713F12"/>
+        </svg>
+      }
+
+      <!-- HATCHLING STAGE -->
+      @if (store.monster().stage === 'HATCHLING') {
+        <svg class="monster-svg" viewBox="0 0 100 100">
+          <circle cx="50" cy="55" r="32" fill="#86EFAC" stroke="#16A34A" stroke-width="3"/>
+          <!-- Little horns -->
+          <polygon points="32,28 38,36 30,38" fill="#15803D"/>
+          <polygon points="68,28 62,36 70,38" fill="#15803D"/>
+          <!-- Eyes -->
+          <circle cx="40" cy="52" r="4" fill="#14532D"/>
+          <circle cx="60" cy="52" r="4" fill="#14532D"/>
+          <!-- Smile or sleeping eye -->
+          @if (store.monster().status === 'SLEEPING') {
+            <path d="M 45 62 Q 50 65 55 62" stroke="#14532D" stroke-width="2" fill="none"/>
+          } @else {
+            <path d="M 44 60 Q 50 66 56 60" stroke="#14532D" stroke-width="2" fill="none"/>
+          }
+        </svg>
+      }
+
+      <!-- SCHOLAR STAGE -->
+      @if (store.monster().stage === 'SCHOLAR') {
+        <svg class="monster-svg" viewBox="0 0 100 100">
+          <circle cx="50" cy="55" r="34" fill="#93C5FD" stroke="#2563EB" stroke-width="3"/>
+          <!-- Glasses -->
+          <circle cx="40" cy="50" r="8" fill="none" stroke="#1E3A8A" stroke-width="2.5"/>
+          <circle cx="60" cy="50" r="8" fill="none" stroke="#1E3A8A" stroke-width="2.5"/>
+          <line x1="48" y1="50" x2="52" y2="50" stroke="#1E3A8A" stroke-width="2.5"/>
+          <!-- Eyes inside glasses -->
+          <circle cx="40" cy="50" r="3" fill="#1E3A8A"/>
+          <circle cx="60" cy="50" r="3" fill="#1E3A8A"/>
+          <!-- Academic book -->
+          <rect x="36" y="70" width="28" height="12" rx="2" fill="#F59E0B" stroke="#B45309" stroke-width="1.5"/>
+        </svg>
+      }
+
+      <!-- GRADUATED BEAST STAGE -->
+      @if (store.monster().stage === 'GRADUATED_BEAST') {
+        <svg class="monster-svg" viewBox="0 0 100 100">
+          <circle cx="50" cy="58" r="34" fill="#C4B5FD" stroke="#7C3AED" stroke-width="3"/>
+          <!-- Mortarboard hat -->
+          <polygon points="50,15 22,27 50,38 78,27" fill="#1E1B4B"/>
+          <rect x="42" y="32" width="16" height="8" fill="#1E1B4B"/>
+          <!-- Tassel -->
+          <line x1="70" y1="28" x2="73" y2="42" stroke="#F59E0B" stroke-width="2"/>
+          <circle cx="73" cy="43" r="2" fill="#F59E0B"/>
+          <!-- Big happy eyes -->
+          <circle cx="40" cy="56" r="4" fill="#312E81"/>
+          <circle cx="60" cy="56" r="4" fill="#312E81"/>
+          <!-- Diploma in mouth -->
+          <rect x="38" y="66" width="24" height="6" rx="2" fill="#FEF08A" stroke="#CA8A04" stroke-width="1"/>
+        </svg>
+      }
+
+      <!-- Sleeping Zzz's overlay -->
+      @if (store.monster().status === 'SLEEPING') {
+        <div class="zzz-container">
+          <span class="zzz z1">z</span>
+          <span class="zzz z2">z</span>
+          <span class="zzz z3">Z</span>
+        </div>
+      }
+    </div>
+
+    <!-- Anti-Distraction Sleeping Banner -->
+    @if (store.monster().status === 'SLEEPING') {
+      <div class="sleep-focus-banner" data-testid="digesting-message">
+        <p class="sleep-focus-text">🌿 Digesting peacefully... keep studying!</p>
+        <span class="pomodoro-hint">Passive 25m focus block active</span>
+      </div>
+    }
+
+    <!-- Evolution Stage & XP Progress Bar -->
+    <div class="evolution-info">
+      <div class="stage-label-row">
+        <span class="stage-badge">Stage: {{ store.monster().stage }}</span>
+        <span class="xp-counter">{{ store.monster().xp }} XP</span>
+      </div>
+
+      <div class="xp-progress-track" data-testid="xp-bar">
+        <div
+          class="xp-progress-fill"
+          [style.width.%]="store.xpProgress().percent"
+        ></div>
+        <span class="xp-bar-text">{{ store.monster().xp }} XP</span>
+      </div>
+
+      <span class="evolution-subtext">
+        @if (store.monster().stage === 'GRADUATED_BEAST') {
+          🎓 Master Scholar — Maximum Evolution Achieved!
+        } @else {
+          Next milestone at {{ store.xpProgress().next }} XP
+        }
+      </span>
+    </div>
+  </div>
+</section>
