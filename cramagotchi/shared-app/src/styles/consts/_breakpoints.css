@@ -1,7 +1,10 @@
-/* Breakpoints — mobile-first */
-/* Usage: @media (min-width: 768px) { ... } for desktop */
+/* ─── Breakpoints — mobile-first ───────────────────────────────────── */
+
 :root {
-  --breakpoint-desktop: 768px;
-  --container-mobile: 100%;
-  --container-desktop: var(--layout-max-width);
+    --bp-desktop: 768px;
+    --pane-ratio-tasks: 1.45fr;
+    --pane-ratio-sanctuary: 1fr;
 }
+
+/* Usage: @media (min-width: 768px) { ... } — consumed as var(--bp-desktop)
+   where a literal value is required (media queries cannot use custom props). */
