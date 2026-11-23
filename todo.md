@@ -338,3 +338,18 @@ Metric: **V** = done
   fallback for unparsable legacy values. Storage stays ISO everywhere; only
   the pill display changes. Verified: 43/43 `ng test`, build clean, bundles
   synced.
+- V **Graduation → new monster:** reaching max stage (GRADUATED_BEAST, 300 XP)
+  via a task completion or an early deadline finish now collects the
+  fully-grown monster into the roster (species Pokédex rules unchanged — 4
+  cards, first hue sticks) and immediately spawns a BRAND-NEW monster: fresh
+  EGG, XP reset to 0, IDLE with cleared timers, and a new random hue
+  (golden-ratio stir of the caller's rng) that tints the main monster card
+  (`MonsterState.hue`, nullable → default token fill). Legacy saves are
+  reconciled on load: `reconcileCollection()` backfills every species at or
+  below the monster's stage (existing hues preserved) and tints a hue-less
+  monster from its stage's roster entry; the store persists the backfill
+  right after restore. Re-birth cycles keep the roster at 4 (unlock no-ops).
+
+  Verified: 77 engine tests (10 new in `GraduationTest.kt`), 48/48 `ng test`
+  (restore-reconciliation spec `monster-store-restore.spec.ts`), build clean,
+  bundles synced, desktop resources + android debug compile clean.

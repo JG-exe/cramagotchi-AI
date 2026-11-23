@@ -44,6 +44,8 @@ export interface MonsterState {
   lastFedAt: number;
   eatingUntil?: number;
   sleepUntil?: number;
+  /** The active creature's own tint (∈ 0..359); undefined on legacy saves until reconciled. */
+  hue?: number;
 }
 
 /** One entry in the collectible monster roster (species + its rolled hue). */
@@ -278,7 +280,11 @@ export class MonsterStoreService {
       }
       const restored = Storage.deserialize(raw);
       if (restored) {
-        this.kmpState.set(restored);
+        // Legacy saves: backfill the roster (species at/below the monster's
+        // stage) and the active monster's hue, then persist the backfill so
+        // it sticks across reloads.
+        this.kmpState.set(Engine.reconcileCollection(restored, Math.random()));
+        this.persistToStorage();
         // Immediately evaluate offline elapsed time
         this.evaluateTime(Date.now());
       }
@@ -298,6 +304,7 @@ function toMonsterState(m: KmpAppState['monster']): MonsterState {
     lastFedAt: m.lastFedAt,
     eatingUntil: m.eatingUntil ?? undefined,
     sleepUntil: m.sleepUntil ?? undefined,
+    hue: m.hue ?? undefined,
   };
 }
 

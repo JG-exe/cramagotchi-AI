@@ -14,6 +14,9 @@ object CramagotchiEngine {
     private const val ID_PREFIX = "task-"
     private const val EXAM_ID_PREFIX = "exam-"
 
+    /** Golden-ratio stir for the graduation hue roll — decorrelated from the roster rolls. */
+    private const val GOLDEN_STIR = 0.618034
+
     /**
      * Derive the next task ID from the highest existing numeric suffix.
      * Keeps IDs collision-free even after a state restore from storage,
@@ -43,7 +46,8 @@ object CramagotchiEngine {
                 xp = 0,
                 stage = EvolutionStage.EGG,
                 status = MonsterStatus.IDLE,
-                lastFedAt = now
+                lastFedAt = now,
+                hue = hueFrom(seedHueRng)
             ),
             collection = listOf(
                 CollectedMonster(EvolutionStage.EGG.name, hueFrom(seedHueRng), now)
@@ -164,7 +168,10 @@ object CramagotchiEngine {
             tasks = updatedTasks,
             monster = feedMonster(state.monster, newXp, newStage, now)
         )
-        return unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng)
+        return graduateIfNeeded(
+            unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng),
+            now, hueRng
+        )
     }
 
     /**
@@ -403,7 +410,10 @@ object CramagotchiEngine {
             exams = state.exams.filter { it.id != examId },
             monster = feedMonster(state.monster, newXp, newStage, now)
         )
-        return unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng)
+        return graduateIfNeeded(
+            unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng),
+            now, hueRng
+        )
     }
 
     /**
@@ -429,6 +439,56 @@ object CramagotchiEngine {
     private fun hueFrom(rng: Double): Int {
         val unit = rng.coerceIn(0.0, 0.999999)
         return (unit * 360.0).toInt()
+    }
+
+    /**
+     * Graduation: the moment the active monster reaches the max stage the
+     * species is already collected (the roster unlock ran first), so the
+     * creature "moves on" and a brand-new one is instantiated — fresh EGG,
+     * xp reset to 0, IDLE with cleared timers, and a new hue rolled with a
+     * golden-ratio stir of the caller's rng so the next creature is visibly
+     * different. Sub-max stages return the state unchanged.
+     */
+    private fun graduateIfNeeded(state: AppState, now: Double, hueRng: Double): AppState {
+        if (state.monster.stage != EvolutionStage.GRADUATED_BEAST) return state
+        val newHue = hueFrom((hueRng + GOLDEN_STIR) % 1.0)
+        return state.copy(
+            monster = state.monster.copy(
+                xp = 0,
+                stage = EvolutionStage.EGG,
+                status = MonsterStatus.IDLE,
+                lastFedAt = now,
+                eatingUntil = null,
+                sleepUntil = null,
+                hue = newHue
+            )
+        )
+    }
+
+    /**
+     * Legacy-save reconciliation: older saves carried no roster (or a roster
+     * seeded only with EGG) while the monster's stage kept advancing. This
+     * backfills every species at or below the monster's current stage —
+     * first hue wins, so existing entries and their hues are never touched —
+     * and tints a hue-less active monster from its stage's roster entry so
+     * the main card matches the collection. Call once right after loading a
+     * save; a fully-populated save passes through unchanged.
+     */
+    fun reconcileCollection(state: AppState, hueRng: Double = 0.5): AppState {
+        var next = state
+        for (stage in EvolutionStage.values()) {
+            if (stage.level <= state.monster.stage.level) {
+                next = unlockCollectible(
+                    next, stage.name, state.monster.lastFedAt,
+                    (hueRng + stage.level * 0.13) % 1.0
+                )
+            }
+        }
+        if (next.monster.hue == null) {
+            val entry = next.collection.firstOrNull { it.speciesId == next.monster.stage.name }
+            if (entry != null) next = next.copy(monster = next.monster.copy(hue = entry.hue))
+        }
+        return next
     }
 
     /**
