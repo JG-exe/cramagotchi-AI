@@ -16,6 +16,11 @@ Legend: **X** = not done · **V** = done
   (eb6f4a4, human-approved) via PR #4 (2d42f47) — Gradescope/backup repo current.
 - V **v2.0.0** tagged on `main` and published:
   https://github.com/JG-exe/cramagotchi-AI/releases/tag/v2.0.0
+- V **v2.1.0** — minor bump via PR #5 (2401244, human-merged): Android release
+  build runs R8 minify + resource shrinking (release APK 6.23 MB → 1.44 MB);
+  version alignment (Android 2.1.0/code 2, package.json 2.1.0). Tagged and
+  published: https://github.com/JG-exe/cramagotchi-AI/releases/tag/v2.1.0.
+  Release APK still unsigned (keystore deferred by decision).
 - V Stray PR on `origin` (EHB-MCT) closed; note: a leftover `dev` branch remains
   pushed on `origin` and can be deleted there via the GitHub UI.
 
