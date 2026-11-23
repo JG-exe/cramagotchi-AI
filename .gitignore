@@ -31,3 +31,6 @@ node_modules/
 Thumbs.db
 [Ee]xpress/
 .DS_Store
+
+# Vibe session artifacts
+.vibe/
