@@ -6,9 +6,9 @@
     "types": []
   },
   "include": [
-    "src/**/*.ts"
+    "../shared-app/src/**/*.ts"
   ],
   "exclude": [
-    "src/**/*.spec.ts"
+    "../shared-app/src/**/*.spec.ts"
   ]
 }

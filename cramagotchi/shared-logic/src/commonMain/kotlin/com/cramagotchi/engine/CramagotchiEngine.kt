@@ -10,9 +10,19 @@ import kotlin.js.JsExport
 @JsExport
 object CramagotchiEngine {
 
-    private var idCounter: Int = 0
+    private const val ID_PREFIX = "task-"
 
-    private fun nextId(): String = "task-${++idCounter}"
+    /**
+     * Derive the next task ID from the highest existing numeric suffix.
+     * Keeps IDs collision-free even after a state restore from storage,
+     * where an in-memory counter would restart at 0.
+     */
+    private fun nextId(state: AppState): String {
+        val highest = state.tasks
+            .mapNotNull { it.id.removePrefix(ID_PREFIX).toIntOrNull() }
+            .maxOrNull() ?: 0
+        return ID_PREFIX + (highest + 1)
+    }
 
     /** Create a fresh AppState with the given monster name and current timestamp. */
     fun createInitialState(monsterName: String, now: Double): AppState {
@@ -31,7 +41,7 @@ object CramagotchiEngine {
     /** Add a new uncompleted task to the state. */
     fun addTask(state: AppState, title: String, weight: TaskWeight, now: Double, subjectTag: String? = null): AppState {
         val newTask = StudyTask(
-            id = nextId(),
+            id = nextId(state),
             title = title,
             subjectTag = subjectTag,
             weight = weight,
