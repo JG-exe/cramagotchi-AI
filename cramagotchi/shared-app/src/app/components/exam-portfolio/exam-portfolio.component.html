@@ -24,45 +24,55 @@
           @if (editingExamId() === exam.id) {
             <!-- Inline edit form for one deadline/exam chip -->
             <form class="exam-edit-form" (ngSubmit)="saveEditExam()" data-testid="exam-edit-form">
-              <mat-form-field appearance="outline" class="field-exam-subject">
-                <mat-label>Subject</mat-label>
-                <input
-                  type="text"
-                  name="editExamSubject"
-                  matInput
-                  [value]="editExamSubject()"
-                  (input)="onEditExamSubjectInput($any($event.target).value)"
-                  data-testid="exam-edit-subject"
-                />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="field-exam-date">
-                <mat-label>{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
-                <input
-                  #dateEditField
-                  type="text"
-                  inputmode="numeric"
-                  placeholder="YYYY-MM-DD"
-                  name="editExamDate"
-                  matInput
-                  appDateMask
-                  [value]="editExamDate()"
-                  (input)="onEditExamDateInput($any($event.target).value)"
-                  (change)="onEditExamDateInput($any($event.target).value)"
-                  (click)="openDatePicker(pickerEdit, editExamDate())"
-                  data-testid="exam-edit-date"
-                />
-                <span matTextSuffix class="date-pick-suffix">
-                  <button
-                    type="button"
-                    class="date-pick-btn"
+              <div class="field-exam-subject-wrap">
+                <mat-form-field appearance="outline" class="field-exam-subject">
+                  <mat-label>Subject</mat-label>
+                  <input
+                    type="text"
+                    name="editExamSubject"
+                    matInput
+                    [value]="editExamSubject()"
+                    (input)="onEditExamSubjectInput($any($event.target).value)"
+                    data-testid="exam-edit-subject"
+                  />
+                </mat-form-field>
+                @if (editNameError()) {
+                  <p class="form-error" data-testid="exam-edit-error">{{ editNameError() }}</p>
+                }
+              </div>
+              <div class="field-exam-date-wrap">
+                <mat-form-field appearance="outline" class="field-exam-date">
+                  <mat-label>{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
+                  <input
+                    #dateEditField
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="YYYY-MM-DD"
+                    name="editExamDate"
+                    matInput
+                    appDateMask
+                    [value]="editExamDate()"
+                    (input)="onEditExamDateInput($any($event.target).value)"
+                    (change)="onEditExamDateInput($any($event.target).value)"
                     (click)="openDatePicker(pickerEdit, editExamDate())"
-                    aria-label="Open date picker"
-                    data-testid="exam-date-picker-btn"
-                  >
-                    <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  </button>
-                </span>
-              </mat-form-field>
+                    data-testid="exam-edit-date"
+                  />
+                  <span matTextSuffix class="date-pick-suffix">
+                    <button
+                      type="button"
+                      class="date-pick-btn"
+                      (click)="openDatePicker(pickerEdit, editExamDate())"
+                      aria-label="Open date picker"
+                      data-testid="exam-date-picker-btn"
+                    >
+                      <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </button>
+                  </span>
+                </mat-form-field>
+                @if (editDateError()) {
+                  <p class="form-error" data-testid="exam-edit-date-error">{{ editDateError() }}</p>
+                }
+              </div>
               <input
                 #pickerEdit
                 type="date"
@@ -71,9 +81,6 @@
                 aria-hidden="true"
                 (change)="onPickedEditDate(pickerEdit.value, dateEditField)"
               />
-              @if (editFormError()) {
-                <p class="form-error" data-testid="exam-edit-error">{{ editFormError() }}</p>
-              }
               <app-sliding-toggle
                 data-testid="exam-edit-kind"
                 left="Deadline"
@@ -137,45 +144,55 @@
     }
 
     <form class="exam-add-form" (ngSubmit)="onAddExam()" data-testid="exam-form">
-      <mat-form-field appearance="outline" class="field-exam-subject">
-        <mat-label>Subject</mat-label>
-        <input
-          type="text"
-          name="examSubject"
-          matInput
-          [value]="examSubjectInput()"
-          (input)="onExamSubjectInput($any($event.target).value)"
-          data-testid="exam-input-subject"
-        />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="field-exam-date">
-        <mat-label>{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
-        <input
-          #dateAddField
-          type="text"
-          inputmode="numeric"
-          placeholder="YYYY-MM-DD"
-          name="examDate"
-          matInput
-          appDateMask
-          [value]="examDateInput()"
-          (input)="onExamDateInput($any($event.target).value)"
-          (change)="onExamDateInput($any($event.target).value)"
-          (click)="openDatePicker(pickerAdd, examDateInput())"
-          data-testid="exam-input-date"
-        />
-        <span matTextSuffix class="date-pick-suffix">
-          <button
-            type="button"
-            class="date-pick-btn"
+      <div class="field-exam-subject-wrap">
+        <mat-form-field appearance="outline" class="field-exam-subject">
+          <mat-label>Subject</mat-label>
+          <input
+            type="text"
+            name="examSubject"
+            matInput
+            [value]="examSubjectInput()"
+            (input)="onExamSubjectInput($any($event.target).value)"
+            data-testid="exam-input-subject"
+          />
+        </mat-form-field>
+        @if (examNameError()) {
+          <p class="form-error" data-testid="exam-form-error">{{ examNameError() }}</p>
+        }
+      </div>
+      <div class="field-exam-date-wrap">
+        <mat-form-field appearance="outline" class="field-exam-date">
+          <mat-label>{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
+          <input
+            #dateAddField
+            type="text"
+            inputmode="numeric"
+            placeholder="YYYY-MM-DD"
+            name="examDate"
+            matInput
+            appDateMask
+            [value]="examDateInput()"
+            (input)="onExamDateInput($any($event.target).value)"
+            (change)="onExamDateInput($any($event.target).value)"
             (click)="openDatePicker(pickerAdd, examDateInput())"
-            aria-label="Open date picker"
-            data-testid="exam-date-picker-btn"
-          >
-            <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </span>
-      </mat-form-field>
+            data-testid="exam-input-date"
+          />
+          <span matTextSuffix class="date-pick-suffix">
+            <button
+              type="button"
+              class="date-pick-btn"
+              (click)="openDatePicker(pickerAdd, examDateInput())"
+              aria-label="Open date picker"
+              data-testid="exam-date-picker-btn"
+            >
+              <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </span>
+        </mat-form-field>
+        @if (examDateError()) {
+          <p class="form-error" data-testid="exam-date-error">{{ examDateError() }}</p>
+        }
+      </div>
       <input
         #pickerAdd
         type="date"
@@ -204,9 +221,6 @@
           + Add
         </button>
       </div>
-      @if (examFormError()) {
-        <p class="form-error" data-testid="exam-form-error">{{ examFormError() }}</p>
-      }
     </form>
   </div>
 </section>

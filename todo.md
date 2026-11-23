@@ -275,3 +275,12 @@ Metric: **V** = done
   `exam-edit-error`, `task-form-error`) that clears as soon as typing resumes.
   Engine still never sees a blank name from the UI (chips may still render
   legacy subject-less exams). Verified: 36/36 `ng test`, build clean.
+- V **Warnings under their own fields:** every form flag now renders directly
+  beneath the input it belongs to, replacing the single bottom-of-form error
+  paragraph. The exam/task structures split their form-level signals into
+  per-field ones (`examNameError`/`examDateError`, `editNameError`/
+  `editDateError`; `taskFormError` moves under the title field). Fields are
+  wrapped in `.field-*-wrap` column wrappers that carry the old flex sizing;
+  testids preserved (`exam-form-error`, `exam-edit-error`, `exam-date-error`,
+  `exam-edit-date-error`, `task-form-error`). Native-pick + edit-start clear
+  the matching flag. Verified: 36/36 `ng test`, build clean, bundles synced.

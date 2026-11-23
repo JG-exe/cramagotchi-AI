@@ -7,18 +7,23 @@
   <!-- Task Creation Form -->
   <form class="task-form" (ngSubmit)="onSubmit()" data-testid="task-form">
     <div class="form-row">
-      <mat-form-field appearance="outline" class="field-title">
-        <mat-label>What are you studying?</mat-label>
-        <input
-          type="text"
-          name="title"
-          matInput
-          [value]="titleInput()"
-          (input)="onTitleInput($any($event.target).value)"
-          required
-          data-testid="task-title-input"
-        />
-      </mat-form-field>
+      <div class="field-title-wrap">
+        <mat-form-field appearance="outline" class="field-title">
+          <mat-label>What are you studying?</mat-label>
+          <input
+            type="text"
+            name="title"
+            matInput
+            [value]="titleInput()"
+            (input)="onTitleInput($any($event.target).value)"
+            required
+            data-testid="task-title-input"
+          />
+        </mat-form-field>
+        @if (taskFormError()) {
+          <p class="form-error" data-testid="task-form-error">{{ taskFormError() }}</p>
+        }
+      </div>
       <mat-form-field appearance="outline" class="field-estimate">
         <mat-label>Estimate (min)</mat-label>
         <input
@@ -40,9 +45,6 @@
       >
         + Add
       </button>
-      @if (taskFormError()) {
-        <p class="form-error" data-testid="task-form-error">{{ taskFormError() }}</p>
-      }
     </div>
 
     <div class="form-controls">

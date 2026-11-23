@@ -155,14 +155,39 @@
   align-items: flex-start;
 }
 
-.field-exam-subject {
+/* Field wrappers hold the field plus its own inline error, so each warning
+   appears directly beneath the input it belongs to. The wrappers take the
+   flex sizing the raw fields used to carry. */
+.field-exam-subject-wrap {
   flex: 1;
   min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field-exam-date-wrap {
+  width: 170px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field-exam-subject {
+  width: 100%;
 }
 
 .field-exam-date {
-  width: 170px;
+  width: 100%;
   font-size: var(--text-sm);
+}
+
+/* Row of field+error wrappers can wrap as one column on narrow panes. */
+.field-exam-subject-wrap .form-error,
+.field-exam-date-wrap .form-error {
+  margin: 0;
+  padding-left: var(--space-2xs, 4px);
+  max-width: 100%;
 }
 
 .mat-mdc-form-field {

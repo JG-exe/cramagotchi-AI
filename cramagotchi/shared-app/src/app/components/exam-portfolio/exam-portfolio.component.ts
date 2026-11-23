@@ -52,9 +52,11 @@ export class ExamPortfolioComponent {
   editExamDate = signal('');
   editExamKind = signal<ExamKind>('DEADLINE');
 
-  /** Quiet inline rejection copy; null whenever nothing is being flagged. */
-  examFormError = signal<string | null>(null);
-  editFormError = signal<string | null>(null);
+  /** Quiet inline rejection copy, shown directly under the related field. */
+  examNameError = signal<string | null>(null);
+  examDateError = signal<string | null>(null);
+  editNameError = signal<string | null>(null);
+  editDateError = signal<string | null>(null);
 
   /** True when the nearest upcoming dated item is the high-stakes EXAM kind. */
   readonly nearestIsExam = computed(() => this.store.nearestUpcomingExam()?.kind === 'EXAM');
@@ -89,6 +91,7 @@ export class ExamPortfolioComponent {
   onPickedAddDate(iso: string, input: HTMLInputElement | undefined): void {
     if (!iso || !isValidIsoDate(iso)) return;
     this.examDateInput.set(iso);
+    this.examDateError.set(null);
     if (input) input.value = iso;
   }
 
@@ -96,6 +99,7 @@ export class ExamPortfolioComponent {
   onPickedEditDate(iso: string, input: HTMLInputElement | undefined): void {
     if (!iso || !isValidIsoDate(iso)) return;
     this.editExamDate.set(iso);
+    this.editDateError.set(null);
     if (input) input.value = iso;
   }
 
@@ -104,31 +108,32 @@ export class ExamPortfolioComponent {
     // a blank name — every deadline/exam is a named, dated commitment.
     const subject = this.examSubjectInput().trim();
     if (!subject) {
-      this.examFormError.set('Give the item a name (e.g. MATH) first.');
+      this.examNameError.set('Give the item a name (e.g. MATH) first.');
       return;
     }
     const date = this.examDateInput();
     if (!date || !isValidIsoDate(date)) {
-      this.examFormError.set('Enter a valid date (YYYY-MM-DD).');
+      this.examDateError.set('Enter a valid date (YYYY-MM-DD).');
       return;
     }
     this.store.addExam(subject, date, this.examKindInput());
     this.examSubjectInput.set('');
     this.examDateInput.set('');
     this.examKindInput.set('DEADLINE');
-    this.examFormError.set(null);
+    this.examNameError.set(null);
+    this.examDateError.set(null);
   }
 
   /** Name typed in the add form — typing clears a stale rejection. */
   onExamSubjectInput(value: string): void {
     this.examSubjectInput.set(value);
-    this.examFormError.set(null);
+    this.examNameError.set(null);
   }
 
   /** Date typed/picked in the add form — typing clears a stale rejection. */
   onExamDateInput(value: string): void {
     this.examDateInput.set(value);
-    this.examFormError.set(null);
+    this.examDateError.set(null);
   }
 
   removeExam(examId: string): void {
@@ -143,7 +148,8 @@ export class ExamPortfolioComponent {
     this.editExamSubject.set(exam.subjectTag ?? '');
     this.editExamDate.set(exam.dateIso);
     this.editExamKind.set(exam.kind ?? 'DEADLINE');
-    this.editFormError.set(null);
+    this.editNameError.set(null);
+    this.editDateError.set(null);
   }
 
   cancelEditExam(): void {
@@ -156,29 +162,30 @@ export class ExamPortfolioComponent {
     if (!examId) return;
     const subject = this.editExamSubject().trim();
     if (!subject) {
-      this.editFormError.set('The name cannot be empty — restore one or cancel.');
+      this.editNameError.set('The name cannot be empty — restore one or cancel.');
       return;
     }
     const date = this.editExamDate();
     if (!date || !isValidIsoDate(date)) {
-      this.editFormError.set('Enter a valid date (YYYY-MM-DD).');
+      this.editDateError.set('Enter a valid date (YYYY-MM-DD).');
       return;
     }
     this.store.updateExam(examId, subject, date, this.editExamKind());
     this.editingExamId.set(null);
-    this.editFormError.set(null);
+    this.editNameError.set(null);
+    this.editDateError.set(null);
   }
 
   /** Name typed in the edit form — typing clears a stale rejection. */
   onEditExamSubjectInput(value: string): void {
     this.editExamSubject.set(value);
-    this.editFormError.set(null);
+    this.editNameError.set(null);
   }
 
   /** Date typed/picked in the edit form — typing clears a stale rejection. */
   onEditExamDateInput(value: string): void {
     this.editExamDate.set(value);
-    this.editFormError.set(null);
+    this.editDateError.set(null);
   }
 
   subjectHue(subjectTag: string): number {
