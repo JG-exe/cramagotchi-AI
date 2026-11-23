@@ -1,8 +1,20 @@
 # Cramagotchi — Progress
 
-Branch: `feat/monster-motion-and-redesign` (from `dev`, per `agents.md` workflow)
+Workflow: worked on `feat/monster-motion-and-redesign` (from `dev`, per `agents.md`),
+human-review approved, merged into `dev` (`5b738f9`), shipped as PR
+https://github.com/JG-exe/cramagotchi-AI/pull/3 (`dev` → `main`, awaiting merge).
 
 Legend: **X** = not done · **V** = done
+
+---
+
+## Release status
+
+- V All implementation + verification items below complete (no X remaining).
+- V Feature branch merged into `dev` with changelog merge commit.
+- V PR #3 open on `personal` (`dev` → `main`) — final human merge pending.
+- V Stray PR on `origin` (EHB-MCT) closed; note: a leftover `dev` branch remains
+  pushed on `origin` and can be deleted there via the GitHub UI.
 
 ---
 
