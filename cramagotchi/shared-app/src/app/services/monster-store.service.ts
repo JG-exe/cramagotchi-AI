@@ -20,6 +20,17 @@ export interface StudyTask {
   completed: boolean;
   createdAt: number;
   completedAt?: number;
+  /** Optional user estimate (minutes) for the estimation-accuracy bonus. */
+  estimatedMinutes?: number | null;
+  /** Actual XP awarded — only set when the task completes (hidden before). */
+  awardedXp?: number | null;
+}
+
+/** One upcoming exam, as exposed to the UI. */
+export interface ExamRef {
+  id: string;
+  subjectTag?: string | null;
+  dateIso: string;
 }
 
 export interface MonsterState {
@@ -36,6 +47,7 @@ export interface AppState {
   tasks: StudyTask[];
   monster: MonsterState;
   examDateIso?: string;
+  exams?: ExamRef[];
 }
 
 /**
