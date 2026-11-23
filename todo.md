@@ -317,3 +317,9 @@ Metric: **V** = done
   `date-fallback-calendar`, `date-calendar-prev/-next/-day`,
   `date-calendar-backdrop`. Verified: 40/40 `ng test`, build clean, bundles
   synced (desktop packages straight from `dist/web-app/browser`).
+- V **Chip pill date format:** deadline/exam chips now render their stored
+  `YYYY-MM-DD` as `DD Mon YYYY` (e.g. `2026-11-30` → `30 Nov 2026`) via
+  `formatExamDateDisplay()` — parse-from-parts (no timezone drift), raw-string
+  fallback for unparsable legacy values. Storage stays ISO everywhere; only
+  the pill display changes. Verified: 43/43 `ng test`, build clean, bundles
+  synced.

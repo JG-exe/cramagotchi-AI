@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { App } from './app';
 import { MonsterStoreService, MonsterState, StudyTask, ExamRef } from './services/monster-store.service';
-import { isValidIsoDate } from './components/exam-portfolio/exam-portfolio.component';
+import { isValidIsoDate, formatExamDateDisplay } from './components/exam-portfolio/exam-portfolio.component';
 
 /**
  * Invalid & edge-case input guards, exercised through the real DOM event
@@ -417,5 +417,31 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     hiddenPicker.value = '2026-12-05';
     hiddenPicker.dispatchEvent(new Event('change'));
     expect(dateInput.value).toBe('2026-12-05');
+  });
+
+  // ── Chip pill date formatting ──────────────────────────────────────
+
+  it('reformats stored ISO chip dates as DD Mon YYYY', () => {
+    expect(formatExamDateDisplay('2026-11-30')).toBe('30 Nov 2026');
+    expect(formatExamDateDisplay('2027-01-07')).toBe('07 Jan 2027');
+    expect(formatExamDateDisplay('1999-12-31')).toBe('31 Dec 1999');
+  });
+
+  it('falls back to the raw string for unparsable chip dates', () => {
+    expect(formatExamDateDisplay('2026/02/10')).toBe('2026/02/10');
+    expect(formatExamDateDisplay('2026-13-01')).toBe('2026-13-01');
+    expect(formatExamDateDisplay('')).toBe('');
+  });
+
+  it('renders the formatted date on deadline/exam chips', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    mockStore.exams.set([{ id: 'exam-1', subjectTag: 'BIO', dateIso: '2026-12-11', kind: 'DEADLINE' }]);
+    fixture.detectChanges();
+
+    const chipDate = compiled.querySelector('[data-testid="exam-chip"] .exam-chip-date');
+    expect(chipDate?.textContent?.trim()).toBe('11 Dec 2026');
   });
 });

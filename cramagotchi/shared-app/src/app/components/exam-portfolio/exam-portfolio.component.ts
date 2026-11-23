@@ -31,6 +31,23 @@ export interface CalendarCell {
   iso: string | null;
 }
 
+const MONTH_ABBREVIATIONS = [
+  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+] as const;
+
+/**
+ * Display form for chip pills: strict `YYYY-MM-DD` → `DD Mon YYYY`
+ * (e.g. `2026-11-30` → `30 Nov 2026`). Off-calendar or unparsable
+ * values fall back to the raw string so nothing ever renders blank.
+ */
+export function formatExamDateDisplay(iso: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  const [year, month, day] = iso.split('-').map(Number);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return iso;
+  return `${String(day).padStart(2, '0')} ${MONTH_ABBREVIATIONS[month - 1]} ${year}`;
+}
+
 /**
  * Deadlines & Exams portfolio — lives above the Study Queue on the left
  * pane (mobile, web, desktop and Android all share this single layout).
@@ -46,6 +63,9 @@ export interface CalendarCell {
 })
 export class ExamPortfolioComponent {
   readonly store = inject(MonsterStoreService);
+
+  /** Template-exposed date formatter (`DD Mon YYYY` for chip pills). */
+  readonly formatExamDateDisplay = formatExamDateDisplay;
 
   examSubjectInput = signal('');
   examDateInput = signal('');

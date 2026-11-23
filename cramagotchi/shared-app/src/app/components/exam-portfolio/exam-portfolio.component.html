@@ -156,7 +156,7 @@
                   [style.--subject-hue]="subjectHue(exam.subjectTag)"
                 >{{ exam.subjectTag }}</span>
               }
-              <span class="exam-chip-date">{{ exam.dateIso }}</span>
+              <span class="exam-chip-date">{{ formatExamDateDisplay(exam.dateIso) }}</span>
               <button
                 type="button"
                 class="btn-edit"
