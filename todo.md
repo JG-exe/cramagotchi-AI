@@ -82,6 +82,12 @@ Legend: **X** = not done · **V** = done
 
 - V `ng test` — 12/12 Angular UI tests pass (all `data-testid` contracts preserved).
 - V `ng build` — production build clean (web / desktop / android all consume this output).
+- V Desktop/web parity: desktop serves the Angular bundle copied into classpath resources
+  at build time (`:desktopApp:bundleWebApp` → `/webapp/**`), so a stale desktop jar shows
+  an old UI. After any frontend change, rebuild with `./gradlew :desktopApp:processResources`
+  (bundled extras: literal CSS fallbacks added before every `color-mix()` / `min()` /
+  `aspect-ratio()` declaration and in every SVG fill, so the older JavaFX WebView
+  (WebKit) degrades gracefully instead of dropping declarations).
 
 ## Decisions log
 

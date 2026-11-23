@@ -21,6 +21,7 @@
   font-weight: var(--weight-semibold);
   color: var(--color-text-muted);
   background: var(--color-surface);
+  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
   box-shadow: var(--shadow-diffuse-sm);
   border-radius: var(--radius-pill);
   padding: var(--space-2xs) var(--space-sm);
@@ -34,6 +35,7 @@
   background: var(--color-surface);
   padding: var(--space-md);
   border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
   box-shadow: var(--shadow-diffuse-sm);
 }
 
@@ -97,6 +99,7 @@
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
+  background: #F2EEE8;
   background: var(--color-surface-recessed);
   border-radius: var(--radius-md);
 }
@@ -108,6 +111,7 @@
   padding: var(--space-sm) var(--space-md);
   background: var(--color-surface);
   border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
   box-shadow: var(--shadow-diffuse-sm);
   transition: box-shadow var(--duration-fast) var(--ease-standard);
 }
@@ -160,11 +164,15 @@
 }
 
 .badge-snack {
+  background: #F9EEE0;
+  color: #9A6E3A;
   background: var(--tag-ochre-bg);
   color: var(--tag-ochre-fg);
 }
 
 .badge-meal {
+  background: #EAEFE6;
+  color: #5A795F;
   background: var(--tag-sage-bg);
   color: var(--tag-sage-fg);
 }
@@ -173,6 +181,8 @@
    gamut so cool hues read as calm neutrals, never saturated blue. */
 .badge-subject {
   --tag-tint: hsl(var(--subject-hue, 40) 42% 46%);
+  background: hsl(var(--subject-hue, 40) 42% 90%);
+  color: hsl(var(--subject-hue, 40) 42% 30%);
   background: color-mix(in srgb, var(--tag-tint) 14%, var(--color-surface-elevated));
   color: color-mix(in srgb, var(--tag-tint) 60%, var(--color-espresso-dark));
 }
@@ -224,6 +234,7 @@
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
+  background: rgba(255, 253, 249, 0.6);
   background: color-mix(in srgb, var(--color-surface-elevated) 60%, transparent);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
