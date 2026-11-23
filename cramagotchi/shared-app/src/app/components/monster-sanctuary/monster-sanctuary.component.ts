@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -32,6 +32,12 @@ export class MonsterSanctuaryComponent {
 
   examSubjectInput = signal('');
   examDateInput = signal('');
+
+  /** Lowercased evolution stage, used to pick the body symbol: #cram-body-… */
+  readonly stageKey = computed(() => this.store.monster().stage.toLowerCase());
+
+  /** Lowercased status, used to pick the face symbol: #cram-face-… */
+  readonly statusKey = computed(() => this.store.monster().status.toLowerCase());
 
   onAddExam(): void {
     const date = this.examDateInput();

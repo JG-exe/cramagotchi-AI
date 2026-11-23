@@ -1,35 +1,79 @@
-/* Colour palette & semantic tokens */
+/* ─── Colour palette & semantic tokens ───────────────────────────────
+   Warm cream & espresso neutrals with botanical/warm-earth accents.
+   DESIGN RULE: strictly no blue, no cool slate, no cyan — every tint
+   derives from these base tokens via color-mix().                        */
 :root {
-  --color-bg-primary: #FAF8F5;
-  --color-surface: #FFFFFF;
-  --color-text-primary: #2D3748;
-  --color-text-muted: #718096;
-  --color-accent-meal: #68A377;
-  --color-accent-snack: #D99B52;
-  --color-status-hungry: #E07A5F;
-  --color-status-sleep: #81B29A;
-  --color-border: #E2E8F0;
-}
+    /* Base Neutrals (Warm Cream & Espresso — Zero Blue) */
+    --color-cream-base: #FAF6F0;
+    --color-surface-elevated: #FFFDF9;
+    --color-espresso-dark: #2C221E;
+    --color-espresso-muted: #6E5D55;
 
-/* Material M3 token overrides — rebrand the prebuilt azure-blue theme to
-   the Cramagotchi palette. All Material components read these --mat-sys
-   variables, so overriding here re-themes every primitive consistently. */
-:root {
-  --mat-sys-primary: var(--color-accent-meal);
-  --mat-sys-on-primary: #ffffff;
-  --mat-sys-primary-container: #E1EFE5;
-  --mat-sys-on-primary-container: #1F3D28;
-  --mat-sys-secondary: var(--color-accent-snack);
-  --mat-sys-on-secondary: #ffffff;
-  --mat-sys-secondary-container: #F7E8D4;
-  --mat-sys-on-secondary-container: #4A3517;
-  --mat-sys-surface: var(--color-surface);
-  --mat-sys-on-surface: var(--color-text-primary);
-  --mat-sys-on-surface-variant: var(--color-text-muted);
-  --mat-sys-surface-container: #F4F1EC;
-  --mat-sys-surface-container-high: #EFEBE4;
-  --mat-sys-background: var(--color-bg-primary);
-  --mat-sys-on-background: var(--color-text-primary);
-  --mat-sys-outline: var(--color-border);
-  --mat-sys-outline-variant: var(--color-border);
+    /* Base Accents (Botanical & Warm Earth) */
+    --color-sage-base: #6E9E7B;
+    --color-ochre-base: #D69749;
+    --color-terracotta-base: #D97757;
+    --color-moss-sleep: #84A590;
+    --color-rose-clay: #C97B7D;
+    --color-plum-taupe: #9E7B8F;
+
+    /* Semantic Assignments */
+    --color-bg-primary: var(--color-cream-base);
+    --color-surface: var(--color-surface-elevated);
+    --color-surface-recessed: color-mix(in srgb, var(--color-espresso-dark) 4%, var(--color-cream-base));
+    --color-text-primary: var(--color-espresso-dark);
+    --color-text-muted: var(--color-espresso-muted);
+
+    --color-accent-meal: var(--color-sage-base);
+    --color-accent-snack: var(--color-ochre-base);
+    --color-status-hungry: var(--color-terracotta-base);
+    --color-status-sleep: var(--color-moss-sleep);
+
+    /* Computed Borders & Soft Diffusion Shadows (warm espresso alpha) */
+    --color-border-subtle: color-mix(in srgb, var(--color-espresso-dark) 8%, transparent);
+    --shadow-diffuse-sm: 0 4px 14px -2px color-mix(in srgb, var(--color-espresso-dark) 6%, transparent);
+    --shadow-diffuse-md: 0 12px 32px -6px color-mix(in srgb, var(--color-espresso-dark) 9%, transparent);
+
+    /* Computed Subject Tag Pill Tokens (14% tint, text darkened with espresso) */
+    --tag-sage-bg: color-mix(in srgb, var(--color-sage-base) 14%, var(--color-surface-elevated));
+    --tag-sage-fg: color-mix(in srgb, var(--color-sage-base) 70%, var(--color-espresso-dark));
+
+    --tag-ochre-bg: color-mix(in srgb, var(--color-ochre-base) 14%, var(--color-surface-elevated));
+    --tag-ochre-fg: color-mix(in srgb, var(--color-ochre-base) 65%, var(--color-espresso-dark));
+
+    --tag-rose-bg: color-mix(in srgb, var(--color-rose-clay) 14%, var(--color-surface-elevated));
+    --tag-rose-fg: color-mix(in srgb, var(--color-rose-clay) 70%, var(--color-espresso-dark));
+
+    --tag-plum-bg: color-mix(in srgb, var(--color-plum-taupe) 14%, var(--color-surface-elevated));
+    --tag-plum-fg: color-mix(in srgb, var(--color-plum-taupe) 70%, var(--color-espresso-dark));
+
+    /* Monster SVG Computed Fills */
+    --monster-fill-egg: color-mix(in srgb, var(--color-ochre-base) 12%, var(--color-surface-elevated));
+    --monster-fill-hatchling: color-mix(in srgb, var(--color-sage-base) 14%, var(--color-surface-elevated));
+    --monster-fill-scholar: color-mix(in srgb, var(--color-sage-base) 18%, var(--color-surface-elevated));
+    --monster-fill-graduated: color-mix(in srgb, var(--color-ochre-base) 18%, var(--color-surface-elevated));
+    --monster-blush: color-mix(in srgb, var(--color-terracotta-base) 28%, transparent);
+
+    /* Angular Material M3 Token Overrides — warm rebrand of the prebuilt
+       azure theme; every Material primitive reads these. */
+    --mat-sys-primary: var(--color-sage-base);
+    --mat-sys-on-primary: var(--color-surface-elevated);
+    --mat-sys-primary-container: color-mix(in srgb, var(--color-sage-base) 18%, var(--color-surface-elevated));
+    --mat-sys-on-primary-container: color-mix(in srgb, var(--color-sage-base) 55%, var(--color-espresso-dark));
+    --mat-sys-secondary: var(--color-ochre-base);
+    --mat-sys-on-secondary: var(--color-surface-elevated);
+    --mat-sys-secondary-container: color-mix(in srgb, var(--color-ochre-base) 16%, var(--color-surface-elevated));
+    --mat-sys-on-secondary-container: color-mix(in srgb, var(--color-ochre-base) 55%, var(--color-espresso-dark));
+    --mat-sys-surface: var(--color-surface-elevated);
+    --mat-sys-on-surface: var(--color-espresso-dark);
+    --mat-sys-on-surface-variant: var(--color-espresso-muted);
+    --mat-sys-surface-container: color-mix(in srgb, var(--color-espresso-dark) 3%, var(--color-cream-base));
+    --mat-sys-surface-container-high: color-mix(in srgb, var(--color-espresso-dark) 5%, var(--color-cream-base));
+    --mat-sys-background: var(--color-bg-primary);
+    --mat-sys-on-background: var(--color-espresso-dark);
+    --mat-sys-outline: color-mix(in srgb, var(--color-espresso-dark) 18%, transparent);
+    --mat-sys-outline-variant: var(--color-border-subtle);
+    --mdc-filled-text-field-container-color: var(--color-surface-recessed);
+    --mdc-linear-progress-active-indicator-color: var(--color-sage-base);
+    --mdc-linear-progress-track-color: color-mix(in srgb, var(--color-sage-base) 18%, transparent);
 }

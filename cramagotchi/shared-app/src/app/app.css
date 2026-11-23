@@ -1,55 +1,38 @@
-/* App root layout — minimal Phase 1 */
-.app-layout {
+/* App root layout — calm study sanctuary shell */
+.app-shell {
   max-width: var(--layout-max-width);
   margin: 0 auto;
-  padding: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
 }
 
-/* Desktop: side-by-side 60/40 */
+.app-header {
+  margin-bottom: var(--space-lg);
+}
+
+.app-title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+.app-tagline {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* ── Desktop: side-by-side split (design.md pane ratios) ─────────── */
 @media (min-width: 768px) {
   .app-layout {
     display: grid;
-    grid-template-columns: 3fr 2fr;
+    grid-template-columns: var(--pane-ratio-sanctuary) var(--pane-ratio-tasks);
     gap: var(--space-lg);
+    align-items: start;
   }
-}
-
-.xp-bar {
-  position: relative;
-  height: 1rem;
-  background: var(--color-border);
-  border-radius: var(--radius-pill);
-  overflow: hidden;
-}
-
-.xp-fill {
-  height: 100%;
-  background: var(--color-accent-meal);
-  transition: width var(--duration-normal);
-}
-
-.xp-label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-semibold);
-}
-
-.status-badge {
-  display: inline-block;
-  padding: var(--space-2xs) var(--space-sm);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-}
-
-.digesting-message {
-  color: var(--color-status-sleep);
-  font-style: italic;
-  font-size: var(--text-sm);
 }
