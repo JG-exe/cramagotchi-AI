@@ -1,14 +1,92 @@
 # Cramagotchi
 
-A short description of your project. Aim for 2-3 lines.
+A zero-punishment study companion: feed a virtual monster by completing study
+tasks, powered by a Kotlin Multiplatform engine shared across web, desktop and
+Android. Rewards are gamified with time estimates, accuracy bonuses and a
+little randomness — and never take anything away from the player.
 
-View (project name) at: [website.be](website.be)
+Latest release: **v1.2.0** (`main`). Development happens on `dev` and reaches
+`main` through review-gated pull requests.
 
 In case the repo isn't updated, try: [personal github copy](https://github.com/JG-exe/cramagotchi-AI)
 
 If you want to add more sections, please do so after the existing ones (avoid burying your sources under a lot of text!).
 
 ## Up & running (optional) 🏃‍➡️
+
+Prerequisites:
+
+- Node.js 20+ and npm
+- JDK 21 (`java -version` should match; set `JAVA_HOME="C:/Program Files/Java/jdk-21.0.10"` on Windows if needed)
+
+Web (from the `cramagotchi/` directory):
+
+```bash
+npm install
+npx ng serve        # http://localhost:4200
+```
+
+Desktop (JavaFX WebView shell embedding the compiled Angular bundle):
+
+```bash
+cd cramagotchi
+./gradlew :desktopApp:installDist
+./desktopApp/build/install/desktopApp/bin/desktopApp
+```
+
+Desktop with hot reload — point the shell at the Angular dev server:
+
+```bash
+npx ng serve        # terminal 1
+CRAMAGOTCHI_DEV_SERVER_URL=http://localhost:4200/ ./gradlew :desktopApp:run   # terminal 2
+```
+
+Kotlin engine changes need a re-sync before the web bundle picks them up:
+
+```bash
+./gradlew :shared-logic:syncJsToSharedApp
+```
+
+Android debug APK:
+
+```bash
+./gradlew :androidApp:assembleDebug
+# cramagotchi/androidApp/build/outputs/apk/debug/
+```
+
+Tests:
+
+```bash
+./gradlew :shared-logic:allTests   # Kotlin suites, all platform targets
+npx ng test --watch=false          # Angular vitest suites
+```
+
+## Features
+
+- Task queue with snack/meal sizing, optional subject tags (deterministic per-subject colour pills) and a collapsible "devoured" history.
+- Optional time estimates on tasks; recording the actual time spent and landing within 25% of the estimate grants a +50% XP accuracy bonus — but wrong estimates never cost anything (zero-punishment).
+- XP rewards are slightly variable (about 85-115% of base) and the exact amount is hidden until the task completes; the UI only shows approximations beforehand.
+- Multiple exams: track an exam portfolio, with the countdown banner following the nearest upcoming exam. Older single-exam save files migrate automatically.
+- Feeding state machine: completing a task triggers EATING, then a 25-minute SLEEPING focus lock ("Digesting peacefully..."), then IDLE. XP never decays and hunger never kills anything.
+- Evolution at 50/150/300 XP: EGG → HATCHLING → SCHOLAR → GRADUATED_BEAST.
+
+## Architecture
+
+All business logic lives in a pure Kotlin Multiplatform state machine
+(`shared-logic`), compiled for js(IR), wasmJs, JVM and Android. The Angular
+(Material/Signals) UI in `shared-app` is a thin layer over the compiled KMP JS
+module and is consumed unmodified by three shells:
+
+| Directory | Role |
+|---|---|
+| `cramagotchi/shared-logic` | KMP engine + serialization storage adapter |
+| `cramagotchi/shared-app` | all Angular components, services, CSS token system |
+| `cramagotchi/web-app` | browser shell (tsconfigs) |
+| `cramagotchi/desktopApp` | JavaFX WebView shell + embedded loopback HTTP server |
+| `cramagotchi/androidApp` | Android WebView shell (WebViewAssetLoader) |
+
+The compiled KMP bundle is vendored into `shared-app/src/assets/kmp` with its
+generated TypeScript definitions. One bundle, three platforms, one behaviour.
 
 ## Sources 🗃️
 
