@@ -203,8 +203,8 @@
 }
 
 .badge-subject {
-  background: #EDF2F7;
-  color: var(--color-text-muted);
+  background: hsl(var(--subject-hue, 210), 45%, 88%);
+  color: hsl(var(--subject-hue, 210), 45%, 28%);
 }
 
 .btn-delete {

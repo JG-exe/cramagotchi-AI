@@ -60,14 +60,13 @@ export class MonsterStoreService {
 
   readonly examDateIso = signal<string | null>(null);
 
-  /** Active (uncompleted) tasks */
-  readonly activeTasks = computed(() => this.tasks().filter(t => !t.completed));
-
-  /** Devoured (completed) tasks */
-  readonly devouredTasks = computed(() => this.tasks().filter(t => t.completed));
+  /** Ticks once per interval pass so date-derived computeds (like the
+   *  exam countdown) refresh when the calendar day changes. */
+  readonly dayTick = signal(0);
 
   /** Days remaining until exam (if set) */
   readonly examCountdownDays = computed(() => {
+    this.dayTick(); // re-evaluate when the interval ticks
     const iso = this.examDateIso();
     if (!iso) return null;
     const target = new Date(iso).setHours(0, 0, 0, 0);
@@ -75,6 +74,12 @@ export class MonsterStoreService {
     const diff = target - today;
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   });
+
+  /** Active (uncompleted) tasks */
+  readonly activeTasks = computed(() => this.tasks().filter(t => !t.completed));
+
+  /** Devoured (completed) tasks */
+  readonly devouredTasks = computed(() => this.tasks().filter(t => t.completed));
 
   /** Computed XP progress toward next evolution */
   readonly xpProgress = computed(() => {
@@ -92,6 +97,7 @@ export class MonsterStoreService {
     if (typeof window !== 'undefined') {
       window.setInterval(() => {
         this.evaluateTime(Date.now());
+        this.dayTick.update(t => t + 1);
       }, 1000);
     }
   }

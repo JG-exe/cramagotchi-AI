@@ -3,6 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MonsterStoreService, TaskWeight } from '../../services/monster-store.service';
 
+/**
+ * Deterministically maps a subject tag to a hue (0-359).
+ * Same tag always yields the same colour; different tags usually differ.
+ */
+export function subjectHue(subjectTag: string): number {
+  return subjectTagToHue(subjectTag);
+}
+
+function subjectTagToHue(subjectTag: string): number {
+  let hash = 0;
+  for (let i = 0; i < subjectTag.length; i++) {
+    hash = (hash * 31 + subjectTag.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash) % 360;
+}
+
 @Component({
   selector: 'app-task-queue',
   standalone: true,
@@ -31,6 +47,10 @@ export class TaskQueueComponent {
     this.titleInput.set('');
     this.subjectInput.set('');
     this.weightInput.set('SNACK');
+  }
+
+  subjectHue(subjectTag: string): number {
+    return subjectTagToHue(subjectTag);
   }
 
   toggleDevoured(): void {

@@ -84,7 +84,11 @@
               {{ task.weight === 'SNACK' ? '🍿 Snack (+10)' : '🍱 Meal (+25)' }}
             </span>
             @if (task.subjectTag) {
-              <span class="badge badge-subject">{{ task.subjectTag }}</span>
+              <span
+                class="badge badge-subject"
+                data-testid="subject-badge"
+                [style.--subject-hue]="subjectHue(task.subjectTag)"
+              >{{ task.subjectTag }}</span>
             }
           </div>
         </div>
