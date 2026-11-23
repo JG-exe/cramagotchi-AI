@@ -275,3 +275,41 @@
   font-weight: var(--weight-bold);
   color: var(--color-text-primary);
 }
+
+/* ── Collectible roster ────────────────────────────────────────────── */
+
+.monster-collection {
+  margin-top: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid color-mix(in srgb, var(--color-espresso-dark, #2C221E) 8%, transparent);
+}
+
+.collection-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}
+
+.collected-card {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: var(--space-2xs);
+  min-width: 64px;
+  background: var(--color-surface-elevated, #FFFDF9);
+  border-radius: var(--radius-md, 16px);
+  box-shadow: var(--shadow-diffuse-sm);
+}
+
+.collected-svg {
+  width: 44px;
+  height: 44px;
+}
+
+.collected-name {
+  font-size: var(--text-xs);
+  color: var(--color-text-primary);
+  text-align: center;
+}

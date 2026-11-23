@@ -159,6 +159,14 @@
               <span class="exam-chip-date">{{ formatExamDateDisplay(exam.dateIso) }}</span>
               <button
                 type="button"
+                class="btn-finish"
+                (click)="finishExam(exam.id)"
+                aria-label="Finish deadline or exam"
+                title="Finish — bonus XP when it's still days out"
+                data-testid="exam-chip-finish"
+              ><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8.5 L6.5 12.5 L13.5 4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button
+                type="button"
                 class="btn-edit"
                 (click)="startEditExam(exam.id)"
                 aria-label="Edit deadline or exam"

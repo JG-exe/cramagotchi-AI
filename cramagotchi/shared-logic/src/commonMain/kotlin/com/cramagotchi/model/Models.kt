@@ -79,6 +79,20 @@ data class MonsterState(
     val sleepUntil: Double? = null
 )
 
+/**
+ * One entry in the collectible monster roster. `speciesId` names the visual
+ * variant (an [EvolutionStage] name); `hue` (∈ 0..359) is the randomly rolled
+ * tint assigned exactly once at acquisition and persisted with the save —
+ * the same creature never re-rolls.
+ */
+@TsExport
+@Serializable
+data class CollectedMonster(
+    val speciesId: String,
+    val hue: Int,
+    val collectedAt: Double
+)
+
 @TsExport
 @Serializable
 data class AppState(
@@ -87,5 +101,7 @@ data class AppState(
     /** Legacy single-exam field — kept for deserialization of old storage. */
     val examDateIso: String? = null,
     /** Active exams and deadlines; the countdown targets the nearest upcoming one. */
-    val exams: List<Exam> = emptyList()
+    val exams: List<Exam> = emptyList(),
+    /** Collectible roster — every species variant reached so far, with its rolled hue. */
+    val collection: List<CollectedMonster> = emptyList()
 )

@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { App } from './app';
-import { MonsterStoreService, MonsterState, StudyTask, ExamRef } from './services/monster-store.service';
+import { MonsterStoreService, MonsterState, StudyTask, ExamRef, CollectedMonster } from './services/monster-store.service';
 import { isValidIsoDate, formatExamDateDisplay } from './components/exam-portfolio/exam-portfolio.component';
 
 /**
@@ -46,6 +46,8 @@ function createMockStore() {
     addExam: vi.fn(),
     updateExam: vi.fn(),
     removeExam: vi.fn(),
+    finishExam: vi.fn(),
+    collection: signal<CollectedMonster[]>([]),
   };
 }
 
