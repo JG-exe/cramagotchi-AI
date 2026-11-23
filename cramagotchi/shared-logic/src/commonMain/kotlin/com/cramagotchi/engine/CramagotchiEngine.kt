@@ -375,11 +375,14 @@ object CramagotchiEngine {
     }
 
     /**
-     * The "I'm done with this" chip action: removes the deadline/exam from
-     * the portfolio (like [removeExam]) and feeds the monster the awarded
-     * XP, with the early-finish bonus from [earlyFinishXp]. Unknown ids are
-     * a no-op. Unparsable dates award the base amount — never a crash or a
-     * punishment. An evolution crossed while finishing unlocks the species.
+     * The "I'm done with this" chip action — **deadline only**: EXAM entries
+     * can never be finished in advance (the exam day itself is the
+     * milestone; finishing one is a no-op). For deadlines this removes the
+     * entry from the portfolio (like [removeExam]) and feeds the monster
+     * the awarded XP, with the early-finish bonus from [earlyFinishXp].
+     * Unknown ids are a no-op. Unparsable dates award the base amount —
+     * never a crash or a punishment. An evolution crossed while finishing
+     * unlocks the species.
      */
     fun finishExam(
         state: AppState,
@@ -388,6 +391,7 @@ object CramagotchiEngine {
         hueRng: Double = 0.5
     ): AppState {
         val exam = state.exams.firstOrNull { it.id == examId } ?: return state
+        if (exam.kind == ExamKind.EXAM) return state
         val todayDay = kotlin.math.floor(now / MILLIS_PER_DAY)
         val daysRemaining = isoDaysFromCivil(exam.dateIso)
             ?.let { (it - todayDay).toInt() }
@@ -441,7 +445,8 @@ object CramagotchiEngine {
         hueRng: Double
     ): AppState {
         var next = state
-        for (stage in EvolutionStage.entries) {
+        // values() not entries: .entries is buggy at runtime on Kotlin/JS 2.0.21
+        for (stage in EvolutionStage.values()) {
             if (stage.level > oldStage.level && stage.level <= newStage.level) {
                 val stirred = (hueRng + stage.level * 0.13) % 1.0
                 next = unlockCollectible(next, stage.name, now, stirred)
