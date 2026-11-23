@@ -14,6 +14,9 @@ object CramagotchiEngine {
     private const val ID_PREFIX = "task-"
     private const val EXAM_ID_PREFIX = "exam-"
 
+    /** Golden-ratio stir for the graduation hue roll — decorrelated from the roster rolls. */
+    private const val GOLDEN_STIR = 0.618034
+
     /**
      * Derive the next task ID from the highest existing numeric suffix.
      * Keeps IDs collision-free even after a state restore from storage,
@@ -34,8 +37,8 @@ object CramagotchiEngine {
         return EXAM_ID_PREFIX + (highest + 1)
     }
 
-    /** Create a fresh AppState with the given monster name and current timestamp. */
-    fun createInitialState(monsterName: String, now: Double): AppState {
+    /** Create a fresh AppState: seed roster, egg hue rolled from `seedHueRng`. */
+    fun createInitialState(monsterName: String, now: Double, seedHueRng: Double = 0.5): AppState {
         return AppState(
             tasks = emptyArray(),
             monster = MonsterState(
@@ -43,7 +46,11 @@ object CramagotchiEngine {
                 xp = 0,
                 stage = EvolutionStage.EGG,
                 status = MonsterStatus.IDLE,
-                lastFedAt = now
+                lastFedAt = now,
+                hue = hueFrom(seedHueRng)
+            ),
+            collection = listOf(
+                CollectedMonster(EvolutionStage.EGG.name, hueFrom(seedHueRng), now)
             )
         )
     }
@@ -73,6 +80,42 @@ object CramagotchiEngine {
     }
 
     /**
+     * Edit an uncompleted task in place: replaces the title, subject tag,
+     * weight and time estimate. Completed tasks are immutable (their awarded
+     * XP and history must stay consistent), so the call is a no-op for them.
+     * A blank/trimmed-empty title keeps the previous value — the engine
+     * never corrupts the task. A null or non-positive estimate clears the
+     * estimate (the caller sends the complete edit form, so null means
+     * "no estimate", never "leave old value").
+     */
+    fun updateTask(
+        state: AppState,
+        taskId: String,
+        title: String,
+        weight: TaskWeight,
+        subjectTag: String? = null,
+        estimatedMinutes: Double? = null
+    ): AppState {
+        val taskIndex = state.tasks.indexOfFirst { it.id == taskId }
+        if (taskIndex == -1) return state
+        val task = state.tasks[taskIndex]
+        if (task.completed) return state
+
+        val trimmedTitle = title.trim().takeIf { it.isNotEmpty() } ?: task.title
+        val safeEstimate = estimatedMinutes?.takeIf { it > 0 }
+        val cleanTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() }
+
+        val updatedTasks = state.tasks.copyOf()
+        updatedTasks[taskIndex] = task.copy(
+            title = trimmedTitle,
+            weight = weight,
+            subjectTag = cleanTag,
+            estimatedMinutes = safeEstimate
+        )
+        return state.copy(tasks = updatedTasks)
+    }
+
+    /**
      * Mark a task as completed: award XP, feed the monster, start eat/sleep cycle.
      *
      * XP = round(base × timeVariation × accuracyBonus):
@@ -91,7 +134,8 @@ object CramagotchiEngine {
         taskId: String,
         now: Double,
         actualMinutes: Double? = null,
-        rng: Double = 0.5
+        rng: Double = 0.5,
+        hueRng: Double = 0.5
     ): AppState {
         val taskIndex = state.tasks.indexOfFirst { it.id == taskId }
         if (taskIndex == -1) return state
@@ -120,17 +164,30 @@ object CramagotchiEngine {
         val newXp = state.monster.xp + awardedXp
         val newStage = calculateEvolution(newXp)
 
-        // Determine monster status and timers
-        val monster = state.monster
-        val newMonster = if (monster.status == MonsterStatus.SLEEPING) {
-            // Anti-distraction lock: award XP but keep sleeping, don't reset timer
-            monster.copy(
-                xp = newXp,
-                stage = newStage,
-                lastFedAt = now
-            )
+        var next = state.copy(
+            tasks = updatedTasks,
+            monster = feedMonster(state.monster, newXp, newStage, now)
+        )
+        return graduateIfNeeded(
+            unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng),
+            now, hueRng
+        )
+    }
+
+    /**
+     * The feeding side-effect of every XP award: a SLEEPING monster quietly
+     * banks the XP (anti-distraction lock — the sleep timer is untouched),
+     * anything else starts the 3 s EATING → 25 min SLEEPING cycle.
+     */
+    private fun feedMonster(
+        monster: MonsterState,
+        newXp: Int,
+        newStage: EvolutionStage,
+        now: Double
+    ): MonsterState {
+        return if (monster.status == MonsterStatus.SLEEPING) {
+            monster.copy(xp = newXp, stage = newStage, lastFedAt = now)
         } else {
-            // Normal feeding: start eat → sleep cycle
             monster.copy(
                 xp = newXp,
                 stage = newStage,
@@ -140,11 +197,6 @@ object CramagotchiEngine {
                 sleepUntil = now + 1_503_000.0
             )
         }
-
-        return state.copy(
-            tasks = updatedTasks,
-            monster = newMonster
-        )
     }
 
     /** Delete a task by ID (only uncompleted tasks). */
@@ -242,12 +294,38 @@ object CramagotchiEngine {
             .minOrNull()
     }
 
-    /** Add an exam to the portfolio, with a unique id. */
-    fun addExam(state: AppState, subjectTag: String?, dateIso: String, now: Double): AppState {
+    /**
+     * The nearest UPCOMING exam/deadline entry (examDay >= today), or null
+     * when nothing is upcoming. Ties resolve to the earliest-added entry,
+     * matching the "nearest days" count of [nearestExamDays]. Used by the
+     * UI so the countdown can name the right item (exam vs deadline).
+     */
+    fun nearestUpcomingExam(state: AppState, now: Double): Exam? {
+        val todayDay = kotlin.math.floor(now / MILLIS_PER_DAY)
+        return state.exams
+            .mapNotNull { exam ->
+                isoDaysFromCivil(exam.dateIso)
+                    ?.let { (it - todayDay).toInt() }
+                    ?.takeIf { it >= 0 }
+                    ?.let { exam to it }
+            }
+            .minByOrNull { (_, days) -> days }
+            ?.first
+    }
+
+    /** Add an exam or deadline to the portfolio, with a unique id. Deadlines are the default kind. */
+    fun addExam(
+        state: AppState,
+        subjectTag: String?,
+        dateIso: String,
+        now: Double,
+        kind: ExamKind = ExamKind.DEADLINE
+    ): AppState {
         val exam = Exam(
             id = nextExamId(state),
             subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
-            dateIso = dateIso
+            dateIso = dateIso,
+            kind = kind
         )
         return state.copy(exams = state.exams + exam)
     }
@@ -255,6 +333,186 @@ object CramagotchiEngine {
     /** Remove an exam from the portfolio by id; the remaining exams keep their data. */
     fun removeExam(state: AppState, examId: String): AppState {
         return state.copy(exams = state.exams.filter { it.id != examId })
+    }
+
+    /**
+     * Edit an existing exam/deadline in place: subject tag, date and kind.
+     * Unknown ids are a no-op. A blank subject clears it; the date is
+     * stored verbatim (the UI validates the `YYYY-MM-DD` shape, and the
+     * countdown already tolerates an unparseable date by skipping it).
+     */
+    fun updateExam(
+        state: AppState,
+        examId: String,
+        subjectTag: String?,
+        dateIso: String,
+        kind: ExamKind = ExamKind.DEADLINE
+    ): AppState {
+        val index = state.exams.indexOfFirst { it.id == examId }
+        if (index == -1) return state
+        val updated = state.exams.toMutableList()
+        updated[index] = updated[index].copy(
+            subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
+            dateIso = dateIso,
+            kind = kind
+        )
+        return state.copy(exams = updated)
+    }
+
+    /* ── Early-finish XP & the collectible roster ─────────────── */
+
+    /** Base XP for finishing a deadline/exam (a MEAL-sized study milestone). */
+    const val BASE_FINISH_XP = 25
+
+    /**
+     * Total XP for finishing a dated item, tiered by the whole days still
+     * remaining until its date (today-relative, same countdown basis as
+     * [nearestExamDays]). The earlier the finish, the bigger the bonus;
+     * on/after the due day there is no bonus (zero punishment — never a
+     * penalty), just the base reward.
+     */
+    fun earlyFinishXp(daysRemaining: Int): Int {
+        val bonus = when {
+            daysRemaining <= 0 -> 0
+            daysRemaining <= 2 -> 10
+            daysRemaining <= 6 -> 20
+            else -> 35
+        }
+        return BASE_FINISH_XP + bonus
+    }
+
+    /**
+     * The "I'm done with this" chip action — **deadline only**: EXAM entries
+     * can never be finished in advance (the exam day itself is the
+     * milestone; finishing one is a no-op). For deadlines this removes the
+     * entry from the portfolio (like [removeExam]) and feeds the monster
+     * the awarded XP, with the early-finish bonus from [earlyFinishXp].
+     * Unknown ids are a no-op. Unparsable dates award the base amount —
+     * never a crash or a punishment. An evolution crossed while finishing
+     * unlocks the species.
+     */
+    fun finishExam(
+        state: AppState,
+        examId: String,
+        now: Double,
+        hueRng: Double = 0.5
+    ): AppState {
+        val exam = state.exams.firstOrNull { it.id == examId } ?: return state
+        if (exam.kind == ExamKind.EXAM) return state
+        val todayDay = kotlin.math.floor(now / MILLIS_PER_DAY)
+        val daysRemaining = isoDaysFromCivil(exam.dateIso)
+            ?.let { (it - todayDay).toInt() }
+            ?: 0
+        val newXp = state.monster.xp + earlyFinishXp(daysRemaining)
+        val newStage = calculateEvolution(newXp)
+
+        val next = state.copy(
+            exams = state.exams.filter { it.id != examId },
+            monster = feedMonster(state.monster, newXp, newStage, now)
+        )
+        return graduateIfNeeded(
+            unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng),
+            now, hueRng
+        )
+    }
+
+    /**
+     * Collect a species variant with a random hue rolled from the caller's
+     * `hueRng` (∈ [0,1) → hue ∈ [0,360)). The roster holds a species at most
+     * once — the first hue sticks and is persisted with the save, so a
+     * creature never re-rolls. Unknown species ids are accepted (the engine
+     * does not police the catalog).
+     */
+    fun unlockCollectible(
+        state: AppState,
+        speciesId: String,
+        now: Double,
+        hueRng: Double = 0.5
+    ): AppState {
+        if (state.collection.any { it.speciesId == speciesId }) return state
+        return state.copy(
+            collection = state.collection + CollectedMonster(speciesId, hueFrom(hueRng), now)
+        )
+    }
+
+    /** Map an rng double to a hue, coerced into [0, 359] (overflow callers can't crash it). */
+    private fun hueFrom(rng: Double): Int {
+        val unit = rng.coerceIn(0.0, 0.999999)
+        return (unit * 360.0).toInt()
+    }
+
+    /**
+     * Graduation: the moment the active monster reaches the max stage the
+     * species is already collected (the roster unlock ran first), so the
+     * creature "moves on" and a brand-new one is instantiated — fresh EGG,
+     * xp reset to 0, IDLE with cleared timers, and a new hue rolled with a
+     * golden-ratio stir of the caller's rng so the next creature is visibly
+     * different. Sub-max stages return the state unchanged.
+     */
+    private fun graduateIfNeeded(state: AppState, now: Double, hueRng: Double): AppState {
+        if (state.monster.stage != EvolutionStage.GRADUATED_BEAST) return state
+        val newHue = hueFrom((hueRng + GOLDEN_STIR) % 1.0)
+        return state.copy(
+            monster = state.monster.copy(
+                xp = 0,
+                stage = EvolutionStage.EGG,
+                status = MonsterStatus.IDLE,
+                lastFedAt = now,
+                eatingUntil = null,
+                sleepUntil = null,
+                hue = newHue
+            )
+        )
+    }
+
+    /**
+     * Legacy-save reconciliation: older saves carried no roster (or a roster
+     * seeded only with EGG) while the monster's stage kept advancing. This
+     * backfills every species at or below the monster's current stage —
+     * first hue wins, so existing entries and their hues are never touched —
+     * and tints a hue-less active monster from its stage's roster entry so
+     * the main card matches the collection. Call once right after loading a
+     * save; a fully-populated save passes through unchanged.
+     */
+    fun reconcileCollection(state: AppState, hueRng: Double = 0.5): AppState {
+        var next = state
+        for (stage in EvolutionStage.values()) {
+            if (stage.level <= state.monster.stage.level) {
+                next = unlockCollectible(
+                    next, stage.name, state.monster.lastFedAt,
+                    (hueRng + stage.level * 0.13) % 1.0
+                )
+            }
+        }
+        if (next.monster.hue == null) {
+            val entry = next.collection.firstOrNull { it.speciesId == next.monster.stage.name }
+            if (entry != null) next = next.copy(monster = next.monster.copy(hue = entry.hue))
+        }
+        return next
+    }
+
+    /**
+     * Collect every stage species newly reached between the old and new
+     * stage (handles multi-stage jumps from stale legacy saves). Each
+     * simultaneously-unlocked species gets its own hue by stirring the
+     * caller's rng with the stage level.
+     */
+    private fun unlockSpeciesForEvolution(
+        state: AppState,
+        oldStage: EvolutionStage,
+        newStage: EvolutionStage,
+        now: Double,
+        hueRng: Double
+    ): AppState {
+        var next = state
+        // values() not entries: .entries is buggy at runtime on Kotlin/JS 2.0.21
+        for (stage in EvolutionStage.values()) {
+            if (stage.level > oldStage.level && stage.level <= newStage.level) {
+                val stirred = (hueRng + stage.level * 0.13) % 1.0
+                next = unlockCollectible(next, stage.name, now, stirred)
+            }
+        }
+        return next
     }
 
     private const val MILLIS_PER_DAY = 86_400_000.0

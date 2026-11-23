@@ -13,3 +13,4 @@ If you want to add more sections, please do so after the existing ones (avoid bu
 ## Sources 🗃️
 
 - agents.md setup and defining the project: [gemini](https://share.gemini.google/pH1UTPTy4APD)
+- further setup for md files: [gemini](https://share.gemini.google/LhrH7Tx3mXLS)

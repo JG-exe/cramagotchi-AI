@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { App } from './app';
-import { MonsterStoreService, MonsterState, StudyTask, ExamRef } from './services/monster-store.service';
+import { MonsterStoreService, MonsterState, StudyTask, ExamRef, CollectedMonster } from './services/monster-store.service';
 import { subjectHue } from './components/task-queue/task-queue.component';
 
 /**
@@ -46,6 +46,16 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     return dayCountdown();
   });
 
+  // Nearest upcoming exam/deadline entry (exam day >= today), or null.
+  const nearestExam = computed<ExamRef | null>(() => {
+    const today = new Date().setHours(0, 0, 0, 0);
+    const upcoming = exams()
+      .map(e => ({ e, days: Math.ceil((new Date(e.dateIso).setHours(0, 0, 0, 0) - today) / (1000 * 60 * 60 * 24)) }))
+      .filter(x => x.days >= 0);
+    if (upcoming.length === 0) return null;
+    return upcoming.reduce((a, b) => (a.days <= b.days ? a : b)).e;
+  });
+
   return {
     monster,
     tasks,
@@ -53,6 +63,7 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     exams,
     dayTick: signal(0),
     nearestExamDays: nearest,
+    nearestUpcomingExam: nearestExam,
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
     devouredTasks: computed(() => tasks().filter(t => t.completed)),
     examCountdownDays: dayCountdown,
@@ -64,11 +75,17 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
       return { current: xp, next: xp, percent: 100 };
     }),
     addTask: vi.fn(),
+    updateTask: vi.fn(),
     completeTaskWithTime: vi.fn(),
     deleteTask: vi.fn(),
     setExamDate: vi.fn(),
     addExam: vi.fn(),
+    updateExam: vi.fn(),
     removeExam: vi.fn(),
+    finishExam: vi.fn(),
+    collection: signal<CollectedMonster[]>([
+      { speciesId: 'EGG', hue: 204, collectedAt: 0 },
+    ]),
   };
 }
 
@@ -270,7 +287,8 @@ describe('App (root component)', () => {
     dateInput!.dispatchEvent(new Event('change'));
     addBtn!.click();
 
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5));
+    // Deadline is the default kind — a plain add never creates an EXAM
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'DEADLINE');
   });
 
   // ── Test 10: Completing passes the recorded actual minutes ──
@@ -345,6 +363,322 @@ describe('App (root component)', () => {
     submitBtn?.click();
 
     expect(mockStore.addTask).toHaveBeenCalledWith('Read Chapter 5', 'SNACK', undefined, 40);
+  });
+
+  // ── Test 13: Deadlines are the default; the toggle escalates to EXAM ──
+
+  it('should create a high-stakes EXAM when the kind toggle is switched to Exam', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    // Deadline is the active option by default (sliding toggle's active side)
+    expect(
+      compiled.querySelector('[data-testid="exam-kind-deadline"]')?.classList
+    ).toContain('toggle-option-active');
+
+    // Flip the kind to EXAM
+    const examOption = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-kind-exam"]');
+    expect(examOption).toBeTruthy();
+    examOption!.click();
+    fixture.detectChanges();
+
+    const subjectInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-subject"]');
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]');
+    subjectInput!.value = 'MATH';
+    subjectInput!.dispatchEvent(new Event('input'));
+    dateInput!.value = isoDaysFromNow(5);
+    dateInput!.dispatchEvent(new Event('change'));
+
+    const addBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]');
+    addBtn!.click();
+
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'EXAM');
+  });
+
+  // ── Test 14: Chips show the kind; "Due" vs the escalated "Exam" ──
+
+  it('should show a Due tag for deadlines and a stronger Exam tag for exams', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([
+      makeExam('exam-1', 9, 'BIO'),
+      { id: 'exam-2', subjectTag: 'MATH', dateIso: isoDaysFromNow(3), kind: 'EXAM' },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const chips = compiled.querySelectorAll('[data-testid="exam-chip"]');
+    expect(chips.length).toBe(2);
+
+    const highChip = compiled.querySelector('.exam-chip-high');
+    expect(highChip?.textContent).toContain('Exam');
+    // The plain deadline chip still shows its muted Due tag
+    const lowChip = Array.from(chips).find(c => !c.classList.contains('exam-chip-high'));
+    expect(lowChip?.textContent).toContain('Due');
+  });
+
+  // ── Test 15: Countdown names the nearest item explicitly ──
+
+  it('should say "deadline" or "exam" in the countdown depending on the nearest item', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([makeExam('exam-1', 3, 'BIO')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    let fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-countdown"]')?.textContent)
+      .toContain('deadline');
+
+    mockStore.exams.set([
+      { id: 'exam-1', subjectTag: 'BIO', dateIso: isoDaysFromNow(3), kind: 'EXAM' },
+    ]);
+    fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-countdown"]')?.textContent)
+      .toContain('exam');
+  });
+
+  // ── Test 16: Active tasks can be edited in place ─────────
+
+  it('should open an inline edit form and call store.updateTask() on save', () => {
+    mockStore = createMockStore();
+    mockStore.tasks.set([makeTask('Old title', 'Old subj', { estimatedMinutes: 30 })]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const editBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-btn"]');
+    expect(editBtn).toBeTruthy();
+    editBtn!.click();
+    fixture.detectChanges();
+
+    const titleInput = compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-title"]');
+    expect(titleInput?.value).toBe('Old title'); // pre-filled with current values
+    const subjectInput = compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-subject"]');
+    expect(subjectInput?.value).toBe('Old subj');
+
+    titleInput!.value = '  New title  ';
+    titleInput!.dispatchEvent(new Event('input'));
+    subjectInput!.value = 'New subject';
+    subjectInput!.dispatchEvent(new Event('input'));
+
+    const saveBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-save"]');
+    expect(saveBtn?.disabled).toBe(false);
+    saveBtn!.click();
+
+    expect(mockStore.updateTask).toHaveBeenCalledWith(
+      expect.any(String), 'New title', expect.anything(), 'New subject', expect.anything()
+    );
+  });
+
+  // ── Test 17: Blank title can never overwrite a task ──────
+
+  it('should keep the save button disabled while the edited title is blank', () => {
+    mockStore = createMockStore();
+    mockStore.tasks.set([makeTask('Real title')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-btn"]')!.click();
+    fixture.detectChanges();
+
+    const titleInput = compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-title"]');
+    titleInput!.value = '   ';
+    titleInput!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const saveBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-save"]');
+    expect(saveBtn?.disabled).toBe(true);
+    expect(mockStore.updateTask).not.toHaveBeenCalled();
+  });
+
+  // ── Test 18: Deadline chips can be edited (subject/date/kind) ──
+
+  it('should open the chip edit form pre-filled and call store.updateExam() on save', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([makeExam('exam-1', 9, 'BIO')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const editBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-chip-edit"]');
+    expect(editBtn).toBeTruthy();
+    editBtn!.click();
+    fixture.detectChanges();
+
+    const subjectInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-edit-subject"]');
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-edit-date"]');
+    expect(subjectInput?.value).toBe('BIO'); // pre-filled with current values
+
+    subjectInput!.value = 'BIO 201';
+    subjectInput!.dispatchEvent(new Event('input'));
+    dateInput!.value = isoDaysFromNow(12);
+    dateInput!.dispatchEvent(new Event('change'));
+
+    // Escalate to a high-stakes EXAM via the kind toggle in the edit form
+    const examOption = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-edit-kind-exam"]');
+    expect(examOption).toBeTruthy();
+    examOption!.click();
+    fixture.detectChanges();
+
+    const saveBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-edit-save"]');
+    expect(saveBtn).toBeTruthy();
+    saveBtn!.click();
+
+    expect(mockStore.updateExam).toHaveBeenCalledWith('exam-1', 'BIO 201', isoDaysFromNow(12), 'EXAM');
+  });
+
+  // ── Desktop fallback calendar (engines without native showPicker) ──
+
+  it('should open the fallback calendar from the calendar button when showPicker is unavailable', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeNull();
+
+    const pickerBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]');
+    expect(pickerBtn).toBeTruthy();
+    pickerBtn!.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeTruthy();
+    expect(compiled.querySelector('[data-testid="date-calendar-day"]')).toBeTruthy();
+  });
+
+  it('should apply the fallback-picked date to the add form and close the calendar', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]')!.click();
+    fixture.detectChanges();
+
+    const enabledDays = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('[data-testid="date-calendar-day"]'),
+    ).filter((btn) => !btn.disabled && !btn.classList.contains('date-cell-muted'));
+    expect(enabledDays.length).toBeGreaterThan(0);
+    enabledDays[enabledDays.length - 1]!.click();
+    fixture.detectChanges();
+
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]');
+    expect(dateInput?.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeNull();
+  });
+
+  it('should close the fallback calendar via the backdrop without changing the date', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]')!.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeTruthy();
+
+    const backdrop = compiled.querySelector<HTMLElement>('[data-testid="date-calendar-backdrop"]');
+    expect(backdrop).toBeTruthy();
+    backdrop!.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeNull();
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]');
+    expect(dateInput?.value).toBe('');
+  });
+
+  it('should navigate fallback-calendar months via prev/next', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]')!.click();
+    fixture.detectChanges();
+
+    const title = () =>
+      compiled.querySelector<HTMLElement>('[data-testid="date-fallback-calendar"] .date-fallback-title')?.textContent?.trim();
+    const before = title();
+    expect(before).toBeTruthy();
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="date-calendar-next"]')!.click();
+    fixture.detectChanges();
+    const afterNext = title();
+    expect(afterNext).not.toBe(before);
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="date-calendar-prev"]')!.click();
+    compiled.querySelector<HTMLButtonElement>('[data-testid="date-calendar-prev"]')!.click();
+    fixture.detectChanges();
+    expect(title()).not.toBe(afterNext);
+  });
+
+  // ── Finish-in-advance: deadline-only chip action ──────────
+
+  it('should call store.finishExam() from the Finish button on a DEADLINE chip', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([makeExam('exam-1', 9, 'HISTORY')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const finishBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-chip-finish"]');
+    expect(finishBtn).toBeTruthy();
+    expect(finishBtn!.textContent?.trim()).toBe('Finish');
+    finishBtn!.click();
+
+    expect(mockStore.finishExam).toHaveBeenCalledWith('exam-1');
+  });
+
+  it('should NOT render the Finish button on high-stakes EXAM chips', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([
+      { id: 'exam-1', subjectTag: 'HISTORY', dateIso: isoDaysFromNow(9), kind: 'DEADLINE' },
+      { id: 'exam-2', subjectTag: 'MATH', dateIso: isoDaysFromNow(9), kind: 'EXAM' },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelectorAll('[data-testid="exam-chip"]').length).toBe(2);
+    expect(compiled.querySelectorAll('[data-testid="exam-chip-finish"]').length).toBe(1);
+  });
+
+  // ── Collectible monster roster gallery ───────────────────
+
+  it('should render one gallery tile per collected monster with its rolled hue', () => {
+    mockStore = createMockStore();
+    mockStore.collection.set([
+      { speciesId: 'EGG', hue: 204, collectedAt: 1 },
+      { speciesId: 'HATCHLING', hue: 12, collectedAt: 2 },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const items = compiled.querySelectorAll<HTMLElement>('[data-testid="collection-item"]');
+    expect(items.length).toBe(2);
+
+    const first = items[0]!;
+    expect(first.getAttribute('data-species')).toBe('EGG');
+    // hue lands as a per-instance --stage-fill override on the shared symbols
+    expect(first.getAttribute('style')).toContain('hsl(204');
+    expect(first.textContent).toContain('Egg');
+
+    expect(items[1]!.getAttribute('style')).toContain('hsl(12');
+    expect(items[1]!.textContent).toContain('Hatchling');
   });
 });
 

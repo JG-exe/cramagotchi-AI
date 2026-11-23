@@ -11,6 +11,8 @@ type KmpAppState = import('../../assets/kmp/cramagotchi-shared-logic.js').com.cr
 export type TaskWeight = 'SNACK' | 'MEAL';
 export type MonsterStatus = 'IDLE' | 'HUNGRY' | 'EATING' | 'SLEEPING';
 export type EvolutionStage = 'EGG' | 'HATCHLING' | 'SCHOLAR' | 'GRADUATED_BEAST';
+/** Every dated item is a DEADLINE by default; EXAM is the high-stakes upgrade. */
+export type ExamKind = 'DEADLINE' | 'EXAM';
 
 export interface StudyTask {
   id: string;
@@ -26,11 +28,12 @@ export interface StudyTask {
   awardedXp?: number | null;
 }
 
-/** One upcoming exam, as exposed to the UI. */
+/** One upcoming exam or deadline, as exposed to the UI. */
 export interface ExamRef {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  kind?: ExamKind;
 }
 
 export interface MonsterState {
@@ -41,12 +44,23 @@ export interface MonsterState {
   lastFedAt: number;
   eatingUntil?: number;
   sleepUntil?: number;
+  /** The active creature's own tint (∈ 0..359); undefined on legacy saves until reconciled. */
+  hue?: number;
+}
+
+/** One entry in the collectible monster roster (species + its rolled hue). */
+export interface CollectedMonster {
+  speciesId: string;
+  /** Random tint rolled once at acquisition, persisted forever. */
+  hue: number;
+  collectedAt: number;
 }
 
 export interface AppState {
   tasks: StudyTask[];
   monster: MonsterState;
   exams?: ExamRef[];
+  collection?: CollectedMonster[];
 }
 
 /**
@@ -58,7 +72,7 @@ export interface AppState {
 export class MonsterStoreService {
   /** KMP state — single source of truth. */
   private readonly kmpState = signal<KmpAppState>(
-    Engine.createInitialState('Munch', Date.now())
+    Engine.createInitialState('Munch', Date.now(), Math.random())
   );
 
   readonly monster = computed<MonsterState>(() =>
@@ -83,6 +97,18 @@ export class MonsterStoreService {
     this.dayTick(); // re-evaluate when the interval ticks
     return Engine.nearestExamDays(this.kmpState(), Date.now()) ?? null;
   });
+
+  /** Nearest upcoming exam/deadline entry (exam day >= today), or null. */
+  readonly nearestUpcomingExam = computed<ExamRef | null>(() => {
+    this.dayTick();
+    const nearest = Engine.nearestUpcomingExam(this.kmpState(), Date.now());
+    return nearest ? toExamRef(nearest) : null;
+  });
+
+  /** Collectible roster — every species variant the user has reached. */
+  readonly collection = computed<CollectedMonster[]>(() =>
+    this.kmpState().collection.asJsReadonlyArrayView().map(toCollectedMonster)
+  );
 
   /** Active (uncompleted) tasks */
   readonly activeTasks = computed(() => this.tasks().filter(t => !t.completed));
@@ -134,6 +160,34 @@ export class MonsterStoreService {
     this.persistToStorage();
   }
 
+  /**
+   * Edit an uncompleted task: replaces title/weight/subject/estimate.
+   * Delegates to the engine — completed tasks and unknown ids are no-ops.
+   */
+  updateTask(
+    taskId: string,
+    title: string,
+    weight: TaskWeight,
+    subjectTag?: string | null,
+    estimatedMinutes?: number | null
+  ): void {
+    const trimmed = title.trim();
+    if (!trimmed) return; // never push an empty title into the engine
+
+    const kmpWeight = weight === 'SNACK' ? Model.TaskWeight.SNACK : Model.TaskWeight.MEAL;
+    this.kmpState.set(
+      Engine.updateTask(
+        this.kmpState(),
+        taskId,
+        trimmed,
+        kmpWeight,
+        subjectTag?.trim() || null,
+        estimatedMinutes ?? null
+      )
+    );
+    this.persistToStorage();
+  }
+
   completeTask(taskId: string): void {
     this.completeTaskWithTime(taskId, null);
   }
@@ -145,14 +199,35 @@ export class MonsterStoreService {
    */
   completeTaskWithTime(taskId: string, actualMinutes: number | null): void {
     this.kmpState.set(
-      Engine.completeTask(this.kmpState(), taskId, Date.now(), actualMinutes, Math.random())
+      Engine.completeTask(this.kmpState(), taskId, Date.now(), actualMinutes, Math.random(), Math.random())
     );
     this.persistToStorage();
   }
 
-  /** Add an exam (subject label optional) to the exam portfolio. */
-  addExam(subjectTag: string | null, dateIso: string): void {
-    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now()));
+  /**
+   * The "I'm done with this" action for a deadline/exam: removes the entry
+   * and feeds the monster, with bonus XP the earlier it is finished
+   * (engine-side tiers; nothing on/after the due day beyond the base).
+   */
+  finishExam(examId: string): void {
+    this.kmpState.set(
+      Engine.finishExam(this.kmpState(), examId, Date.now(), Math.random())
+    );
+    this.persistToStorage();
+  }
+
+  /** Add an exam or deadline (subject label optional); deadline is the default kind. */
+  addExam(subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+    const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
+    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now(), kmpKind));
+    this.persistToStorage();
+  }
+
+  /** Edit an exam/deadline in place: subject, date and kind. */
+  updateExam(examId: string, subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+    if (!dateIso) return;
+    const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
+    this.kmpState.set(Engine.updateExam(this.kmpState(), examId, subjectTag, dateIso, kmpKind));
     this.persistToStorage();
   }
 
@@ -197,10 +272,19 @@ export class MonsterStoreService {
     if (typeof localStorage === 'undefined') return;
     try {
       const raw = localStorage.getItem(Storage.STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) {
+        // First run: persist immediately so the freshly rolled egg hue
+        // and roster seed survive the next reload.
+        this.persistToStorage();
+        return;
+      }
       const restored = Storage.deserialize(raw);
       if (restored) {
-        this.kmpState.set(restored);
+        // Legacy saves: backfill the roster (species at/below the monster's
+        // stage) and the active monster's hue, then persist the backfill so
+        // it sticks across reloads.
+        this.kmpState.set(Engine.reconcileCollection(restored, Math.random()));
+        this.persistToStorage();
         // Immediately evaluate offline elapsed time
         this.evaluateTime(Date.now());
       }
@@ -220,6 +304,7 @@ function toMonsterState(m: KmpAppState['monster']): MonsterState {
     lastFedAt: m.lastFedAt,
     eatingUntil: m.eatingUntil ?? undefined,
     sleepUntil: m.sleepUntil ?? undefined,
+    hue: m.hue ?? undefined,
   };
 }
 
@@ -241,12 +326,29 @@ type KmpExam = {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  kind?: { name: string } | string;
 };
 
 function toExamRef(e: KmpExam): ExamRef {
+  const kindName = typeof e.kind === 'string' ? e.kind : e.kind?.name;
   return {
     id: e.id,
     subjectTag: e.subjectTag ?? undefined,
     dateIso: e.dateIso,
+    kind: (kindName === 'EXAM' ? 'EXAM' : 'DEADLINE') as ExamKind,
+  };
+}
+
+type KmpCollectedMonster = {
+  speciesId: string;
+  hue: number;
+  collectedAt: number;
+};
+
+function toCollectedMonster(c: KmpCollectedMonster): CollectedMonster {
+  return {
+    speciesId: c.speciesId,
+    hue: c.hue,
+    collectedAt: c.collectedAt,
   };
 }

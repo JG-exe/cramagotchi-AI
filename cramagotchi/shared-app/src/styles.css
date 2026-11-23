@@ -26,3 +26,20 @@ body {
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Inline SVG button icons (pencil, close, check) — used instead of glyphs
+   so the JavaFX WebView (no symbol font) renders them identically */
+.btn-icon {
+  width: 0.85em;
+  height: 0.85em;
+  display: inline-block;
+  vertical-align: -0.08em;
+}
+
+/* Inline form rejection copy — calm, warm alarm tone (never harsh red) */
+.form-error {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: #A35D45;
+  color: color-mix(in srgb, var(--color-status-hungry) 70%, var(--color-espresso-dark));
+}

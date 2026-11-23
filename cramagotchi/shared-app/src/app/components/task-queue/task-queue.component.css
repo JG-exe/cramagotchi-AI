@@ -45,6 +45,28 @@
   align-items: flex-start;
 }
 
+/* Wrapper holds the title field plus its inline warning (testid task-form-error),
+   so the "name the task first" message sits directly under the title input. */
+.field-title-wrap {
+  flex: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.field-title-wrap .form-error {
+  margin: 0;
+  padding-left: var(--space-2xs, 4px);
+  max-width: 100%;
+}
+
+/* Inside the column wrapper the field sizes to the wrapper, not to the row. */
+.field-title-wrap .field-title {
+  flex: 0 1 auto;
+  width: 100%;
+}
+
 .field-title {
   flex: 3;
 }
@@ -77,15 +99,8 @@
   align-items: center;
 }
 
-.weight-selector {
-  display: flex;
-  gap: var(--space-2xs);
-  align-items: center;
-}
-
-.mat-mdc-radio-button label {
-  font-size: var(--text-xs);
-}
+/* Segment control: Snack vs Meal now lives in the shared
+   SlidingToggleComponent — one track, one thumb gliding between options. */
 
 /* ── Task list ─────────────────────────────────────────────────────── */
 .task-list {
@@ -175,6 +190,63 @@
   color: #5A795F;
   background: var(--tag-sage-bg);
   color: var(--tag-sage-fg);
+}
+
+/* Estimate badge: same neutral family as the minutes input. */
+.badge-estimate {
+  background: var(--color-surface-recessed,
+    color-mix(in srgb, var(--color-espresso-dark, #2C221E) 4%, var(--color-cream-base, #FAF6F0)));
+  color: var(--color-text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Edit + delete grouped on the card's trailing edge. */
+.task-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.btn-edit {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: 2px var(--space-2xs);
+  border-radius: var(--radius-sm);
+}
+
+.btn-edit:hover {
+  color: var(--color-text-primary);
+}
+
+/* Inline edit form: takes the card's place, calm recessed panel. */
+.task-edit-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface-recessed,
+    color-mix(in srgb, var(--color-espresso-dark, #2C221E) 4%, var(--color-cream-base, #FAF6F0)));
+  border-radius: var(--radius-sm);
+}
+
+.task-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.task-edit-row .weight-segmented {
+  margin-top: var(--space-2xs);
+}
+
+.task-edit-actions {
+  display: inline-flex;
+  gap: var(--space-xs);
 }
 
 /* Subject pills: deterministic per-tag hue, tonally mixed into the warm
