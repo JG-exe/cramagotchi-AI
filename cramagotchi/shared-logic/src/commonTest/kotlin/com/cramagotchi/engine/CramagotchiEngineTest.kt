@@ -250,4 +250,63 @@ class CramagotchiEngineTest {
             "IDs added after a restore must not collide with restored task IDs"
         )
     }
+
+    // ── Test 9: Exam countdown is computed by the KMP engine ──
+
+    /**
+     * agents.md §5 (Should Have): the exam countdown must be calculated via
+     * KMP logic, not in the UI layer. `examCountdownDays(state, now)` returns
+     * the whole-day difference between the UTC calendar day of `examDateIso`
+     * and the UTC calendar day of `now`, or null when no exam date is set.
+     */
+    private fun stateWithExamDate(examDateIso: String?): AppState =
+        CramagotchiEngine.createInitialState("Munch", baseTime)
+            .copy(examDateIso = examDateIso)
+
+    @Test
+    fun testExamCountdownReturnsNullWhenNoExamDate() {
+        assertNull(
+            CramagotchiEngine.examCountdownDays(stateWithExamDate(null), baseTime),
+            "No exam date configured → countdown must be null"
+        )
+    }
+
+    @Test
+    fun testExamCountdownCountsWholeCalendarDays() {
+        // 2026-12-01 12:00 UTC; exam on 2026-12-11 → exactly 10 days
+        val now = 1_796_126_400_000.0
+        val state = stateWithExamDate("2026-12-11")
+        assertEquals(
+            10,
+            CramagotchiEngine.examCountdownDays(state, now),
+            "Countdown must be whole calendar days, independent of time-of-day"
+        )
+
+        // Same exam date, evaluated later the same day (23:00 UTC) → still 10
+        val laterSameDay = now + 11 * 3_600_000.0
+        assertEquals(
+            10,
+            CramagotchiEngine.examCountdownDays(state, laterSameDay),
+            "Countdown must not drift within the same calendar day"
+        )
+    }
+
+    @Test
+    fun testExamCountdownIsZeroOnExamDayAndNegativeAfter() {
+        val state = stateWithExamDate("2026-12-11")
+
+        val examDayMorning = 1_796_976_000_000.0 // 2026-12-11 08:00 UTC
+        assertEquals(
+            0,
+            CramagotchiEngine.examCountdownDays(state, examDayMorning),
+            "On the exam day itself the countdown must read 0"
+        )
+
+        val dayAfter = examDayMorning + 24 * 3_600_000.0 // 2026-12-12 08:00 UTC
+        assertEquals(
+            -1,
+            CramagotchiEngine.examCountdownDays(state, dayAfter),
+            "After the exam day the countdown turns negative (exam missed)"
+        )
+    }
 }
