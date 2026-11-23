@@ -308,4 +308,53 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     // Garbage estimate must pass null (cleared), never the raw string
     expect(mockStore.updateTask.mock.calls[0][4]).toBeNull();
   });
+
+  it('formats digits as you type into strict YYYY-MM-DD', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const subjectInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-subject"]')!;
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!;
+    const addBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!;
+    const placeholderFormats = compiled.querySelectorAll<HTMLInputElement>(
+      '[data-testid="exam-input-date"][placeholder="YYYY-MM-DD"]'
+    );
+    expect(placeholderFormats.length).toBeGreaterThan(0); // expected shape always visible
+
+    subjectInput!.value = 'MATH';
+    subjectInput!.dispatchEvent(new Event('input'));
+
+    // Mid-typing: digits only — dashes are inserted automatically
+    dateInput!.value = '2026112';
+    dateInput!.dispatchEvent(new Event('input'));
+    expect(dateInput!.value).toBe('2026-11-2');
+
+    // A complete date passes straight through the mask to the engine
+    dateInput!.value = '20261128';
+    dateInput!.dispatchEvent(new Event('input'));
+    expect(dateInput!.value).toBe('2026-11-28');
+
+    addBtn!.click();
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', '2026-11-28', 'DEADLINE');
+  });
+
+  it('offers a native date-picker companion on the masked inputs', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    // one picker button + hidden picker <input type="date"> per date field
+    const pickerButtons = compiled.querySelectorAll('[data-testid="exam-date-picker-btn"]');
+    const hiddenPickers = compiled.querySelectorAll<HTMLInputElement>('input.date-picker-hidden');
+    expect(pickerButtons.length).toBe(1);
+    expect(hiddenPickers.length).toBe(1);
+
+    // picked dates land in the add form
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!;
+    const hiddenPicker = hiddenPickers[0]!;
+    hiddenPicker.value = '2026-12-05';
+    hiddenPicker.dispatchEvent(new Event('change'));
+    expect(dateInput.value).toBe('2026-12-05');
+  });
 });

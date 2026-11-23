@@ -252,3 +252,13 @@ Metric: **V** = done
 - V Verified: 32/32 `ng test`, `ng build` clean, JS re-synced, desktop bundle
   rebuilt, android + engine tests green. Desktop shows this structure on the
   user's next launch (new WebKit renders the card same as web).
+
+- V **Form polish (follow-up):** Deadline/Exam toggle and Snack/Meal toggle now
+  match the Material buttons' 40px control height; exam Add button switched
+  from a washed-out stroked style to the flat sage treatment (readable rest &
+  disabled states). Due/exam date fields: `DateMaskDirective` formats digits
+  as you type into `YYYY-MM-DD` (placeholder shows the expected shape) while a
+  calendar suffix button + click open the native date picker (`showPicker()`,
+  ideal on Android/mobile; engines without it fall back to typed input).
+  Separator garbage (e.g. `2026/02/10`) is never healed by the mask — the
+  validity guard still rejects it. Verified: 34/34 `ng test`, build clean.

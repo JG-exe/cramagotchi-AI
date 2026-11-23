@@ -5,6 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, ExamKind } from '../../services/monster-store.service';
+import { DateMaskDirective } from '../../shared/date-mask.directive';
 
 export function subjectTagToHue(subjectTag: string): number {
   let hash = 0;
@@ -32,7 +33,7 @@ export function isValidIsoDate(value: string): boolean {
 @Component({
   selector: 'app-exam-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, DateMaskDirective],
   templateUrl: './exam-portfolio.component.html',
   styleUrl: './exam-portfolio.component.css',
 })
@@ -52,6 +53,36 @@ export class ExamPortfolioComponent {
 
   /** True when the nearest upcoming dated item is the high-stakes EXAM kind. */
   readonly nearestIsExam = computed(() => this.store.nearestUpcomingExam()?.kind === 'EXAM');
+
+  /**
+   * Opens the browser/WebView native date picker from a click gesture
+   * (especially valuable on Android/mobile where typing is clumsy).
+   * Engines without `showPicker()` (older desktop WebKit) ignore this
+   * silently — the masked text input remains the fallback there.
+   */
+  openDatePicker(picker: HTMLInputElement | undefined, current: string): void {
+    if (!picker) return;
+    picker.value = current;
+    try {
+      (picker as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+    } catch {
+      // not a user gesture / unsupported engine — typed masked input still works
+    }
+  }
+
+  /** Native picker → add form (picker always yields strict `YYYY-MM-DD`). */
+  onPickedAddDate(iso: string, input: HTMLInputElement | undefined): void {
+    if (!iso || !isValidIsoDate(iso)) return;
+    this.examDateInput.set(iso);
+    if (input) input.value = iso;
+  }
+
+  /** Native picker → inline edit form. */
+  onPickedEditDate(iso: string, input: HTMLInputElement | undefined): void {
+    if (!iso || !isValidIsoDate(iso)) return;
+    this.editExamDate.set(iso);
+    if (input) input.value = iso;
+  }
 
   onAddExam(): void {
     const date = this.examDateInput();

@@ -38,15 +38,39 @@
               <mat-form-field appearance="outline" class="field-exam-date">
                 <mat-label>{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
                 <input
-                  type="date"
+                  #dateEditField
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="YYYY-MM-DD"
                   name="editExamDate"
                   matInput
+                  appDateMask
                   [value]="editExamDate()"
                   (input)="editExamDate.set($any($event.target).value)"
                   (change)="editExamDate.set($any($event.target).value)"
+                  (click)="openDatePicker(pickerEdit, editExamDate())"
                   data-testid="exam-edit-date"
                 />
+                <span matTextSuffix class="date-pick-suffix">
+                  <button
+                    type="button"
+                    class="date-pick-btn"
+                    (click)="openDatePicker(pickerEdit, editExamDate())"
+                    aria-label="Open date picker"
+                    data-testid="exam-date-picker-btn"
+                  >
+                    <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </button>
+                </span>
               </mat-form-field>
+              <input
+                #pickerEdit
+                type="date"
+                class="date-picker-hidden"
+                tabindex="-1"
+                aria-hidden="true"
+                (change)="onPickedEditDate(pickerEdit.value, dateEditField)"
+              />
               <div
                 class="kind-segmented"
                 role="radiogroup"
@@ -135,15 +159,39 @@
       <mat-form-field appearance="outline" class="field-exam-date">
         <mat-label>{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
         <input
-          type="date"
+          #dateAddField
+          type="text"
+          inputmode="numeric"
+          placeholder="YYYY-MM-DD"
           name="examDate"
           matInput
+          appDateMask
           [value]="examDateInput()"
           (input)="examDateInput.set($any($event.target).value)"
           (change)="examDateInput.set($any($event.target).value)"
+          (click)="openDatePicker(pickerAdd, examDateInput())"
           data-testid="exam-input-date"
         />
+        <span matTextSuffix class="date-pick-suffix">
+          <button
+            type="button"
+            class="date-pick-btn"
+            (click)="openDatePicker(pickerAdd, examDateInput())"
+            aria-label="Open date picker"
+            data-testid="exam-date-picker-btn"
+          >
+            <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </span>
       </mat-form-field>
+      <input
+        #pickerAdd
+        type="date"
+        class="date-picker-hidden"
+        tabindex="-1"
+        aria-hidden="true"
+        (change)="onPickedAddDate(pickerAdd.value, dateAddField)"
+      />
       <div class="exam-add-actions">
         <div
           class="kind-segmented"
@@ -168,7 +216,7 @@
         </div>
         <button
           type="submit"
-          mat-stroked-button
+          mat-flat-button
           class="btn-add-exam"
           data-testid="exam-add-btn"
         >
