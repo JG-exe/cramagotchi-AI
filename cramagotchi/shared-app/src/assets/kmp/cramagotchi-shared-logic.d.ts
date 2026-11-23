@@ -14,14 +14,17 @@ export declare namespace com.cramagotchi.engine {
     const CramagotchiEngine: {
         createInitialState(monsterName: string, now: number): com.cramagotchi.model.AppState;
         addTask(state: com.cramagotchi.model.AppState, title: string, weight: com.cramagotchi.model.TaskWeight, now: number, subjectTag?: Nullable<string>, estimatedMinutes?: Nullable<number>): com.cramagotchi.model.AppState;
+        updateTask(state: com.cramagotchi.model.AppState, taskId: string, title: string, weight: com.cramagotchi.model.TaskWeight, subjectTag?: Nullable<string>, estimatedMinutes?: Nullable<number>): com.cramagotchi.model.AppState;
         completeTask(state: com.cramagotchi.model.AppState, taskId: string, now: number, actualMinutes?: Nullable<number>, rng?: number): com.cramagotchi.model.AppState;
         deleteTask(state: com.cramagotchi.model.AppState, taskId: string): com.cramagotchi.model.AppState;
         evaluateTime(state: com.cramagotchi.model.AppState, now: number): com.cramagotchi.model.AppState;
         calculateEvolution(xp: number): com.cramagotchi.model.EvolutionStage;
         examCountdownDays(state: com.cramagotchi.model.AppState, now: number): Nullable<number>;
         nearestExamDays(state: com.cramagotchi.model.AppState, now: number): Nullable<number>;
-        addExam(state: com.cramagotchi.model.AppState, subjectTag: Nullable<string>, dateIso: string, now: number): com.cramagotchi.model.AppState;
+        nearestUpcomingExam(state: com.cramagotchi.model.AppState, now: number): Nullable<com.cramagotchi.model.Exam>;
+        addExam(state: com.cramagotchi.model.AppState, subjectTag: Nullable<string>, dateIso: string, now: number, kind?: com.cramagotchi.model.ExamKind): com.cramagotchi.model.AppState;
         removeExam(state: com.cramagotchi.model.AppState, examId: string): com.cramagotchi.model.AppState;
+        updateExam(state: com.cramagotchi.model.AppState, examId: string, subjectTag: Nullable<string>, dateIso: string, kind?: com.cramagotchi.model.ExamKind): com.cramagotchi.model.AppState;
     };
 }
 export declare namespace com.cramagotchi.model {
@@ -89,6 +92,21 @@ export declare namespace com.cramagotchi.model {
         static values(): Array<com.cramagotchi.model.EvolutionStage>;
         static valueOf(value: string): com.cramagotchi.model.EvolutionStage;
     }
+    abstract class ExamKind {
+        private constructor();
+        static get DEADLINE(): com.cramagotchi.model.ExamKind & {
+            get name(): "DEADLINE";
+            get ordinal(): 0;
+        };
+        static get EXAM(): com.cramagotchi.model.ExamKind & {
+            get name(): "EXAM";
+            get ordinal(): 1;
+        };
+        get name(): "DEADLINE" | "EXAM";
+        get ordinal(): 0 | 1;
+        static values(): Array<com.cramagotchi.model.ExamKind>;
+        static valueOf(value: string): com.cramagotchi.model.ExamKind;
+    }
     class StudyTask {
         constructor(id: string, title: string, subjectTag: Nullable<string> | undefined, weight: com.cramagotchi.model.TaskWeight, completed: boolean | undefined, createdAt: number, completedAt?: Nullable<number>, estimatedMinutes?: Nullable<number>, awardedXp?: Nullable<number>);
         get id(): string;
@@ -108,11 +126,12 @@ export declare namespace com.cramagotchi.model {
         };
     }
     class Exam {
-        constructor(id: string, subjectTag: Nullable<string> | undefined, dateIso: string);
+        constructor(id: string, subjectTag: Nullable<string> | undefined, dateIso: string, kind?: com.cramagotchi.model.ExamKind);
         get id(): string;
         get subjectTag(): Nullable<string>;
         get dateIso(): string;
-        copy(id?: string, subjectTag?: Nullable<string>, dateIso?: string): com.cramagotchi.model.Exam;
+        get kind(): com.cramagotchi.model.ExamKind;
+        copy(id?: string, subjectTag?: Nullable<string>, dateIso?: string, kind?: com.cramagotchi.model.ExamKind): com.cramagotchi.model.Exam;
         toString(): string;
         hashCode(): number;
         equals(other: Nullable<any>): boolean;

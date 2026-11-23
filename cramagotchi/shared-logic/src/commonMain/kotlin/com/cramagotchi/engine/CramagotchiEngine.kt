@@ -73,6 +73,42 @@ object CramagotchiEngine {
     }
 
     /**
+     * Edit an uncompleted task in place: replaces the title, subject tag,
+     * weight and time estimate. Completed tasks are immutable (their awarded
+     * XP and history must stay consistent), so the call is a no-op for them.
+     * A blank/trimmed-empty title keeps the previous value — the engine
+     * never corrupts the task. A null or non-positive estimate clears the
+     * estimate (the caller sends the complete edit form, so null means
+     * "no estimate", never "leave old value").
+     */
+    fun updateTask(
+        state: AppState,
+        taskId: String,
+        title: String,
+        weight: TaskWeight,
+        subjectTag: String? = null,
+        estimatedMinutes: Double? = null
+    ): AppState {
+        val taskIndex = state.tasks.indexOfFirst { it.id == taskId }
+        if (taskIndex == -1) return state
+        val task = state.tasks[taskIndex]
+        if (task.completed) return state
+
+        val trimmedTitle = title.trim().takeIf { it.isNotEmpty() } ?: task.title
+        val safeEstimate = estimatedMinutes?.takeIf { it > 0 }
+        val cleanTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() }
+
+        val updatedTasks = state.tasks.copyOf()
+        updatedTasks[taskIndex] = task.copy(
+            title = trimmedTitle,
+            weight = weight,
+            subjectTag = cleanTag,
+            estimatedMinutes = safeEstimate
+        )
+        return state.copy(tasks = updatedTasks)
+    }
+
+    /**
      * Mark a task as completed: award XP, feed the monster, start eat/sleep cycle.
      *
      * XP = round(base × timeVariation × accuracyBonus):
@@ -242,12 +278,38 @@ object CramagotchiEngine {
             .minOrNull()
     }
 
-    /** Add an exam to the portfolio, with a unique id. */
-    fun addExam(state: AppState, subjectTag: String?, dateIso: String, now: Double): AppState {
+    /**
+     * The nearest UPCOMING exam/deadline entry (examDay >= today), or null
+     * when nothing is upcoming. Ties resolve to the earliest-added entry,
+     * matching the "nearest days" count of [nearestExamDays]. Used by the
+     * UI so the countdown can name the right item (exam vs deadline).
+     */
+    fun nearestUpcomingExam(state: AppState, now: Double): Exam? {
+        val todayDay = kotlin.math.floor(now / MILLIS_PER_DAY)
+        return state.exams
+            .mapNotNull { exam ->
+                isoDaysFromCivil(exam.dateIso)
+                    ?.let { (it - todayDay).toInt() }
+                    ?.takeIf { it >= 0 }
+                    ?.let { exam to it }
+            }
+            .minByOrNull { (_, days) -> days }
+            ?.first
+    }
+
+    /** Add an exam or deadline to the portfolio, with a unique id. Deadlines are the default kind. */
+    fun addExam(
+        state: AppState,
+        subjectTag: String?,
+        dateIso: String,
+        now: Double,
+        kind: ExamKind = ExamKind.DEADLINE
+    ): AppState {
         val exam = Exam(
             id = nextExamId(state),
             subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
-            dateIso = dateIso
+            dateIso = dateIso,
+            kind = kind
         )
         return state.copy(exams = state.exams + exam)
     }
@@ -255,6 +317,30 @@ object CramagotchiEngine {
     /** Remove an exam from the portfolio by id; the remaining exams keep their data. */
     fun removeExam(state: AppState, examId: String): AppState {
         return state.copy(exams = state.exams.filter { it.id != examId })
+    }
+
+    /**
+     * Edit an existing exam/deadline in place: subject tag, date and kind.
+     * Unknown ids are a no-op. A blank subject clears it; the date is
+     * stored verbatim (the UI validates the `YYYY-MM-DD` shape, and the
+     * countdown already tolerates an unparseable date by skipping it).
+     */
+    fun updateExam(
+        state: AppState,
+        examId: String,
+        subjectTag: String?,
+        dateIso: String,
+        kind: ExamKind = ExamKind.DEADLINE
+    ): AppState {
+        val index = state.exams.indexOfFirst { it.id == examId }
+        if (index == -1) return state
+        val updated = state.exams.toMutableList()
+        updated[index] = updated[index].copy(
+            subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
+            dateIso = dateIso,
+            kind = kind
+        )
+        return state.copy(exams = updated)
     }
 
     private const val MILLIS_PER_DAY = 86_400_000.0

@@ -77,14 +77,37 @@
   align-items: center;
 }
 
-.weight-selector {
-  display: flex;
-  gap: var(--space-2xs);
+/* Segment control: Snack vs Meal, driven by signals (no Material radio). */
+.weight-segmented {
+  display: inline-flex;
   align-items: center;
+  gap: var(--space-2xs);
+  padding: 2px;
+  background: var(--color-surface-recessed,
+    color-mix(in srgb, var(--color-espresso-dark, #2C221E) 5%, var(--color-cream-base, #FAF6F0)));
+  border-radius: var(--radius-pill);
 }
 
-.mat-mdc-radio-button label {
+.weight-option {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: inherit;
   font-size: var(--text-xs);
+  font-weight: var(--weight-semibold, 600);
+  padding: var(--space-2xs) var(--space-sm);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.weight-option-active {
+  background: var(--color-surface-elevated, #FFFDF9);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-diffuse-sm, 0 4px 14px -2px rgba(44, 34, 30, 0.08));
 }
 
 /* ── Task list ─────────────────────────────────────────────────────── */
@@ -175,6 +198,63 @@
   color: #5A795F;
   background: var(--tag-sage-bg);
   color: var(--tag-sage-fg);
+}
+
+/* Estimate badge: same neutral family as the minutes input. */
+.badge-estimate {
+  background: var(--color-surface-recessed,
+    color-mix(in srgb, var(--color-espresso-dark, #2C221E) 4%, var(--color-cream-base, #FAF6F0)));
+  color: var(--color-text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+/* Edit + delete grouped on the card's trailing edge. */
+.task-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.btn-edit {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: 2px var(--space-2xs);
+  border-radius: var(--radius-sm);
+}
+
+.btn-edit:hover {
+  color: var(--color-text-primary);
+}
+
+/* Inline edit form: takes the card's place, calm recessed panel. */
+.task-edit-form {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-surface-recessed,
+    color-mix(in srgb, var(--color-espresso-dark, #2C221E) 4%, var(--color-cream-base, #FAF6F0)));
+  border-radius: var(--radius-sm);
+}
+
+.task-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.task-edit-row .weight-segmented {
+  margin-top: var(--space-2xs);
+}
+
+.task-edit-actions {
+  display: inline-flex;
+  gap: var(--space-xs);
 }
 
 /* Subject pills: deterministic per-tag hue, tonally mixed into the warm

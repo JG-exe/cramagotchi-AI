@@ -136,4 +136,58 @@ class ExamPortfolioTest {
         assertEquals(1, restored.exams.size)
         assertEquals("MATH", restored.exams[0].subjectTag)
     }
+
+    // ── Deadline / exam kinds ────────────────────────────────
+
+    @Test
+    fun testAddExamDefaultsToDeadline() {
+        val state = CramagotchiEngine.addExam(freshState(), "MATH", "2026-12-11", baseTime)
+        assertEquals(ExamKind.DEADLINE, state.exams[0].kind, "Deadline must be the default kind")
+    }
+
+    @Test
+    fun testAddExamCanCreateHighStakesExam() {
+        val state = CramagotchiEngine.addExam(freshState(), "MATH", "2026-12-11", baseTime, ExamKind.EXAM)
+        assertEquals(ExamKind.EXAM, state.exams[0].kind)
+    }
+
+    @Test
+    fun testLegacyExamDateMigratesAsDeadline() {
+        val legacyJson = """
+            {"tasks":[],"monster":{"name":"Munch","xp":0,"stage":"EGG",
+             "status":"IDLE","lastFedAt":1700000000000},
+             "examDateIso":"2026-12-11"}
+        """.trimIndent()
+        val restored = StorageRepository.deserialize(legacyJson)
+        assertNotNull(restored)
+        assertEquals(ExamKind.DEADLINE, restored.exams[0].kind, "Pre-kind payloads are deadlines")
+    }
+
+    @Test
+    fun testExamKindRoundTripsThroughStorage() {
+        val state = CramagotchiEngine.addExam(freshState(), "MATH", "2026-12-11", baseTime, ExamKind.EXAM)
+        val restored = StorageRepository.deserialize(StorageRepository.serialize(state))
+        assertNotNull(restored)
+        assertEquals(ExamKind.EXAM, restored.exams[0].kind)
+    }
+
+    // ── Nearest-upcoming item naming ─────────────────────────
+
+    @Test
+    fun testNearestUpcomingExamReturnsClosestEntry() {
+        val state = CramagotchiEngine.addExam(
+            CramagotchiEngine.addExam(freshState(), "FAR", "2026-12-21", baseTime, ExamKind.EXAM),
+            "NEAR", "2026-12-04", dec1
+        )
+        val nearest = CramagotchiEngine.nearestUpcomingExam(state, dec1)
+        assertNotNull(nearest)
+        assertEquals("NEAR", nearest.subjectTag)
+        assertEquals(ExamKind.DEADLINE, nearest.kind)
+    }
+
+    @Test
+    fun testNearestUpcomingExamIsNullWhenNothingUpcoming() {
+        val allPast = CramagotchiEngine.addExam(freshState(), "OLD", "2026-11-01", baseTime, ExamKind.EXAM)
+        assertNull(CramagotchiEngine.nearestUpcomingExam(allPast, dec1))
+    }
 }

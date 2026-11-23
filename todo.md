@@ -142,3 +142,39 @@ Branch: `feat/style-finalization` (from `dev`). Reference archived at
   ("All queued study tasks devoured! Add another small step whenever you're ready.").
 - V Verification: 24/24 `ng test` pass; `ng build` clean; desktop bundle rebuilt via
   `./gradlew :desktopApp:processResources`.
+
+---
+
+# Editable tasks & deadline/exam migration
+
+Branch: `feat/edit-and-deadlines` (from `dev`).
+
+Metric: **V** = done
+
+- V **Decision:** every dated item gains a *kind* — `DEADLINE` (default) or `EXAM`
+  (the high-stakes upgrade). Legacy stored exams (written before kinds existed)
+  deserialise as plain deadlines via the field default; no manual migration.
+- V Engine (`CramagotchiEngine.kt`): `ExamKind` enum; `Exam.kind` field;
+  `addExam(…, kind = DEADLINE)`; new pure `updateTask` (uncompleted tasks only —
+  completed ones stay immutable for history consistency; blank title keeps the old
+  title, non-positive/absent estimate clears it) and `updateExam` (subject/date/kind,
+  unknown id = no-op); `nearestUpcomingExam` helper so the countdown banner can name
+  the right item ("days until next deadline" vs "next exam").
+- V Store (`monster-store.service.ts`): `ExamKind` type + `kind` on `ExamRef`;
+  `nearestUpcomingExam` computed; `updateTask` / `updateExam` delegating to the engine;
+  `addExam` passes the chosen kind.
+- V Sanctuary UI: Deadline/Exam segmented toggle in the add form (deadline preselected);
+  chips show a `Due` vs a stronger espresso `Exam` kind tag; per-chip pencil button
+  opens an inline edit form (subject / date / kind + Save/Cancel) — invalid dates
+  never reach the engine (same `isValidIsoDate` gate).
+- V Task queue UI: pencil button per active task opens an inline edit form
+  (title / subject / estimate / Snack-Meal segmented control); save disabled on blank
+  title; garbage estimate passes null (cleared), never a raw string.
+- V Task add form weight selector (and edit form) moved off Material radio-group
+  (whose initial `[ngModel]` writeValue renders checked too late in some harnesses)
+  onto deterministic signal-driven segmented buttons.
+- V Tests: Kotlin `EditFeatureTest` (12 cases) + deadline/kind cases in
+  `ExamPortfolioTest`; Angular suites grow 24 → 32 (kind toggle, chip kind tags,
+  banner wording, task & exam edit flows, edit-form invalid-input probes).
+- V Verification: `:shared-logic:allTests` green (JVM/JS/wasm), JS assets re-synced,
+  32/32 `ng test`, `ng build` clean, desktop bundle + android unit tests green.

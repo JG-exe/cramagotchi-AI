@@ -43,16 +43,27 @@
     </div>
 
     <div class="form-controls">
-      <mat-radio-group
-        class="weight-selector"
-        name="weight"
+      <div
+        class="weight-segmented"
+        role="radiogroup"
         aria-label="Task size"
-        [ngModel]="weightInput()"
-        (ngModelChange)="weightInput.set($event)"
+        data-testid="task-weight-toggle"
       >
-        <mat-radio-button value="SNACK" class="radio-label pill-snack">Snack (≈10 XP)</mat-radio-button>
-        <mat-radio-button value="MEAL" class="radio-label pill-meal">Meal (≈25 XP)</mat-radio-button>
-      </mat-radio-group>
+        <button
+          type="button"
+          class="weight-option"
+          [class.weight-option-active]="weightInput() === 'SNACK'"
+          (click)="weightInput.set('SNACK')"
+          data-testid="task-weight-snack"
+        >Snack (≈10 XP)</button>
+        <button
+          type="button"
+          class="weight-option"
+          [class.weight-option-active]="weightInput() === 'MEAL'"
+          (click)="weightInput.set('MEAL')"
+          data-testid="task-weight-meal"
+        >Meal (≈25 XP)</button>
+      </div>
 
       <mat-form-field appearance="outline" class="field-subject">
         <mat-label>Subject / Topic (optional)</mat-label>
@@ -77,49 +88,145 @@
 
     @for (task of store.activeTasks(); track task.id) {
       <div class="task-card" [attr.data-task-id]="task.id">
-        <mat-checkbox
-          class="task-checkbox"
-          (change)="complete(task.id)"
-          [checked]="task.completed"
-          aria-label="Complete and feed to Cramagotchi"
-        />
+        @if (editingTaskId() === task.id) {
+          <!-- Inline edit form for one active task -->
+          <form class="task-edit-form" (ngSubmit)="saveEditTask()" data-testid="task-edit-form">
+            <div class="task-edit-row">
+              <mat-form-field appearance="outline" class="field-title">
+                <mat-label>What are you studying?</mat-label>
+                <input
+                  type="text"
+                  name="editTitle"
+                  matInput
+                  [value]="editTitle()"
+                  (input)="editTitle.set($any($event.target).value)"
+                  required
+                  data-testid="task-edit-title"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="field-estimate">
+                <mat-label>Estimate (min)</mat-label>
+                <input
+                  type="number"
+                  name="editEstimate"
+                  matInput
+                  min="1"
+                  step="1"
+                  [value]="editEstimate()"
+                  (input)="editEstimate.set($any($event.target).value)"
+                  data-testid="task-edit-estimate"
+                />
+              </mat-form-field>
+            </div>
+            <div class="task-edit-row">
+              <mat-form-field appearance="outline" class="field-subject">
+                <mat-label>Subject / Topic (optional)</mat-label>
+                <input
+                  type="text"
+                  name="editSubject"
+                  matInput
+                  [value]="editSubject()"
+                  (input)="editSubject.set($any($event.target).value)"
+                  data-testid="task-edit-subject"
+                />
+              </mat-form-field>
+              <div
+                class="weight-segmented"
+                role="radiogroup"
+                aria-label="Task size"
+                data-testid="task-edit-weight"
+              >
+                <button
+                  type="button"
+                  class="weight-option"
+                  [class.weight-option-active]="editWeight() === 'SNACK'"
+                  (click)="editWeight.set('SNACK')"
+                  data-testid="task-edit-weight-snack"
+                >Snack (≈10 XP)</button>
+                <button
+                  type="button"
+                  class="weight-option"
+                  [class.weight-option-active]="editWeight() === 'MEAL'"
+                  (click)="editWeight.set('MEAL')"
+                  data-testid="task-edit-weight-meal"
+                >Meal (≈25 XP)</button>
+              </div>
+            </div>
+            <div class="task-edit-actions">
+              <button
+                type="submit"
+                mat-stroked-button
+                class="btn-save-task"
+                [disabled]="!editTitle().trim()"
+                data-testid="task-edit-save"
+              >Save</button>
+              <button
+                type="button"
+                mat-stroked-button
+                class="btn-cancel-task"
+                (click)="cancelEditTask()"
+                data-testid="task-edit-cancel"
+              >Cancel</button>
+            </div>
+          </form>
+        } @else {
+          <mat-checkbox
+            class="task-checkbox"
+            (change)="complete(task.id)"
+            [checked]="task.completed"
+            aria-label="Complete and feed to Cramagotchi"
+          />
 
-        <div class="task-info">
-          <span class="task-title">{{ task.title }}</span>
-          <div class="task-badges">
-            <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
-              {{ task.weight === 'SNACK' ? '🍿 Snack (≈10 XP)' : '🍱 Meal (≈25 XP)' }}
-            </span>
-            <input
-              type="number"
-              class="actual-minutes-input"
-              min="0"
-              step="1"
-              placeholder="min used"
-              [value]="actualMinutes[task.id] ?? ''"
-              (input)="actualMinutes[task.id] = $any($event.target).value"
-              aria-label="Minutes actually spent"
-              data-testid="task-actual-minutes"
-            />
-            @if (task.subjectTag) {
-              <span
-                class="badge badge-subject"
-                data-testid="subject-badge"
-                [style.--subject-hue]="subjectHue(task.subjectTag)"
-              >{{ task.subjectTag }}</span>
-            }
+          <div class="task-info">
+            <span class="task-title">{{ task.title }}</span>
+            <div class="task-badges">
+              <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
+                {{ task.weight === 'SNACK' ? '🍿 Snack (≈10 XP)' : '🍱 Meal (≈25 XP)' }}
+              </span>
+              @if (task.estimatedMinutes != null && task.estimatedMinutes > 0) {
+                <span class="badge badge-estimate">≈ {{ task.estimatedMinutes }} min</span>
+              }
+              <input
+                type="number"
+                class="actual-minutes-input"
+                min="0"
+                step="1"
+                placeholder="min used"
+                [value]="actualMinutes[task.id] ?? ''"
+                (input)="actualMinutes[task.id] = $any($event.target).value"
+                aria-label="Minutes actually spent"
+                data-testid="task-actual-minutes"
+              />
+              @if (task.subjectTag) {
+                <span
+                  class="badge badge-subject"
+                  data-testid="subject-badge"
+                  [style.--subject-hue]="subjectHue(task.subjectTag)"
+                >{{ task.subjectTag }}</span>
+              }
+            </div>
           </div>
-        </div>
 
-        <button
-          type="button"
-          class="btn-delete"
-          (click)="store.deleteTask(task.id)"
-          aria-label="Delete task"
-          title="Delete task"
-        >
-          ✕
-        </button>
+          <div class="task-actions">
+            <button
+              type="button"
+              class="btn-edit"
+              (click)="startEditTask(task.id)"
+              aria-label="Edit task"
+              title="Edit task"
+              data-testid="task-edit-btn"
+            >✎</button>
+            <button
+              type="button"
+              class="btn-delete"
+              (click)="store.deleteTask(task.id)"
+              aria-label="Delete task"
+              title="Delete task"
+            >
+              ✕
+            </button>
+          </div>
+        }
       </div>
     }
   </div>
