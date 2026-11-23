@@ -13,7 +13,9 @@ Legend: **X** = not done · **V** = done
 - V All implementation + verification items below complete (no X remaining).
 - V Feature branch merged into `dev` with changelog merge commit.
 - V PR #3 merged on `personal` (865ea0a); `dev` fully merged into `main`
-  (eb6f4a4, human-approved) and pushed — Gradescope/backup repo current.
+  (eb6f4a4, human-approved) via PR #4 (2d42f47) — Gradescope/backup repo current.
+- V **v2.0.0** tagged on `main` and published:
+  https://github.com/JG-exe/cramagotchi-AI/releases/tag/v2.0.0
 - V Stray PR on `origin` (EHB-MCT) closed; note: a leftover `dev` branch remains
   pushed on `origin` and can be deleted there via the GitHub UI.
 

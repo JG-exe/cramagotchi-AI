@@ -13,15 +13,20 @@ android {
         applicationId = "com.cramagotchi.android"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "2.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 shrinker/optimizer: the Kotlin side is a thin WebView shell
+            // (all app logic lives in the bundled Angular+KMP-JS assets, which
+            // R8 never touches), so shrinking is safe here. androidx.webkit
+            // ships its own consumer keep rules.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
