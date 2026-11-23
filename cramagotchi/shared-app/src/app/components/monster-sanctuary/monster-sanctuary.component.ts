@@ -72,6 +72,13 @@ export class MonsterSanctuaryComponent {
     return `hsl(${hue} 42% 62%)`;
   }
 
+  /** Tint for the ACTIVE monster from its own rolled hue (graduation re-rolls
+   *  it); null → the stage's default token fill (legacy saves pre-reconcile). */
+  readonly activeFill = computed<string | null>(() => {
+    const hue = this.store.monster().hue;
+    return hue == null ? null : `hsl(${hue} 42% 62%)`;
+  });
+
   /** Live read of the remaining passive sleep block, in seconds.
    *  `dayTick()` re-evaluates this once per second while the tab is open. */
   readonly sleepRemainingSec = computed(() => {

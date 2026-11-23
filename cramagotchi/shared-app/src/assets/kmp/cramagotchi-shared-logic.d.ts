@@ -29,6 +29,7 @@ export declare namespace com.cramagotchi.engine {
         earlyFinishXp(daysRemaining: number): number;
         finishExam(state: com.cramagotchi.model.AppState, examId: string, now: number, hueRng?: number): com.cramagotchi.model.AppState;
         unlockCollectible(state: com.cramagotchi.model.AppState, speciesId: string, now: number, hueRng?: number): com.cramagotchi.model.AppState;
+        reconcileCollection(state: com.cramagotchi.model.AppState, hueRng?: number): com.cramagotchi.model.AppState;
     };
 }
 export declare namespace com.cramagotchi.model {
@@ -143,7 +144,7 @@ export declare namespace com.cramagotchi.model {
         };
     }
     class MonsterState {
-        constructor(name: string | undefined, xp: number | undefined, stage: com.cramagotchi.model.EvolutionStage | undefined, status: com.cramagotchi.model.MonsterStatus | undefined, lastFedAt: number, eatingUntil?: Nullable<number>, sleepUntil?: Nullable<number>);
+        constructor(name: string | undefined, xp: number | undefined, stage: com.cramagotchi.model.EvolutionStage | undefined, status: com.cramagotchi.model.MonsterStatus | undefined, lastFedAt: number, eatingUntil?: Nullable<number>, sleepUntil?: Nullable<number>, hue?: Nullable<number>);
         get name(): string;
         get xp(): number;
         get stage(): com.cramagotchi.model.EvolutionStage;
@@ -151,7 +152,8 @@ export declare namespace com.cramagotchi.model {
         get lastFedAt(): number;
         get eatingUntil(): Nullable<number>;
         get sleepUntil(): Nullable<number>;
-        copy(name?: string, xp?: number, stage?: com.cramagotchi.model.EvolutionStage, status?: com.cramagotchi.model.MonsterStatus, lastFedAt?: number, eatingUntil?: Nullable<number>, sleepUntil?: Nullable<number>): com.cramagotchi.model.MonsterState;
+        get hue(): Nullable<number>;
+        copy(name?: string, xp?: number, stage?: com.cramagotchi.model.EvolutionStage, status?: com.cramagotchi.model.MonsterStatus, lastFedAt?: number, eatingUntil?: Nullable<number>, sleepUntil?: Nullable<number>, hue?: Nullable<number>): com.cramagotchi.model.MonsterState;
         toString(): string;
         hashCode(): number;
         equals(other: Nullable<any>): boolean;

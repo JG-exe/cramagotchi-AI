@@ -76,7 +76,14 @@ data class MonsterState(
     val status: MonsterStatus = MonsterStatus.IDLE,
     val lastFedAt: Double,
     val eatingUntil: Double? = null,
-    val sleepUntil: Double? = null
+    val sleepUntil: Double? = null,
+    /**
+     * The active creature's own tint (∈ 0..359), rolled at creation and
+     * re-rolled only when a fully-grown monster graduates and a fresh one
+     * spawns. Null on legacy saves until [reconcileCollection] backfills it
+     * from the roster; null means "use the default stage fill".
+     */
+    val hue: Int? = null
 )
 
 /**

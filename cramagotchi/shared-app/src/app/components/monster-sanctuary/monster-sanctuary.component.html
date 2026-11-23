@@ -166,6 +166,7 @@
          animated as one grounded group on a recessed arena -->
     <div
       class="monster-stage-display"
+      [style.--stage-fill]="activeFill()"
       [class.is-idle]="store.monster().status === 'IDLE'"
       [class.is-hungry]="store.monster().status === 'HUNGRY'"
       [class.is-eating]="store.monster().status === 'EATING'"
