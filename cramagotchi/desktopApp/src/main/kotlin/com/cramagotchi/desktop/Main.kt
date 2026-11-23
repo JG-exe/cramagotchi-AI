@@ -14,7 +14,7 @@ import javafx.stage.Stage
  * Shares the exact same frontend as the browser and Android versions by
  * loading the shared Angular bundle (bundled into classpath resources at
  * build time by the :desktopApp:bundleWebApp Gradle task). Set
- * CREMAGOTCHI_DEV_SERVER_URL to load the ng serve dev server instead.
+ * CRAMAGOTCHI_DEV_SERVER_URL to load the ng serve dev server instead.
  *
  * All business logic runs through the shared-logic KMP engine, which the
  * Angular bundle itself consumes in its compiled JS form.
@@ -43,7 +43,7 @@ class CramagotchiDesktopApp : Application() {
     private var webAppServer: EmbeddedWebAppServer? = null
 
     override fun start(stage: Stage) {
-        val startUrl = System.getenv("CREMAGOTCHI_DEV_SERVER_URL")
+        val startUrl = System.getenv("CRAMAGOTCHI_DEV_SERVER_URL")
             ?: run {
                 webAppServer = EmbeddedWebAppServer.start()
                 "http://127.0.0.1:${webAppServer!!.port}/"
