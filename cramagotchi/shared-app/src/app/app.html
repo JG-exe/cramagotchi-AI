@@ -1,11 +1,18 @@
-<div class="app-layout">
-  <!-- Monster sanctuary panel -->
-  <section class="monster-panel" data-testid="monster-panel">
-    <app-monster-sanctuary />
-  </section>
+<div class="app-shell">
+  <header class="app-header">
+    <h1 class="app-title">🥚 Cramagotchi</h1>
+    <p class="app-tagline">Your zero-punishment study companion</p>
+  </header>
 
-  <!-- Study tasks panel -->
-  <section class="task-panel" data-testid="task-panel">
-    <app-task-queue />
-  </section>
+  <main class="app-layout">
+    <!-- Monster sanctuary panel -->
+    <section class="monster-panel" data-testid="monster-panel">
+      <app-monster-sanctuary />
+    </section>
+
+    <!-- Study tasks panel -->
+    <section class="task-panel" data-testid="task-panel">
+      <app-task-queue />
+    </section>
+  </main>
 </div>

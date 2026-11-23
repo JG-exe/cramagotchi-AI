@@ -1,7 +1,7 @@
-/* Global styles — imports & resets */
+/* Global styles — token imports & base resets */
 @import './styles/consts/_colours.css';
-@import './styles/consts/_distances.css';
 @import './styles/consts/_typography.css';
+@import './styles/consts/_distances.css';
 @import './styles/consts/_breakpoints.css';
 @import './styles/consts/_animations.css';
 
@@ -13,10 +13,16 @@
   padding: 0;
 }
 
+html {
+  color-scheme: light;
+}
+
 body {
   font-family: var(--font-sans);
   font-size: var(--text-base);
+  font-weight: var(--weight-medium);
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);
-  line-height: 1.6;
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
 }
