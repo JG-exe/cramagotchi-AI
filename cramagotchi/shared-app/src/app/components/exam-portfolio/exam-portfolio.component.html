@@ -54,14 +54,14 @@
                     [value]="editExamDate()"
                     (input)="onEditExamDateInput($any($event.target).value)"
                     (change)="onEditExamDateInput($any($event.target).value)"
-                    (click)="openDatePicker(pickerEdit, editExamDate())"
+                    (click)="openDatePicker(pickerEdit, editExamDate(), 'edit')"
                     data-testid="exam-edit-date"
                   />
                   <span matTextSuffix class="date-pick-suffix">
                     <button
                       type="button"
                       class="date-pick-btn"
-                      (click)="openDatePicker(pickerEdit, editExamDate())"
+                      (click)="openDatePicker(pickerEdit, editExamDate(), 'edit', 'button')"
                       aria-label="Open date picker"
                       data-testid="exam-date-picker-btn"
                     >
@@ -72,15 +72,53 @@
                 @if (editDateError()) {
                   <p class="form-error" data-testid="exam-edit-date-error">{{ editDateError() }}</p>
                 }
+                <input
+                  #pickerEdit
+                  type="date"
+                  class="date-picker-hidden"
+                  tabindex="-1"
+                  aria-hidden="true"
+                  (change)="onPickedEditDate(pickerEdit.value, dateEditField)"
+                />
+                @if (calendarOpen() === 'edit') {
+                  <div class="date-fallback-backdrop" (click)="closeFallbackCalendar()" data-testid="date-calendar-backdrop"></div>
+                  <div class="date-fallback" role="dialog" aria-label="Choose a date" data-testid="date-fallback-calendar">
+                    <div class="date-fallback-head">
+                      <button
+                        type="button"
+                        class="date-nav-btn"
+                        (click)="shiftCalendarMonth(-1)"
+                        aria-label="Previous month"
+                        data-testid="date-calendar-prev"
+                      ><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 L5 8 L10 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                      <span class="date-fallback-title">{{ calendarMonthLabel() }}</span>
+                      <button
+                        type="button"
+                        class="date-nav-btn"
+                        (click)="shiftCalendarMonth(1)"
+                        aria-label="Next month"
+                        data-testid="date-calendar-next"
+                      ><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 L11 8 L6 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    </div>
+                    <div class="date-fallback-grid">
+                      @for (wd of calendarWeekdays; track $index) {
+                        <span class="date-fallback-wd">{{ wd }}</span>
+                      }
+                      @for (cell of calendarCells(); track $index) {
+                        <button
+                          type="button"
+                          class="date-cell"
+                          [class.date-cell-muted]="!cell.iso"
+                          [class.date-cell-selected]="!!cell.iso && cell.iso === editExamDate()"
+                          [disabled]="!cell.iso"
+                          (click)="selectFallbackDay('edit', cell, dateEditField)"
+                          data-testid="date-calendar-day"
+                        >{{ cell.day }}</button>
+                      }
+                    </div>
+                  </div>
+                }
               </div>
-              <input
-                #pickerEdit
-                type="date"
-                class="date-picker-hidden"
-                tabindex="-1"
-                aria-hidden="true"
-                (change)="onPickedEditDate(pickerEdit.value, dateEditField)"
-              />
               <app-sliding-toggle
                 data-testid="exam-edit-kind"
                 left="Deadline"
@@ -174,14 +212,14 @@
             [value]="examDateInput()"
             (input)="onExamDateInput($any($event.target).value)"
             (change)="onExamDateInput($any($event.target).value)"
-            (click)="openDatePicker(pickerAdd, examDateInput())"
+            (click)="openDatePicker(pickerAdd, examDateInput(), 'add')"
             data-testid="exam-input-date"
           />
           <span matTextSuffix class="date-pick-suffix">
             <button
               type="button"
               class="date-pick-btn"
-              (click)="openDatePicker(pickerAdd, examDateInput())"
+              (click)="openDatePicker(pickerAdd, examDateInput(), 'add', 'button')"
               aria-label="Open date picker"
               data-testid="exam-date-picker-btn"
             >
@@ -192,15 +230,53 @@
         @if (examDateError()) {
           <p class="form-error" data-testid="exam-date-error">{{ examDateError() }}</p>
         }
+        @if (calendarOpen() === 'add') {
+          <div class="date-fallback-backdrop" (click)="closeFallbackCalendar()" data-testid="date-calendar-backdrop"></div>
+          <div class="date-fallback" role="dialog" aria-label="Choose a date" data-testid="date-fallback-calendar">
+            <div class="date-fallback-head">
+              <button
+                type="button"
+                class="date-nav-btn"
+                (click)="shiftCalendarMonth(-1)"
+                aria-label="Previous month"
+                data-testid="date-calendar-prev"
+              ><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3 L5 8 L10 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <span class="date-fallback-title">{{ calendarMonthLabel() }}</span>
+              <button
+                type="button"
+                class="date-nav-btn"
+                (click)="shiftCalendarMonth(1)"
+                aria-label="Next month"
+                data-testid="date-calendar-next"
+              ><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3 L11 8 L6 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+            <div class="date-fallback-grid">
+              @for (wd of calendarWeekdays; track $index) {
+                <span class="date-fallback-wd">{{ wd }}</span>
+              }
+              @for (cell of calendarCells(); track $index) {
+                <button
+                  type="button"
+                  class="date-cell"
+                  [class.date-cell-muted]="!cell.iso"
+                  [class.date-cell-selected]="!!cell.iso && cell.iso === examDateInput()"
+                  [disabled]="!cell.iso"
+                  (click)="selectFallbackDay('add', cell, dateAddField)"
+                  data-testid="date-calendar-day"
+                >{{ cell.day }}</button>
+              }
+            </div>
+          </div>
+        }
+        <input
+          #pickerAdd
+          type="date"
+          class="date-picker-hidden"
+          tabindex="-1"
+          aria-hidden="true"
+          (change)="onPickedAddDate(pickerAdd.value, dateAddField)"
+        />
       </div>
-      <input
-        #pickerAdd
-        type="date"
-        class="date-picker-hidden"
-        tabindex="-1"
-        aria-hidden="true"
-        (change)="onPickedAddDate(pickerAdd.value, dateAddField)"
-      />
       <div class="exam-add-actions">
         <app-sliding-toggle
           data-testid="exam-kind-toggle"

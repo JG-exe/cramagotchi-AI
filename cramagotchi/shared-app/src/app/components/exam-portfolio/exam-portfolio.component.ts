@@ -25,6 +25,12 @@ export function isValidIsoDate(value: string): boolean {
   return day <= daysInMonth;
 }
 
+/** One day in the fallback calendar grid; `iso` is null for leading/trailing filler. */
+export interface CalendarCell {
+  day: number;
+  iso: string | null;
+}
+
 /**
  * Deadlines & Exams portfolio — lives above the Study Queue on the left
  * pane (mobile, web, desktop and Android all share this single layout).
@@ -74,17 +80,108 @@ export class ExamPortfolioComponent {
   /**
    * Opens the browser/WebView native date picker from a click gesture
    * (especially valuable on Android/mobile where typing is clumsy).
-   * Engines without `showPicker()` (older desktop WebKit) ignore this
-   * silently — the masked text input remains the fallback there.
+   * Engines without `showPicker()` — JavaFX WebView on desktop — get the
+   * component-rendered fallback calendar instead: from the calendar button
+   * it always opens; from a bare input click it stays closed so the masked
+   * typing flow is never hijacked.
    */
-  openDatePicker(picker: HTMLInputElement | undefined, current: string): void {
+  openDatePicker(
+    picker: HTMLInputElement | undefined,
+    current: string,
+    target: 'add' | 'edit',
+    opener: 'input' | 'button' = 'input',
+  ): void {
     if (!picker) return;
     picker.value = current;
     try {
-      (picker as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+      const native = picker as HTMLInputElement & { showPicker?: () => void };
+      if (typeof native.showPicker === 'function') {
+        native.showPicker();
+        return;
+      }
     } catch {
-      // not a user gesture / unsupported engine — typed masked input still works
+      // transient-activation or engine quirk — fall back below
     }
+    if (opener === 'input') return; // backed by the fallback from the button
+    this.openFallbackCalendar(current, target);
+  }
+
+  /* ── Fallback calendar (engines without native showPicker) ────────── */
+
+  /** Which form's picker is open, or null for closed. */
+  calendarOpen = signal<'add' | 'edit' | null>(null);
+  calendarViewYear = signal(new Date().getFullYear());
+  /** 0-based month, matching `new Date(month)` semantics. */
+  calendarViewMonth = signal(new Date().getMonth());
+  /** Weekday header row, Monday-first. */
+  readonly calendarWeekdays = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  private static readonly MONTH_NAMES = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ];
+
+  readonly calendarMonthLabel = computed(
+    () => `${ExamPortfolioComponent.MONTH_NAMES[this.calendarViewMonth()]} ${this.calendarViewYear()}`,
+  );
+
+  /** Monday-first grid of the viewed month, padded to full weeks. */
+  readonly calendarCells = computed<CalendarCell[]>(() => {
+    const year = this.calendarViewYear();
+    const month = this.calendarViewMonth();
+    const cells: CalendarCell[] = [];
+    const offset = (new Date(year, month, 1).getDay() + 6) % 7;
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    for (let i = 0; i < offset; i++) {
+      cells.push({ day: prevMonthDays - offset + 1 + i, iso: null });
+    }
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let day = 1; day <= daysInMonth; day++) {
+      cells.push({
+        day,
+        iso: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+      });
+    }
+    const trailing = (7 - (cells.length % 7)) % 7;
+    for (let day = 1; day <= trailing; day++) {
+      cells.push({ day, iso: null });
+    }
+    return cells;
+  });
+
+  /** Seeds the fallback calendar view (picked month, else today) and opens it. */
+  private openFallbackCalendar(current: string, target: 'add' | 'edit'): void {
+    const picked = /^(\d{4})-(\d{2})/.exec(current);
+    if (picked) {
+      this.calendarViewYear.set(Number(picked[1]));
+      this.calendarViewMonth.set(Number(picked[2]) - 1);
+    } else {
+      const now = new Date();
+      this.calendarViewYear.set(now.getFullYear());
+      this.calendarViewMonth.set(now.getMonth());
+    }
+    this.calendarOpen.set(target);
+  }
+
+  closeFallbackCalendar(): void {
+    this.calendarOpen.set(null);
+  }
+
+  shiftCalendarMonth(delta: number): void {
+    const total = this.calendarViewYear() * 12 + this.calendarViewMonth() + delta;
+    this.calendarViewYear.set(Math.floor(total / 12));
+    this.calendarViewMonth.set(((total % 12) + 12) % 12);
+  }
+
+  selectFallbackDay(
+    target: 'add' | 'edit',
+    cell: CalendarCell,
+    input: HTMLInputElement | undefined,
+  ): void {
+    if (!cell.iso) return;
+    if (target === 'add') this.onPickedAddDate(cell.iso, input);
+    else this.onPickedEditDate(cell.iso, input);
+    this.calendarOpen.set(null);
   }
 
   /** Native picker → add form (picker always yields strict `YYYY-MM-DD`). */
