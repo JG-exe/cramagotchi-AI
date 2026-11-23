@@ -178,3 +178,51 @@ Metric: **V** = done
   banner wording, task & exam edit flows, edit-form invalid-input probes).
 - V Verification: `:shared-logic:allTests` green (JVM/JS/wasm), JS assets re-synced,
   32/32 `ng test`, `ng build` clean, desktop bundle + android unit tests green.
+
+---
+
+# Persistent storage on desktop (+ Android audit)
+
+Branch: `fix/platform-persistent-storage` (from `dev`).
+
+Metric: **V** = done
+
+- V **Diagnosis:** the Angular store saves to `localStorage` on every mutation on all
+  three platforms, but JavaFX 21's `WebEngine` kept DOM storage in memory only —
+  desktop saves evaporated on app exit (browser + Android were unaffected).
+- V `WebEngine.userDataDirectory` (added in JavaFX 23) now points at a per-user
+  profile dir: `%APPDATA%\Cramagotchi\webview` on Windows, `~/.cramagotchi/webview`
+  elsewhere (macOS/Linux). Set before the engine loads content; created on demand.
+- V JavaFX bump: `21.0.4 → 23.0.1` (first version with `userDataDirectory`;
+  verified present in the resolved `javafx-web-23.0.1-win.jar`).
+- V Desktop JDK: `jvmToolchain(17 → 21)` — matches the Gradle daemon JVM
+  (`org.gradle.java.home=jdk-21.0.10`), JavaFX 23's runtime baseline.
+- V Guarded fallback: if the profile dir cannot be created (read-only home,
+  safety software), the engine silently falls back to the previous session-only
+  behaviour with a warning — startup never crashes.
+- V Android audit: **no change needed** — `MainActivity` already sets
+  `domStorageEnabled = true` and Android WebView persists localStorage per app
+  install; the `WebViewAssetLoader` origin (`https://appassets.androidplatform.net`)
+  is stable across restarts; `allowBackup="true"` is already set.
+- V Verification: desktop compiles + bundles, `:androidApp:compileDebugKotlin`,
+  `:shared-logic:allTests`, 32/32 `ng test`, desktop `processResources` green.
+
+## Risk register (what the Java/JavaFX bump might break)
+
+- **New WebKit inside JavaFX 23** may render the redesigned UI slightly
+  differently. The bundled literal CSS fallbacks (`color-mix`/`min`/
+  `aspect-ratio` predecessors) stay in place and are ignored harmlessly —
+  newer WebKit supports the real properties. → Smoke-test the desktop app
+  once on your machine.
+- **Toolchain 21 on desktop only** — `shared-logic` and `androidApp` stay on
+  17 (bytecode target), so the Android/AGP build path is untouched; desktop
+  consumes `shared-logic`'s `desktopJar` (jvmTarget 17) fine from Java 21.
+- **First desktop launch after the bump** starts with an empty profile (the
+  old data was never persisted anyway), i.e. a fresh EGG monster once.
+- **Profile-lock:** if the desktop app is launched twice, the second instance
+  may fail to open the same profile dir → the guarded fallback returns null
+  and session-only storage kicks in instead of crashing.
+- **CRAMAGOTCHI_DEV_SERVER_URL dev path** uses the same profile dir; deleting
+  `%APPDATA%\Cramagotchi\webview` resets desktop state.
+- Nothing else references JavaFX or the desktop toolchain (verified by grep),
+  so the blast radius is limited to `desktopApp`.

@@ -7,12 +7,16 @@ plugins {
 }
 
 javafx {
-    version = "21.0.4"
+    // 23.0.1 = first WebEngine with the userDataDirectory property, which the
+    // desktop shell now points at a per-user folder so localStorage — i.e.
+    // every Cramagotchi save — survives app restarts (JavaFX < 23 kept DOM
+    // storage in memory only). Runtime baseline: JDK 21+.
+    version = "23.0.1"
     modules = listOf("javafx.controls", "javafx.web")
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 application {

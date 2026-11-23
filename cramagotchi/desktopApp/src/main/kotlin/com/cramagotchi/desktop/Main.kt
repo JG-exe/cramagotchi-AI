@@ -7,6 +7,8 @@ import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.web.WebView
 import javafx.stage.Stage
+import java.io.File
+import java.util.logging.Logger
 
 /**
  * Desktop application shell for Cramagotchi.
@@ -50,6 +52,10 @@ class CramagotchiDesktopApp : Application() {
             }
 
         val webView = WebView().apply {
+            // Persistent WebView profile: without it, JavaFX (< 23) kept DOM
+            // storage (all Cramagotchi saves live in localStorage) in memory
+            // only. Must be set before the engine loads any content.
+            engine.userDataDirectory = resolveUserDataDirectory()
             engine.load(startUrl)
         }
 
@@ -60,6 +66,29 @@ class CramagotchiDesktopApp : Application() {
 
     override fun stop() {
         webAppServer?.stop()
+    }
+
+    /**
+     * Per-user directory for the WebView profile (localStorage, IndexedDB…).
+     *
+     * Location: `%APPDATA%\Cramagotchi\webview` on Windows (the primary
+     * desktop target), `~/.cramagotchi/webview` elsewhere (macOS/Linux).
+     * The directory is created on demand; when creation fails — e.g. a
+     * read-only home — this returns null so the engine falls back to the
+     * previous session-only behaviour instead of crashing at startup.
+     */
+    private fun resolveUserDataDirectory(): File? {
+        val base = System.getenv("APPDATA")?.takeIf { it.isNotBlank() }
+            ?: System.getProperty("user.home")
+        return try {
+            File(base, "Cramagotchi${File.separator}webview")
+                .apply { mkdirs() }
+                .takeIf { it.isDirectory && it.canWrite() }
+        } catch (e: Exception) {
+            Logger.getLogger("cramagotchi.desktop")
+                .warning("Could not prepare WebView data dir; storage stays session-only: $e")
+            null
+        }
     }
 }
 
