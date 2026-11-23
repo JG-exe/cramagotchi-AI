@@ -1,0 +1,12 @@
+/* Colour palette & semantic tokens */
+:root {
+  --color-bg-primary: #FAF8F5;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #2D3748;
+  --color-text-muted: #718096;
+  --color-accent-meal: #68A377;
+  --color-accent-snack: #D99B52;
+  --color-status-hungry: #E07A5F;
+  --color-status-sleep: #81B29A;
+  --color-border: #E2E8F0;
+}

@@ -1,0 +1,10 @@
+plugins {
+    kotlin("multiplatform") version "1.9.25" apply false
+    kotlin("plugin.serialization") version "1.9.25" apply false
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}

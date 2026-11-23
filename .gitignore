@@ -1,0 +1,29 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Kotlin JS
+kotlin-js-store/
+.kotlin/
+
+# Node / Angular
+node_modules/
+**/node_modules/
+.angular/
+**/dist/
+
+# IDE
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# OS
+Thumbs.db
+[Ee]xpress/
+.DS_Store

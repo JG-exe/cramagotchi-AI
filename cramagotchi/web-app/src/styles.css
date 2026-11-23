@@ -1,0 +1,22 @@
+/* Global styles — imports & resets */
+@import './styles/consts/_colours.css';
+@import './styles/consts/_distances.css';
+@import './styles/consts/_typography.css';
+@import './styles/consts/_breakpoints.css';
+@import './styles/consts/_animations.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-primary);
+  line-height: 1.6;
+}
