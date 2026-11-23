@@ -269,3 +269,9 @@ Metric: **V** = done
   Labels stay real buttons; testids unchanged; active-class contract updated
   to `toggle-option-active`. Verified: 34/34 `ng test`, build clean, bundles
   rebuilt.
+- V **Empty-name rejection:** a deadline/exam without a (non-whitespace) name is
+  now rejected in both the add form and the inline edit form; blank task titles
+  already were — all three surface a calm inline flag (`exam-form-error`,
+  `exam-edit-error`, `task-form-error`) that clears as soon as typing resumes.
+  Engine still never sees a blank name from the UI (chips may still render
+  legacy subject-less exams). Verified: 36/36 `ng test`, build clean.

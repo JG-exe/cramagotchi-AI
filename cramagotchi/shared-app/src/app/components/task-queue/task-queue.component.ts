@@ -48,6 +48,9 @@ export class TaskQueueComponent {
   estimateInput = signal('');
   showDevoured = signal(false);
 
+  /** Quiet inline rejection copy; null whenever nothing is being flagged. */
+  taskFormError = signal<string | null>(null);
+
   /** Add form's sliding Snack/Meal toggle. */
   onWeightToggle(side: 'left' | 'right'): void {
     this.weightInput.set(side === 'right' ? 'MEAL' : 'SNACK');
@@ -110,7 +113,10 @@ export class TaskQueueComponent {
 
   onSubmit(): void {
     const title = this.titleInput().trim();
-    if (!title) return;
+    if (!title) {
+      this.taskFormError.set('Name the study task first — what are you learning?');
+      return;
+    }
 
     const estimate = Number(this.estimateInput());
     this.store.addTask(
@@ -124,6 +130,13 @@ export class TaskQueueComponent {
     this.subjectInput.set('');
     this.estimateInput.set('');
     this.weightInput.set('SNACK');
+    this.taskFormError.set(null);
+  }
+
+  /** Title typed in the add form — typing clears a stale rejection. */
+  onTitleInput(value: string): void {
+    this.titleInput.set(value);
+    this.taskFormError.set(null);
   }
 
   /** Complete a task, passing the minutes the user recorded for it. */

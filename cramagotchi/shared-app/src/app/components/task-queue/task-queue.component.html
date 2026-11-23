@@ -14,7 +14,7 @@
           name="title"
           matInput
           [value]="titleInput()"
-          (input)="titleInput.set($any($event.target).value)"
+          (input)="onTitleInput($any($event.target).value)"
           required
           data-testid="task-title-input"
         />
@@ -40,6 +40,9 @@
       >
         + Add
       </button>
+      @if (taskFormError()) {
+        <p class="form-error" data-testid="task-form-error">{{ taskFormError() }}</p>
+      }
     </div>
 
     <div class="form-controls">

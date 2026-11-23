@@ -52,6 +52,10 @@ export class ExamPortfolioComponent {
   editExamDate = signal('');
   editExamKind = signal<ExamKind>('DEADLINE');
 
+  /** Quiet inline rejection copy; null whenever nothing is being flagged. */
+  examFormError = signal<string | null>(null);
+  editFormError = signal<string | null>(null);
+
   /** True when the nearest upcoming dated item is the high-stakes EXAM kind. */
   readonly nearestIsExam = computed(() => this.store.nearestUpcomingExam()?.kind === 'EXAM');
 
@@ -96,14 +100,35 @@ export class ExamPortfolioComponent {
   }
 
   onAddExam(): void {
+    // A dateless/subjectless item is rejected: the engine never receives
+    // a blank name — every deadline/exam is a named, dated commitment.
+    const subject = this.examSubjectInput().trim();
+    if (!subject) {
+      this.examFormError.set('Give the item a name (e.g. MATH) first.');
+      return;
+    }
     const date = this.examDateInput();
-    // Empty submissions are ignored, and only a well-formed calendar date
-    // reaches the engine (which stores dateIso verbatim).
-    if (!date || !isValidIsoDate(date)) return;
-    this.store.addExam(this.examSubjectInput().trim() || null, date, this.examKindInput());
+    if (!date || !isValidIsoDate(date)) {
+      this.examFormError.set('Enter a valid date (YYYY-MM-DD).');
+      return;
+    }
+    this.store.addExam(subject, date, this.examKindInput());
     this.examSubjectInput.set('');
     this.examDateInput.set('');
     this.examKindInput.set('DEADLINE');
+    this.examFormError.set(null);
+  }
+
+  /** Name typed in the add form — typing clears a stale rejection. */
+  onExamSubjectInput(value: string): void {
+    this.examSubjectInput.set(value);
+    this.examFormError.set(null);
+  }
+
+  /** Date typed/picked in the add form — typing clears a stale rejection. */
+  onExamDateInput(value: string): void {
+    this.examDateInput.set(value);
+    this.examFormError.set(null);
   }
 
   removeExam(examId: string): void {
@@ -118,20 +143,42 @@ export class ExamPortfolioComponent {
     this.editExamSubject.set(exam.subjectTag ?? '');
     this.editExamDate.set(exam.dateIso);
     this.editExamKind.set(exam.kind ?? 'DEADLINE');
+    this.editFormError.set(null);
   }
 
   cancelEditExam(): void {
     this.editingExamId.set(null);
   }
 
-  /** Persist the chip edit — only a valid calendar date reaches the engine. */
+  /** Persist the chip edit — a named item with a real calendar date, or nothing. */
   saveEditExam(): void {
     const examId = this.editingExamId();
     if (!examId) return;
+    const subject = this.editExamSubject().trim();
+    if (!subject) {
+      this.editFormError.set('The name cannot be empty — restore one or cancel.');
+      return;
+    }
     const date = this.editExamDate();
-    if (!date || !isValidIsoDate(date)) return;
-    this.store.updateExam(examId, this.editExamSubject().trim() || null, date, this.editExamKind());
+    if (!date || !isValidIsoDate(date)) {
+      this.editFormError.set('Enter a valid date (YYYY-MM-DD).');
+      return;
+    }
+    this.store.updateExam(examId, subject, date, this.editExamKind());
     this.editingExamId.set(null);
+    this.editFormError.set(null);
+  }
+
+  /** Name typed in the edit form — typing clears a stale rejection. */
+  onEditExamSubjectInput(value: string): void {
+    this.editExamSubject.set(value);
+    this.editFormError.set(null);
+  }
+
+  /** Date typed/picked in the edit form — typing clears a stale rejection. */
+  onEditExamDateInput(value: string): void {
+    this.editExamDate.set(value);
+    this.editFormError.set(null);
   }
 
   subjectHue(subjectTag: string): number {

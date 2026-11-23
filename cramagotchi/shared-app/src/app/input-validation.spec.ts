@@ -167,12 +167,69 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
     setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-subject"]')!,
+      'HISTORY'
+    );
+    setInput(
       compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!,
       '2020-01-15'
     );
     compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
 
-    expect(mockStore.addExam).toHaveBeenCalledWith(null, '2020-01-15', 'DEADLINE');
+    expect(mockStore.addExam).toHaveBeenCalledWith('HISTORY', '2020-01-15', 'DEADLINE');
+  });
+
+  it('rejects an empty / whitespace exam name and flags it inline', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    // blank name + well-formed date → rejected
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!,
+      '2026-05-10'
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
+    fixture.detectChanges();
+    expect(mockStore.addExam).not.toHaveBeenCalled();
+    expect(compiled.querySelector('[data-testid="exam-form-error"]')?.textContent)
+      .toContain('name');
+
+    // whitespace-only name → also rejected
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-subject"]')!,
+      '   '
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
+    expect(mockStore.addExam).not.toHaveBeenCalled();
+
+    // naming the item clears the inline flag
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-subject"]')!,
+      'MATH'
+    );
+    fixture.detectChanges();
+    expect(compiled.querySelector('[data-testid="exam-form-error"]')).toBeNull();
+  });
+
+  it('rejects blanking the name in the exam edit form', () => {
+    mockStore.exams.set([{ id: 'exam-1', subjectTag: 'BIO', dateIso: '2026-12-11', kind: 'DEADLINE' }]);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-chip-edit"]')!.click();
+    fixture.detectChanges();
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-edit-subject"]')!,
+      ''
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-edit-save"]')!.click();
+    fixture.detectChanges();
+    expect(mockStore.updateExam).not.toHaveBeenCalled();
+    expect(compiled.querySelector('[data-testid="exam-edit-error"]')?.textContent)
+      .toContain('empty');
   });
 
   // ── Task estimate ──────────────────────────────────────────────────
@@ -187,8 +244,12 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
       '   '
     );
     compiled.querySelector<HTMLButtonElement>('[data-testid="task-submit-btn"]')!.click();
+    fixture.detectChanges();
 
     expect(mockStore.addTask).not.toHaveBeenCalled();
+    // the blank task name is flagged inline instead of being swallowed silently
+    expect(compiled.querySelector('[data-testid="task-form-error"]')?.textContent)
+      .toContain('Name');
   });
 
   it('rejects a negative estimated-minutes value', () => {

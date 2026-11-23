@@ -31,7 +31,7 @@
                   name="editExamSubject"
                   matInput
                   [value]="editExamSubject()"
-                  (input)="editExamSubject.set($any($event.target).value)"
+                  (input)="onEditExamSubjectInput($any($event.target).value)"
                   data-testid="exam-edit-subject"
                 />
               </mat-form-field>
@@ -46,8 +46,8 @@
                   matInput
                   appDateMask
                   [value]="editExamDate()"
-                  (input)="editExamDate.set($any($event.target).value)"
-                  (change)="editExamDate.set($any($event.target).value)"
+                  (input)="onEditExamDateInput($any($event.target).value)"
+                  (change)="onEditExamDateInput($any($event.target).value)"
                   (click)="openDatePicker(pickerEdit, editExamDate())"
                   data-testid="exam-edit-date"
                 />
@@ -71,6 +71,9 @@
                 aria-hidden="true"
                 (change)="onPickedEditDate(pickerEdit.value, dateEditField)"
               />
+              @if (editFormError()) {
+                <p class="form-error" data-testid="exam-edit-error">{{ editFormError() }}</p>
+              }
               <app-sliding-toggle
                 data-testid="exam-edit-kind"
                 left="Deadline"
@@ -141,7 +144,7 @@
           name="examSubject"
           matInput
           [value]="examSubjectInput()"
-          (input)="examSubjectInput.set($any($event.target).value)"
+          (input)="onExamSubjectInput($any($event.target).value)"
           data-testid="exam-input-subject"
         />
       </mat-form-field>
@@ -156,8 +159,8 @@
           matInput
           appDateMask
           [value]="examDateInput()"
-          (input)="examDateInput.set($any($event.target).value)"
-          (change)="examDateInput.set($any($event.target).value)"
+          (input)="onExamDateInput($any($event.target).value)"
+          (change)="onExamDateInput($any($event.target).value)"
           (click)="openDatePicker(pickerAdd, examDateInput())"
           data-testid="exam-input-date"
         />
@@ -201,6 +204,9 @@
           + Add
         </button>
       </div>
+      @if (examFormError()) {
+        <p class="form-error" data-testid="exam-form-error">{{ examFormError() }}</p>
+      }
     </form>
   </div>
 </section>
