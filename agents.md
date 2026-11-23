@@ -26,15 +26,12 @@ Encourage exam study momentum without becoming a source of procrastination. **No
   * Standalone components, Angular Signals for reactive state binding, OnPush change detection.
   * Thin UI layer: delegates all state transitions and business rules to the compiled KMP module.
   * Responsive mobile-first layout (stacked on mobile, two-pane split on desktop).
-* **Styling (Clean Modular Vanilla CSS):**
-  * ANgular Material + vanilla css
-  * Strict separation of design tokens inside `src/styles/consts/` with one dedicated file per token category.
+* UI Components & Styling (Angular Material + Modular Vanilla CSS):
+  * Angular Material (`@angular/material`): Allowed and encouraged for accessible UI primitives (buttons, form fields, checkboxes, cards, chips, progress bars, tooltips).
+  * Modular Vanilla CSS: All custom layout, spacing, custom SVG monster animations, and Material theme overrides must use CSS custom properties organized inside `src/styles/consts/` with one dedicated file per token category. Avoid hardcoded magic numbers in component stylesheets.
 
----
+3. Directory & File Structure
 
-## 3. Directory & File Structure
-
-```text
 cramagotchi/
 ├── shared-logic/                         # Kotlin Multiplatform Module
 │   ├── build.gradle.kts                  # KMP config (js(IR), generateTypeScriptDefinitions())
@@ -54,21 +51,21 @@ cramagotchi/
     └── src/
         ├── styles/
         │   ├── consts/                   # CSS Custom Properties (1 file per category)
-        │   │   ├── _colours.css          # Palette, semantic colours, surface tones
+        │   │   ├── _colours.css          # Palette, semantic colours, surface tones, Material M3 token overrides
         │   │   ├── _distances.css        # Spacing scale, margins, padding, gaps, radii
         │   │   ├── _typography.css       # Font families, sizes, weights, line-heights
         │   │   ├── _breakpoints.css      # Viewport thresholds & layout container widths
         │   │   └── _animations.css       # Keyframes & transition durations
-        │   └── main.css                  # Imports all /consts/*.css + base resets
+        │   └── main.css                  # Imports Angular Material theme, /consts/*.css, & base resets
         └── app/
             ├── services/
             │   └── monster-store.service.ts # Wraps KMP module with Angular Signals
             ├── components/
-            │   ├── task-queue/           # Task creation & active/devoured lists
+            │   ├── task-queue/           # Task creation & active/devoured lists (using Material inputs/lists)
             │   │   ├── task-queue.component.ts
             │   │   ├── task-queue.component.html
             │   │   └── task-queue.component.css
-            │   └── monster-sanctuary/    # Inline SVG monster, status pill & XP bar
+            │   └── monster-sanctuary/    # Inline SVG monster, Material chips/status pill & XP bar
             │       ├── monster-sanctuary.component.ts
             │       ├── monster-sanctuary.component.html
             │       └── monster-sanctuary.component.css
@@ -77,7 +74,6 @@ cramagotchi/
             ├── app.component.css
             └── app.component.spec.ts     # Angular component tests (Write & review FIRST)
 ```
-
 ---
 
 ## 4. Kotlin Domain Models (`@JsExport`)
