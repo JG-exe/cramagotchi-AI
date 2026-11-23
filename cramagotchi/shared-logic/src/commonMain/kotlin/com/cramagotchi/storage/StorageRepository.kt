@@ -10,7 +10,8 @@ import kotlin.js.JsExport
 @JsExport
 object StorageRepository {
 
-    private const val STORAGE_KEY = "cramagotchi_state"
+    /** Single source of truth for the persistence key across all app targets. */
+    const val STORAGE_KEY = "cramagotchi_state"
 
     private val json = Json {
         ignoreUnknownKeys = true

@@ -232,4 +232,22 @@ class CramagotchiEngineTest {
         )
         assertEquals(80, recoveredHungry.monster.xp, "XP must never decay, even after long absence")
     }
+
+    // ── Test 8: IDs stay unique after a state restore ────────
+
+    @Test
+    fun testTaskIdsStayUniqueAfterRestore() {
+        // Simulate a state restored from storage that already contains "task-1";
+        // a fresh in-memory counter would collide with it.
+        val restored = CramagotchiEngine.addTask(
+            freshState(),
+            "Existing", TaskWeight.SNACK, baseTime
+        )
+        val afterRestore = CramagotchiEngine.addTask(restored, "New", TaskWeight.MEAL, baseTime + 1.0)
+
+        assertTrue(
+            afterRestore.tasks[0].id != afterRestore.tasks[1].id,
+            "IDs added after a restore must not collide with restored task IDs"
+        )
+    }
 }

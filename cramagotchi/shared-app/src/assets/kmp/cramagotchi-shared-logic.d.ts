@@ -121,6 +121,7 @@ export declare namespace com.cramagotchi.model {
 }
 export declare namespace com.cramagotchi.storage {
     const StorageRepository: {
+        get STORAGE_KEY(): string;
         serialize(state: com.cramagotchi.model.AppState): string;
         deserialize(jsonStr: string): Nullable<com.cramagotchi.model.AppState>;
     };
