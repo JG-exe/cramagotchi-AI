@@ -117,6 +117,13 @@ Legend: **X** = not done · **V** = done
 
 ## Decisions log
 
+- V **No shrinking on desktop** (v2.1.0 era): investigated R8/desktop analogs —
+  measured `installDist` 44 MB of which 32 MB is the JavaFX WebKit bridge and
+  only 228 KB is our bytecode (nothing to shrink); a jlink self-contained
+  image measures 87 MB on disk (70 MB compressed) — *larger* than the jar
+  folder, only paying off for targets with no JDK. Desktop stays a plain
+  fat distribution; revisit jlink/jpackage only if "no-JDK installers"
+  become a goal.
 - V monster.svg only contains the SCHOLAR stage → user chose to **derive 3 sibling
   variants** (EGG, HATCHLING, GRADUATED_BEAST) in the same art style (satisfies US-3.3).
 - V Noted & fixed: old scholar (blue) / graduate (violet) SVGs and subject-pill fallback
