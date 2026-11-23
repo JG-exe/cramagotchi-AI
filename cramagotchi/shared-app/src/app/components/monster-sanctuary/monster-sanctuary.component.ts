@@ -56,6 +56,22 @@ export class MonsterSanctuaryComponent {
   /** Companion-tone label for the current status. */
   readonly statusTone = computed(() => STATUS_TONE[this.store.monster().status]);
 
+  /** Lowercased species id for the gallery symbol: #cram-body-… */
+  speciesKey(speciesId: string): string {
+    return speciesId.toLowerCase();
+  }
+
+  /** Friendly roster label for a collected species variant. */
+  speciesLabel(speciesId: string): string {
+    const meta = STAGE_META[speciesId as EvolutionStage];
+    return meta ? meta.label : speciesId;
+  }
+
+  /** Hsl tint for one collected monster's `--stage-fill` override. */
+  collectedFill(hue: number): string {
+    return `hsl(${hue} 42% 62%)`;
+  }
+
   /** Live read of the remaining passive sleep block, in seconds.
    *  `dayTick()` re-evaluates this once per second while the tab is open. */
   readonly sleepRemainingSec = computed(() => {

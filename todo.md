@@ -289,7 +289,7 @@ Metric: **V** = done
 
 ## Backlog (planned — not started)
 
-- X **Deadline "finish in advance" bonus XP:** deadlines/exams currently only have
+- V **Deadline "finish in advance" bonus XP (done):** deadlines/exams currently only have
   edit + remove. Add a third chip action — *finish* — for completing the item
   before (or on) its date. Completing strictly before the deadline grants bonus
   XP on top of the normal reward; the earlier the finish, the bigger the bonus
@@ -298,8 +298,13 @@ Metric: **V** = done
   just no extra). Finishing removes the chip like remove does, but feeds XP and
   the monster. Pure logic (days-between, bonus tiers) should live in shared-logic
   KMP so all three platforms share it; UI button per chip in `exam-portfolio`.
+  **Shipped:** engine `finishExam()` + `earlyFinishXp()` tiers (base 25; +10 at
+  1–2 days, +20 at 3–6, +35 at ≥7; none on/after the day) in shared-logic,
+  tested in `FinishExamTest.kt`; store `finishExam()`; sage check button per
+  chip (`exam-chip-finish`). Feeding mirrors task completion (SLEEPING banks
+  XP without resetting the timer) and evolution crossings auto-collect.
 
-- X **Collectible monsters with random hue:** make monsters collectible — a
+- V **Collectible monsters with random hue (done):** make monsters collectible — a
   collection of distinct monsters the user can unlock (e.g. by levelling /
   milestones), each one a different species variant. Every collected monster
   gets a random hue applied on acquisition (persisted with the save so the hue
@@ -307,6 +312,14 @@ Metric: **V** = done
   hue via CSS custom property / fill token override so no per-hue asset is
   needed. Needs: collection model + persistence in shared-logic/KMP store,
   collection UI ( roster/gallery view), hue assignment + storage.
+  **Shipped:** `CollectedMonster` in Models.kt + `collection` on AppState
+  (persisted; old saves deserialize to empty); engine seeds the EGG species at
+  creation and auto-collects each newly reached stage on task completion or
+  deadline finish (`unlockCollectible`, multi-stage jumps handled), tested in
+  `MonsterCollectionTest.kt`. Store exposes `collection`; the sanctuary card
+  gains a "Collected Monsters" roster — mini stage-symbol tiles, each tinted
+  by its rolled hue via a per-instance `--stage-fill` override (first roll
+  sticks forever).
 - V **Hotfix — desktop date picker:** the calendar button was dead on desktop
   (JavaFX WebView's older WebKit has no `showPicker()`). When the native
   picker is unavailable the button now opens a component-rendered fallback

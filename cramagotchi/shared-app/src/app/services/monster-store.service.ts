@@ -46,10 +46,19 @@ export interface MonsterState {
   sleepUntil?: number;
 }
 
+/** One entry in the collectible monster roster (species + its rolled hue). */
+export interface CollectedMonster {
+  speciesId: string;
+  /** Random tint rolled once at acquisition, persisted forever. */
+  hue: number;
+  collectedAt: number;
+}
+
 export interface AppState {
   tasks: StudyTask[];
   monster: MonsterState;
   exams?: ExamRef[];
+  collection?: CollectedMonster[];
 }
 
 /**
@@ -61,7 +70,7 @@ export interface AppState {
 export class MonsterStoreService {
   /** KMP state — single source of truth. */
   private readonly kmpState = signal<KmpAppState>(
-    Engine.createInitialState('Munch', Date.now())
+    Engine.createInitialState('Munch', Date.now(), Math.random())
   );
 
   readonly monster = computed<MonsterState>(() =>
@@ -93,6 +102,11 @@ export class MonsterStoreService {
     const nearest = Engine.nearestUpcomingExam(this.kmpState(), Date.now());
     return nearest ? toExamRef(nearest) : null;
   });
+
+  /** Collectible roster — every species variant the user has reached. */
+  readonly collection = computed<CollectedMonster[]>(() =>
+    this.kmpState().collection.asJsReadonlyArrayView().map(toCollectedMonster)
+  );
 
   /** Active (uncompleted) tasks */
   readonly activeTasks = computed(() => this.tasks().filter(t => !t.completed));
@@ -183,7 +197,19 @@ export class MonsterStoreService {
    */
   completeTaskWithTime(taskId: string, actualMinutes: number | null): void {
     this.kmpState.set(
-      Engine.completeTask(this.kmpState(), taskId, Date.now(), actualMinutes, Math.random())
+      Engine.completeTask(this.kmpState(), taskId, Date.now(), actualMinutes, Math.random(), Math.random())
+    );
+    this.persistToStorage();
+  }
+
+  /**
+   * The "I'm done with this" action for a deadline/exam: removes the entry
+   * and feeds the monster, with bonus XP the earlier it is finished
+   * (engine-side tiers; nothing on/after the due day beyond the base).
+   */
+  finishExam(examId: string): void {
+    this.kmpState.set(
+      Engine.finishExam(this.kmpState(), examId, Date.now(), Math.random())
     );
     this.persistToStorage();
   }
@@ -244,7 +270,12 @@ export class MonsterStoreService {
     if (typeof localStorage === 'undefined') return;
     try {
       const raw = localStorage.getItem(Storage.STORAGE_KEY);
-      if (!raw) return;
+      if (!raw) {
+        // First run: persist immediately so the freshly rolled egg hue
+        // and roster seed survive the next reload.
+        this.persistToStorage();
+        return;
+      }
       const restored = Storage.deserialize(raw);
       if (restored) {
         this.kmpState.set(restored);
@@ -298,5 +329,19 @@ function toExamRef(e: KmpExam): ExamRef {
     subjectTag: e.subjectTag ?? undefined,
     dateIso: e.dateIso,
     kind: (kindName === 'EXAM' ? 'EXAM' : 'DEADLINE') as ExamKind,
+  };
+}
+
+type KmpCollectedMonster = {
+  speciesId: string;
+  hue: number;
+  collectedAt: number;
+};
+
+function toCollectedMonster(c: KmpCollectedMonster): CollectedMonster {
+  return {
+    speciesId: c.speciesId,
+    hue: c.hue,
+    collectedAt: c.collectedAt,
   };
 }

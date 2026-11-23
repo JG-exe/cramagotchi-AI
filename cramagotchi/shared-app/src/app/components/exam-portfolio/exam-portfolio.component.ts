@@ -257,6 +257,12 @@ export class ExamPortfolioComponent {
     this.store.removeExam(examId);
   }
 
+  /** "I'm done with this" — removes the entry and feeds the monster; the engine
+   *  awards the early-finish bonus XP tier. */
+  finishExam(examId: string): void {
+    this.store.finishExam(examId);
+  }
+
   /** Open the inline edit form for one exam/deadline chip. */
   startEditExam(examId: string): void {
     const exam = this.store.exams().find(e => e.id === examId);

@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { App } from './app';
-import { MonsterStoreService, MonsterState, StudyTask, ExamRef } from './services/monster-store.service';
+import { MonsterStoreService, MonsterState, StudyTask, ExamRef, CollectedMonster } from './services/monster-store.service';
 import { subjectHue } from './components/task-queue/task-queue.component';
 
 /**
@@ -82,6 +82,10 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     addExam: vi.fn(),
     updateExam: vi.fn(),
     removeExam: vi.fn(),
+    finishExam: vi.fn(),
+    collection: signal<CollectedMonster[]>([
+      { speciesId: 'EGG', hue: 204, collectedAt: 0 },
+    ]),
   };
 }
 
@@ -613,6 +617,51 @@ describe('App (root component)', () => {
     compiled.querySelector<HTMLButtonElement>('[data-testid="date-calendar-prev"]')!.click();
     fixture.detectChanges();
     expect(title()).not.toBe(afterNext);
+  });
+
+  // ── Finish-in-advance: bonus XP chip action ──────────────
+
+  it('should call store.finishExam() with the exam id from the finish chip button', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([makeExam('exam-1', 9, 'HISTORY')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const finishBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-chip-finish"]');
+    expect(finishBtn).toBeTruthy();
+    finishBtn!.click();
+
+    expect(mockStore.finishExam).toHaveBeenCalledWith('exam-1');
+  });
+
+  // ── Collectible monster roster gallery ───────────────────
+
+  it('should render one gallery tile per collected monster with its rolled hue', () => {
+    mockStore = createMockStore();
+    mockStore.collection.set([
+      { speciesId: 'EGG', hue: 204, collectedAt: 1 },
+      { speciesId: 'HATCHLING', hue: 12, collectedAt: 2 },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const items = compiled.querySelectorAll<HTMLElement>('[data-testid="collection-item"]');
+    expect(items.length).toBe(2);
+
+    const first = items[0]!;
+    expect(first.getAttribute('data-species')).toBe('EGG');
+    // hue lands as a per-instance --stage-fill override on the shared symbols
+    expect(first.getAttribute('style')).toContain('hsl(204');
+    expect(first.textContent).toContain('Egg');
+
+    expect(items[1]!.getAttribute('style')).toContain('hsl(12');
+    expect(items[1]!.textContent).toContain('Hatchling');
   });
 });
 
