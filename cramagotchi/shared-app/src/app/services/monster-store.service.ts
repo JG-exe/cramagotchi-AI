@@ -64,15 +64,10 @@ export class MonsterStoreService {
    *  exam countdown) refresh when the calendar day changes. */
   readonly dayTick = signal(0);
 
-  /** Days remaining until exam (if set) */
-  readonly examCountdownDays = computed(() => {
+  /** Days remaining until exam — delegated to the KMP engine (agents.md §5). */
+  readonly examCountdownDays = computed<number | null>(() => {
     this.dayTick(); // re-evaluate when the interval ticks
-    const iso = this.examDateIso();
-    if (!iso) return null;
-    const target = new Date(iso).setHours(0, 0, 0, 0);
-    const today = new Date().setHours(0, 0, 0, 0);
-    const diff = target - today;
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    return Engine.examCountdownDays(this.kmpState(), Date.now()) ?? null;
   });
 
   /** Active (uncompleted) tasks */

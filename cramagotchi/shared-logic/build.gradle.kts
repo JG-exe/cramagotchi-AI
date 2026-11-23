@@ -21,6 +21,12 @@ android {
 }
 
 kotlin {
+    // expect/actual annotation (TsExport marker) — stable enough for this use,
+    // flag silences the beta classifier warning.
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     jvm("desktop")
     androidTarget {
         @Suppress("DEPRECATION")
@@ -39,6 +45,14 @@ kotlin {
             }
         }
         nodejs()
+        binaries.library()
+        generateTypeScriptDefinitions()
+    }
+
+    @OptIn(org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl::class)
+    wasmJs {
+        moduleName = "cramagotchi-shared-logic-wasm"
+        browser()
         binaries.library()
         generateTypeScriptDefinitions()
     }

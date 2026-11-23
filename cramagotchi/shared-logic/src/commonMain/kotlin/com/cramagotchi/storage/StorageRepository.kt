@@ -2,12 +2,12 @@ package com.cramagotchi.storage
 
 import com.cramagotchi.model.AppState
 import kotlinx.serialization.json.Json
-import kotlin.js.JsExport
+import com.cramagotchi.export.TsExport
 
 /**
  * Browser localStorage adapter for serialising/deserialising AppState.
  */
-@JsExport
+@TsExport
 object StorageRepository {
 
     /** Single source of truth for the persistence key across all app targets. */
