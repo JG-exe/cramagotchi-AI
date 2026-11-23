@@ -10,8 +10,8 @@ Protect `main` at all times. Follow this strict branching hierarchy:
 
 - **`main` (Production):** Human-only merges. Whenever a new `dev` version is ready, open a Pull Request to `main` containing a detailed changelog of features, passing test suites, and architectural changes. Never push or merge directly to `main`.
 - **`dev` (Integration):** Staging branch. Merging a `feature/*` branch into `dev` is strictly blocked until human code review and test approval are granted.
-- **`feature/<feature-name>`:** Create one dedicated branch per user story or feature from `dev`.
-- **`feature/<feature-name>/<subagent-task>`:** When multiple subagents work concurrently on a feature, assign each subagent an isolated sub-branch. Subagents may automatically merge completed, test-passing work back into their parent `feature/<feature-name>` branch.
+- **`feat/<feature-name>`:** Create one dedicated branch per user story or feature from `dev`.
+- **`feat/<feature-name>/<subagent-task>`:** When multiple subagents work concurrently on a feature, assign each subagent an isolated sub-branch. Subagents may automatically merge completed, test-passing work back into their parent `feature/<feature-name>` branch.
 
 ### 🚨 CRITICAL EXECUTION GATE (HUMAN-IN-THE-LOOP TDD)
 
