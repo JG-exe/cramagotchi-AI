@@ -1,0 +1,7 @@
+/* Breakpoints — mobile-first */
+/* Usage: @media (min-width: 768px) { ... } for desktop */
+:root {
+  --breakpoint-desktop: 768px;
+  --container-mobile: 100%;
+  --container-desktop: var(--layout-max-width);
+}
