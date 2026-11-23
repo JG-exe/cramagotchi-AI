@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { App } from './app';
 import { MonsterStoreService, MonsterState, StudyTask, ExamRef } from './services/monster-store.service';
-import { isValidIsoDate } from './components/monster-sanctuary/monster-sanctuary.component';
+import { isValidIsoDate } from './components/exam-portfolio/exam-portfolio.component';
 
 /**
  * Invalid & edge-case input guards, exercised through the real DOM event

@@ -143,175 +143,6 @@
 </svg>
 
 <section class="sanctuary-container" data-testid="monster-sanctuary">
-  <!-- Exam Portfolio: compact countdown pill targets the nearest upcoming item -->
-  <div class="exam-banner">
-    @if (store.nearestExamDays() !== null) {
-      <span class="countdown-tag" data-testid="exam-countdown">
-        ⏳ <strong>{{ store.nearestExamDays() }}</strong> days until next {{ nearestIsExam() ? 'exam' : 'deadline' }}
-      </span>
-    } @else {
-      <span class="countdown-prompt">No upcoming deadlines — add one below:</span>
-    }
-  </div>
-
-  <!-- Deadline/exam chips + add form -->
-  <div class="exam-manager">
-    @if (store.exams().length > 0) {
-      <div class="exams-list" data-testid="exams-list">
-        @for (exam of store.exams(); track exam.id) {
-          @if (editingExamId() === exam.id) {
-            <!-- Inline edit form for one deadline/exam chip -->
-            <form class="exam-edit-form" (ngSubmit)="saveEditExam()" data-testid="exam-edit-form">
-              <mat-form-field appearance="outline" class="field-exam-subject">
-                <mat-label>Subject</mat-label>
-                <input
-                  type="text"
-                  name="editExamSubject"
-                  matInput
-                  [value]="editExamSubject()"
-                  (input)="editExamSubject.set($any($event.target).value)"
-                  data-testid="exam-edit-subject"
-                />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="field-exam-date">
-                <mat-label>{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
-                <input
-                  type="date"
-                  name="editExamDate"
-                  matInput
-                  [value]="editExamDate()"
-                  (input)="editExamDate.set($any($event.target).value)"
-                  (change)="editExamDate.set($any($event.target).value)"
-                  data-testid="exam-edit-date"
-                />
-              </mat-form-field>
-              <div
-                class="kind-segmented"
-                role="radiogroup"
-                aria-label="Item importance"
-                data-testid="exam-edit-kind"
-              >
-                <button
-                  type="button"
-                  class="kind-option"
-                  [class.kind-option-active]="editExamKind() === 'DEADLINE'"
-                  (click)="editExamKind.set('DEADLINE')"
-                  data-testid="exam-edit-kind-deadline"
-                >Deadline</button>
-                <button
-                  type="button"
-                  class="kind-option"
-                  [class.kind-option-active]="editExamKind() === 'EXAM'"
-                  (click)="editExamKind.set('EXAM')"
-                  data-testid="exam-edit-kind-exam"
-                >Exam</button>
-              </div>
-              <button
-                type="submit"
-                mat-stroked-button
-                class="btn-save-exam"
-                data-testid="exam-edit-save"
-              >Save</button>
-              <button
-                type="button"
-                mat-stroked-button
-                class="btn-cancel-exam"
-                (click)="cancelEditExam()"
-                data-testid="exam-edit-cancel"
-              >Cancel</button>
-            </form>
-          } @else {
-            <span class="exam-chip" [class.exam-chip-high] = "exam.kind === 'EXAM'" data-testid="exam-chip">
-              <span class="kind-tag" [class.kind-tag-exam]="exam.kind === 'EXAM'">
-                {{ exam.kind === 'EXAM' ? 'Exam' : 'Due' }}
-              </span>
-              @if (exam.subjectTag) {
-                <span
-                  class="badge badge-subject"
-                  [style.--subject-hue]="subjectHue(exam.subjectTag)"
-                >{{ exam.subjectTag }}</span>
-              }
-              <span class="exam-chip-date">{{ exam.dateIso }}</span>
-              <button
-                type="button"
-                class="btn-edit"
-                (click)="startEditExam(exam.id)"
-                aria-label="Edit deadline or exam"
-                title="Edit"
-                data-testid="exam-chip-edit"
-              >✎</button>
-              <button
-                type="button"
-                class="btn-delete"
-                (click)="removeExam(exam.id)"
-                aria-label="Remove exam"
-                title="Remove exam"
-                data-testid="exam-chip-remove"
-              >
-                ✕
-              </button>
-            </span>
-          }
-        }
-      </div>
-    }
-
-    <form class="exam-add-form" (ngSubmit)="onAddExam()" data-testid="exam-form">
-      <mat-form-field appearance="outline" class="field-exam-subject">
-        <mat-label>Subject</mat-label>
-        <input
-          type="text"
-          name="examSubject"
-          matInput
-          [value]="examSubjectInput()"
-          (input)="examSubjectInput.set($any($event.target).value)"
-          data-testid="exam-input-subject"
-        />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="field-exam-date">
-        <mat-label>{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
-        <input
-          type="date"
-          name="examDate"
-          matInput
-          [value]="examDateInput()"
-          (input)="examDateInput.set($any($event.target).value)"
-          (change)="examDateInput.set($any($event.target).value)"
-          data-testid="exam-input-date"
-        />
-      </mat-form-field>
-      <div
-        class="kind-segmented"
-        role="radiogroup"
-        aria-label="Item importance"
-        data-testid="exam-kind-toggle"
-      >
-        <button
-          type="button"
-          class="kind-option"
-          [class.kind-option-active]="examKindInput() === 'DEADLINE'"
-          (click)="examKindInput.set('DEADLINE')"
-          data-testid="exam-kind-deadline"
-        >Deadline</button>
-        <button
-          type="button"
-          class="kind-option"
-          [class.kind-option-active]="examKindInput() === 'EXAM'"
-          (click)="examKindInput.set('EXAM')"
-          data-testid="exam-kind-exam"
-        >Exam</button>
-      </div>
-      <button
-        type="submit"
-        mat-stroked-button
-        class="btn-add-exam"
-        data-testid="exam-add-btn"
-      >
-        + Add
-      </button>
-    </form>
-  </div>
-
   <!-- Monster Card -->
   <div class="monster-card">
     <div class="monster-header">
@@ -373,7 +204,7 @@
     <!-- Anti-Distraction Sleeping Banner with live passive-Pomodoro countdown -->
     @if (store.monster().status === 'SLEEPING') {
       <div class="sleep-focus-banner" data-testid="digesting-message">
-        <p class="sleep-focus-text">🌿 Digesting peacefully... keep studying!</p>
+        <p class="sleep-focus-text">Digesting peacefully... keep studying!</p>
         <span class="pomodoro-row">
           <span class="pomodoro-hint">Passive focus block</span>
           @if (sleepCountdown() !== null) {
@@ -390,7 +221,7 @@
         @if (store.monster().stage !== 'GRADUATED_BEAST') {
           <span class="milestone-label">next · {{ store.xpProgress().next }} XP</span>
         } @else {
-          <span class="milestone-label">🎓 Maximum Evolution Achieved!</span>
+          <span class="milestone-label">Maximum Evolution Achieved!</span>
         }
       </div>
 

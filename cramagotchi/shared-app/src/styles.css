@@ -26,3 +26,12 @@ body {
   line-height: var(--leading-normal);
   -webkit-font-smoothing: antialiased;
 }
+
+/* Inline SVG button icons (pencil, close, check) — used instead of glyphs
+   so the JavaFX WebView (no symbol font) renders them identically */
+.btn-icon {
+  width: 0.85em;
+  height: 0.85em;
+  display: inline-block;
+  vertical-align: -0.08em;
+}

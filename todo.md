@@ -226,3 +226,29 @@ Metric: **V** = done
   `%APPDATA%\Cramagotchi\webview` resets desktop state.
 - Nothing else references JavaFX or the desktop toolchain (verified by grep),
   so the blast radius is limited to `desktopApp`.
+
+---
+
+# Layout coherence pass (deadlines card + emoji-free chrome)
+
+Branch: `fix/layout-deadlines-card` (from `dev`).
+
+Metric: **V** = done
+
+- V **Header tofu fixed:** the 🥚 emoji behind/next to the brand name rendered as a
+  hollow rectangle on the desktop WebView (no emoji font in JavaFX's WebKit).
+  Replaced by an inline line-art egg SVG (same path family as the EGG stage),
+  so the logo is font-independent everywhere. All other emoji/glyphs (⏳ 🌿 🎓
+  ✎ ✕ ✓ 🍿 🍱 🍽️) replaced with inline SVGs or plain text for the same reason.
+- V **New `exam-portfolio` component:** the deadlines/exams banner + chips + add
+  form moved out of `monster-sanctuary` into a dedicated card styled like the
+  task maker (same surface/radius/diffuse shadow), with a "Deadlines & Exams"
+  section header echoing "Study Queue".
+- V **Left pane order (all platforms — one shared bundle):** Deadlines & Exams
+  card → task maker form → task list. Monster card stays in its sticky right
+  panel; mobile stacks tasks first, sanctuary last.
+- V `monster-sanctuary` keeps only the monster: card, avatar symbols, motion,
+  sleep banner, XP bar (exam logic/markup/CSS fully extracted).
+- V Verified: 32/32 `ng test`, `ng build` clean, JS re-synced, desktop bundle
+  rebuilt, android + engine tests green. Desktop shows this structure on the
+  user's next launch (new WebKit renders the card same as web).

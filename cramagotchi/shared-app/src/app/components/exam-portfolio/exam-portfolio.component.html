@@ -1,0 +1,180 @@
+<section class="exam-portfolio" data-testid="exam-portfolio">
+  <header class="section-header">
+    <h2 class="section-title">Deadlines &amp; Exams</h2>
+    <span class="countdown-pill" data-testid="exam-countdown">
+      @if (store.nearestExamDays() !== null) {
+        <svg class="countdown-icon" viewBox="0 0 220 220" aria-hidden="true">
+          <!-- Hourglass, same line-art family as the monster -->
+          <path d="M78 42 H142 M78 178 H142 M88 42 V78 Q88 96 110 110 Q132 124 132 142 V178 M132 42 V78 Q132 96 110 110 Q88 124 88 142 V178"
+                fill="none" stroke="var(--color-espresso-dark, #2C221E)"
+                stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        <strong>{{ store.nearestExamDays() }}</strong>&nbsp;days → next {{ nearestIsExam() ? 'exam' : 'deadline' }}
+      } @else {
+        <span class="countdown-prompt">No upcoming deadlines — add one below</span>
+      }
+    </span>
+  </header>
+
+  <!-- Card body: existing chips up top, the add form beneath — one coherent card -->
+  <div class="exam-card">
+    @if (store.exams().length > 0) {
+      <div class="exams-list" data-testid="exams-list">
+        @for (exam of store.exams(); track exam.id) {
+          @if (editingExamId() === exam.id) {
+            <!-- Inline edit form for one deadline/exam chip -->
+            <form class="exam-edit-form" (ngSubmit)="saveEditExam()" data-testid="exam-edit-form">
+              <mat-form-field appearance="outline" class="field-exam-subject">
+                <mat-label>Subject</mat-label>
+                <input
+                  type="text"
+                  name="editExamSubject"
+                  matInput
+                  [value]="editExamSubject()"
+                  (input)="editExamSubject.set($any($event.target).value)"
+                  data-testid="exam-edit-subject"
+                />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="field-exam-date">
+                <mat-label>{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
+                <input
+                  type="date"
+                  name="editExamDate"
+                  matInput
+                  [value]="editExamDate()"
+                  (input)="editExamDate.set($any($event.target).value)"
+                  (change)="editExamDate.set($any($event.target).value)"
+                  data-testid="exam-edit-date"
+                />
+              </mat-form-field>
+              <div
+                class="kind-segmented"
+                role="radiogroup"
+                aria-label="Item importance"
+                data-testid="exam-edit-kind"
+              >
+                <button
+                  type="button"
+                  class="kind-option"
+                  [class.kind-option-active]="editExamKind() === 'DEADLINE'"
+                  (click)="editExamKind.set('DEADLINE')"
+                  data-testid="exam-edit-kind-deadline"
+                >Deadline</button>
+                <button
+                  type="button"
+                  class="kind-option"
+                  [class.kind-option-active]="editExamKind() === 'EXAM'"
+                  (click)="editExamKind.set('EXAM')"
+                  data-testid="exam-edit-kind-exam"
+                >Exam</button>
+              </div>
+              <div class="exam-edit-actions">
+                <button
+                  type="submit"
+                  mat-stroked-button
+                  class="btn-save-exam"
+                  data-testid="exam-edit-save"
+                >Save</button>
+                <button
+                  type="button"
+                  mat-stroked-button
+                  class="btn-cancel-exam"
+                  (click)="cancelEditExam()"
+                  data-testid="exam-edit-cancel"
+                >Cancel</button>
+              </div>
+            </form>
+          } @else {
+            <span class="exam-chip" [class.exam-chip-high]="exam.kind === 'EXAM'" data-testid="exam-chip">
+              <span class="kind-tag" [class.kind-tag-exam]="exam.kind === 'EXAM'">
+                {{ exam.kind === 'EXAM' ? 'Exam' : 'Due' }}
+              </span>
+              @if (exam.subjectTag) {
+                <span
+                  class="badge badge-subject"
+                  [style.--subject-hue]="subjectHue(exam.subjectTag)"
+                >{{ exam.subjectTag }}</span>
+              }
+              <span class="exam-chip-date">{{ exam.dateIso }}</span>
+              <button
+                type="button"
+                class="btn-edit"
+                (click)="startEditExam(exam.id)"
+                aria-label="Edit deadline or exam"
+                title="Edit"
+                data-testid="exam-chip-edit"
+              ><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 3.2 L12.8 4.8 L5.6 12 L3.2 12.8 L4 10.4 Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button
+                type="button"
+                class="btn-delete"
+                (click)="removeExam(exam.id)"
+                aria-label="Remove exam"
+                title="Remove exam"
+                data-testid="exam-chip-remove"
+              >
+                <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5 L11.5 11.5 M11.5 4.5 L4.5 11.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+              </button>
+            </span>
+          }
+        }
+      </div>
+    }
+
+    <form class="exam-add-form" (ngSubmit)="onAddExam()" data-testid="exam-form">
+      <mat-form-field appearance="outline" class="field-exam-subject">
+        <mat-label>Subject</mat-label>
+        <input
+          type="text"
+          name="examSubject"
+          matInput
+          [value]="examSubjectInput()"
+          (input)="examSubjectInput.set($any($event.target).value)"
+          data-testid="exam-input-subject"
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="field-exam-date">
+        <mat-label>{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
+        <input
+          type="date"
+          name="examDate"
+          matInput
+          [value]="examDateInput()"
+          (input)="examDateInput.set($any($event.target).value)"
+          (change)="examDateInput.set($any($event.target).value)"
+          data-testid="exam-input-date"
+        />
+      </mat-form-field>
+      <div class="exam-add-actions">
+        <div
+          class="kind-segmented"
+          role="radiogroup"
+          aria-label="Item importance"
+          data-testid="exam-kind-toggle"
+        >
+          <button
+            type="button"
+            class="kind-option"
+            [class.kind-option-active]="examKindInput() === 'DEADLINE'"
+            (click)="examKindInput.set('DEADLINE')"
+            data-testid="exam-kind-deadline"
+          >Deadline</button>
+          <button
+            type="button"
+            class="kind-option"
+            [class.kind-option-active]="examKindInput() === 'EXAM'"
+            (click)="examKindInput.set('EXAM')"
+            data-testid="exam-kind-exam"
+          >Exam</button>
+        </div>
+        <button
+          type="submit"
+          mat-stroked-button
+          class="btn-add-exam"
+          data-testid="exam-add-btn"
+        >
+          + Add
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

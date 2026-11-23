@@ -15,10 +15,20 @@
 }
 
 .app-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-size: var(--text-xl);
   font-weight: var(--weight-bold);
   color: var(--color-text-primary);
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.app-logo {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
 }
 
 .app-tagline {
@@ -28,6 +38,13 @@
 }
 
 .app-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* Left pane: the Deadlines & Exams card sewn to the Study Queue above it */
+.task-panel {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
