@@ -284,3 +284,26 @@ Metric: **V** = done
   testids preserved (`exam-form-error`, `exam-edit-error`, `exam-date-error`,
   `exam-edit-date-error`, `task-form-error`). Native-pick + edit-start clear
   the matching flag. Verified: 36/36 `ng test`, build clean, bundles synced.
+
+---
+
+## Backlog (planned — not started)
+
+- X **Deadline "finish in advance" bonus XP:** deadlines/exams currently only have
+  edit + remove. Add a third chip action — *finish* — for completing the item
+  before (or on) its date. Completing strictly before the deadline grants bonus
+  XP on top of the normal reward; the earlier the finish, the bigger the bonus
+  (tiered by days remaining — e.g. same-day = small, ≥ several days out = most).
+  Finishing on/after the due date gives no bonus (zero-punishment: no penalty,
+  just no extra). Finishing removes the chip like remove does, but feeds XP and
+  the monster. Pure logic (days-between, bonus tiers) should live in shared-logic
+  KMP so all three platforms share it; UI button per chip in `exam-portfolio`.
+
+- X **Collectible monsters with random hue:** make monsters collectible — a
+  collection of distinct monsters the user can unlock (e.g. by levelling /
+  milestones), each one a different species variant. Every collected monster
+  gets a random hue applied on acquisition (persisted with the save so the hue
+  sticks — same creature never re-rolls). Builds on the SVG symbol system:
+  hue via CSS custom property / fill token override so no per-hue asset is
+  needed. Needs: collection model + persistence in shared-logic/KMP store,
+  collection UI ( roster/gallery view), hue assignment + storage.
