@@ -8,13 +8,16 @@
     } @else {
       <span class="countdown-prompt">Set exam date:</span>
     }
-    <input
-      type="date"
-      class="input-exam-date"
-      [value]="store.examDateIso() ?? ''"
-      (change)="onExamDateChange($event)"
-      title="Set target exam date"
-    />
+    <mat-form-field appearance="outline" class="field-exam-date">
+      <mat-label>Exam date</mat-label>
+      <input
+        type="date"
+        matInput
+        [value]="store.examDateIso() ?? ''"
+        (change)="onExamDateChange($event)"
+        title="Set target exam date"
+      />
+    </mat-form-field>
   </div>
 
   <!-- Monster Card -->

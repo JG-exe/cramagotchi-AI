@@ -7,53 +7,51 @@
   <!-- Task Creation Form -->
   <form class="task-form" (ngSubmit)="onSubmit()" data-testid="task-form">
     <div class="form-row">
-      <input
-        type="text"
-        name="title"
-        class="input-title"
-        placeholder="What are you studying?"
-        [ngModel]="titleInput()"
-        (ngModelChange)="titleInput.set($event)"
-        required
-        data-testid="task-title-input"
-      />
-      <button type="submit" class="btn-add" [disabled]="!titleInput().trim()" data-testid="task-submit-btn">
+      <mat-form-field appearance="outline" class="field-title">
+        <mat-label>What are you studying?</mat-label>
+        <input
+          type="text"
+          name="title"
+          matInput
+          [ngModel]="titleInput()"
+          (ngModelChange)="titleInput.set($event)"
+          required
+          data-testid="task-title-input"
+        />
+      </mat-form-field>
+      <button
+        type="submit"
+        mat-flat-button
+        class="btn-add"
+        [disabled]="!titleInput().trim()"
+        data-testid="task-submit-btn"
+      >
         + Add
       </button>
     </div>
 
     <div class="form-controls">
-      <div class="weight-selector" role="radiogroup" aria-label="Task size">
-        <label class="radio-label" [class.selected]="weightInput() === 'SNACK'">
-          <input
-            type="radio"
-            name="weight"
-            value="SNACK"
-            [checked]="weightInput() === 'SNACK'"
-            (change)="weightInput.set('SNACK')"
-          />
-          <span class="pill pill-snack">Snack (+10 XP)</span>
-        </label>
-        <label class="radio-label" [class.selected]="weightInput() === 'MEAL'">
-          <input
-            type="radio"
-            name="weight"
-            value="MEAL"
-            [checked]="weightInput() === 'MEAL'"
-            (change)="weightInput.set('MEAL')"
-          />
-          <span class="pill pill-meal">Meal (+25 XP)</span>
-        </label>
-      </div>
+      <mat-radio-group
+        class="weight-selector"
+        name="weight"
+        aria-label="Task size"
+        [ngModel]="weightInput()"
+        (ngModelChange)="weightInput.set($event)"
+      >
+        <mat-radio-button value="SNACK" class="radio-label pill-snack">Snack (+10 XP)</mat-radio-button>
+        <mat-radio-button value="MEAL" class="radio-label pill-meal">Meal (+25 XP)</mat-radio-button>
+      </mat-radio-group>
 
-      <input
-        type="text"
-        name="subject"
-        class="input-subject"
-        placeholder="Subject / Topic (optional)"
-        [ngModel]="subjectInput()"
-        (ngModelChange)="subjectInput.set($event)"
-      />
+      <mat-form-field appearance="outline" class="field-subject">
+        <mat-label>Subject / Topic (optional)</mat-label>
+        <input
+          type="text"
+          name="subject"
+          matInput
+          [ngModel]="subjectInput()"
+          (ngModelChange)="subjectInput.set($event)"
+        />
+      </mat-form-field>
     </div>
   </form>
 
@@ -67,15 +65,12 @@
 
     @for (task of store.activeTasks(); track task.id) {
       <div class="task-card" [attr.data-task-id]="task.id">
-        <label class="task-checkbox-label">
-          <input
-            type="checkbox"
-            class="task-checkbox"
-            (change)="store.completeTask(task.id)"
-            [checked]="task.completed"
-          />
-          <span class="custom-checkbox"></span>
-        </label>
+        <mat-checkbox
+          class="task-checkbox"
+          (change)="store.completeTask(task.id)"
+          [checked]="task.completed"
+          aria-label="Complete and feed to Cramagotchi"
+        />
 
         <div class="task-info">
           <span class="task-title">{{ task.title }}</span>

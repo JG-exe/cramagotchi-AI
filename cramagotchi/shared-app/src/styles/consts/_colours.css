@@ -10,3 +10,26 @@
   --color-status-sleep: #81B29A;
   --color-border: #E2E8F0;
 }
+
+/* Material M3 token overrides — rebrand the prebuilt azure-blue theme to
+   the Cramagotchi palette. All Material components read these --mat-sys
+   variables, so overriding here re-themes every primitive consistently. */
+:root {
+  --mat-sys-primary: var(--color-accent-meal);
+  --mat-sys-on-primary: #ffffff;
+  --mat-sys-primary-container: #E1EFE5;
+  --mat-sys-on-primary-container: #1F3D28;
+  --mat-sys-secondary: var(--color-accent-snack);
+  --mat-sys-on-secondary: #ffffff;
+  --mat-sys-secondary-container: #F7E8D4;
+  --mat-sys-on-secondary-container: #4A3517;
+  --mat-sys-surface: var(--color-surface);
+  --mat-sys-on-surface: var(--color-text-primary);
+  --mat-sys-on-surface-variant: var(--color-text-muted);
+  --mat-sys-surface-container: #F4F1EC;
+  --mat-sys-surface-container-high: #EFEBE4;
+  --mat-sys-background: var(--color-bg-primary);
+  --mat-sys-on-background: var(--color-text-primary);
+  --mat-sys-outline: var(--color-border);
+  --mat-sys-outline-variant: var(--color-border);
+}

@@ -1,6 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, TaskWeight } from '../../services/monster-store.service';
 
 /**
@@ -22,7 +27,15 @@ function subjectTagToHue(subjectTag: string): number {
 @Component({
   selector: 'app-task-queue',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatCheckboxModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatRadioModule,
+    MatButtonModule,
+  ],
   templateUrl: './task-queue.component.html',
   styleUrl: './task-queue.component.css',
 })
