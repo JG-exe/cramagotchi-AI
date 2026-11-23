@@ -307,3 +307,13 @@ Metric: **V** = done
   hue via CSS custom property / fill token override so no per-hue asset is
   needed. Needs: collection model + persistence in shared-logic/KMP store,
   collection UI ( roster/gallery view), hue assignment + storage.
+- V **Hotfix — desktop date picker:** the calendar button was dead on desktop
+  (JavaFX WebView's older WebKit has no `showPicker()`). When the native
+  picker is unavailable the button now opens a component-rendered fallback
+  calendar (Monday-first month grid, prev/next navigation, backdrop click to
+  close, picked day highlighted). Native `showPicker` stays preferred on
+  Android/browser; a bare click on the text input opens the native picker but
+  never the fallback, so masked typing keeps working. New testids:
+  `date-fallback-calendar`, `date-calendar-prev/-next/-day`,
+  `date-calendar-backdrop`. Verified: 40/40 `ng test`, build clean, bundles
+  synced (desktop packages straight from `dist/web-app/browser`).

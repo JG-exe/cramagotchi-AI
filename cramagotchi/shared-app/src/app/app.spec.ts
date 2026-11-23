@@ -533,6 +533,87 @@ describe('App (root component)', () => {
 
     expect(mockStore.updateExam).toHaveBeenCalledWith('exam-1', 'BIO 201', isoDaysFromNow(12), 'EXAM');
   });
+
+  // ── Desktop fallback calendar (engines without native showPicker) ──
+
+  it('should open the fallback calendar from the calendar button when showPicker is unavailable', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeNull();
+
+    const pickerBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]');
+    expect(pickerBtn).toBeTruthy();
+    pickerBtn!.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeTruthy();
+    expect(compiled.querySelector('[data-testid="date-calendar-day"]')).toBeTruthy();
+  });
+
+  it('should apply the fallback-picked date to the add form and close the calendar', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]')!.click();
+    fixture.detectChanges();
+
+    const enabledDays = Array.from(
+      compiled.querySelectorAll<HTMLButtonElement>('[data-testid="date-calendar-day"]'),
+    ).filter((btn) => !btn.disabled && !btn.classList.contains('date-cell-muted'));
+    expect(enabledDays.length).toBeGreaterThan(0);
+    enabledDays[enabledDays.length - 1]!.click();
+    fixture.detectChanges();
+
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]');
+    expect(dateInput?.value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeNull();
+  });
+
+  it('should close the fallback calendar via the backdrop without changing the date', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]')!.click();
+    fixture.detectChanges();
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeTruthy();
+
+    const backdrop = compiled.querySelector<HTMLElement>('[data-testid="date-calendar-backdrop"]');
+    expect(backdrop).toBeTruthy();
+    backdrop!.click();
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('[data-testid="date-fallback-calendar"]')).toBeNull();
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]');
+    expect(dateInput?.value).toBe('');
+  });
+
+  it('should navigate fallback-calendar months via prev/next', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-date-picker-btn"]')!.click();
+    fixture.detectChanges();
+
+    const title = () =>
+      compiled.querySelector<HTMLElement>('[data-testid="date-fallback-calendar"] .date-fallback-title')?.textContent?.trim();
+    const before = title();
+    expect(before).toBeTruthy();
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="date-calendar-next"]')!.click();
+    fixture.detectChanges();
+    const afterNext = title();
+    expect(afterNext).not.toBe(before);
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="date-calendar-prev"]')!.click();
+    compiled.querySelector<HTMLButtonElement>('[data-testid="date-calendar-prev"]')!.click();
+    fixture.detectChanges();
+    expect(title()).not.toBe(afterNext);
+  });
 });
 
 /** Build a StudyTask fixture. */

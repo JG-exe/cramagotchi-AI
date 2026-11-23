@@ -168,6 +168,7 @@
 
 .field-exam-date-wrap {
   width: 170px;
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -291,4 +292,99 @@
 
 .btn-delete:hover {
   color: var(--color-status-hungry);
+}
+
+/* ── Fallback calendar (engines without native showPicker, e.g.
+      JavaFX WebView on desktop) ─────────────────────────────────────── */
+
+.date-fallback-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: transparent;
+}
+
+.date-fallback {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 70;
+  width: 232px;
+  padding: var(--space-xs, 8px);
+  background: var(--color-surface, #FAF6F0);
+  border: 1px solid color-mix(in srgb, var(--color-espresso-dark, #2C221E) 12%, transparent);
+  border-radius: var(--radius-md, 16px);
+  box-shadow: var(--shadow-diffuse-sm, 0 6px 18px rgba(44, 34, 30, 0.12));
+}
+
+.date-fallback-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs, 4px);
+  margin-bottom: var(--space-2xs, 4px);
+}
+
+.date-fallback-title {
+  font-size: var(--text-sm, 0.85rem);
+  font-weight: 600;
+  color: var(--color-text-primary, #2C221E);
+}
+
+.date-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  background: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.date-nav-btn:hover {
+  color: var(--color-text-primary, #2C221E);
+  background: color-mix(in srgb, var(--color-espresso-dark, #2C221E) 6%, transparent);
+}
+
+.date-fallback-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.date-fallback-wd {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  padding: 2px 0;
+}
+
+.date-cell {
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  background: none;
+  font-size: var(--text-xs, 0.78rem);
+  color: var(--color-text-primary, #2C221E);
+  cursor: pointer;
+}
+
+.date-cell:hover {
+  background: color-mix(in srgb, var(--color-espresso-dark, #2C221E) 8%, transparent);
+}
+
+.date-cell-muted {
+  color: color-mix(in srgb, var(--color-text-muted, #9A8F86) 55%, transparent);
+  cursor: default;
+}
+
+.date-cell-selected {
+  background: var(--color-sage-base, #6E9E7B);
+  color: #FFFDF9;
 }
