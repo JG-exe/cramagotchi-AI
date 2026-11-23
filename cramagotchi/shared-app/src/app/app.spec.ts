@@ -46,6 +46,16 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     return dayCountdown();
   });
 
+  // Nearest upcoming exam/deadline entry (exam day >= today), or null.
+  const nearestExam = computed<ExamRef | null>(() => {
+    const today = new Date().setHours(0, 0, 0, 0);
+    const upcoming = exams()
+      .map(e => ({ e, days: Math.ceil((new Date(e.dateIso).setHours(0, 0, 0, 0) - today) / (1000 * 60 * 60 * 24)) }))
+      .filter(x => x.days >= 0);
+    if (upcoming.length === 0) return null;
+    return upcoming.reduce((a, b) => (a.days <= b.days ? a : b)).e;
+  });
+
   return {
     monster,
     tasks,
@@ -53,6 +63,7 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     exams,
     dayTick: signal(0),
     nearestExamDays: nearest,
+    nearestUpcomingExam: nearestExam,
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
     devouredTasks: computed(() => tasks().filter(t => t.completed)),
     examCountdownDays: dayCountdown,
@@ -64,10 +75,12 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
       return { current: xp, next: xp, percent: 100 };
     }),
     addTask: vi.fn(),
+    updateTask: vi.fn(),
     completeTaskWithTime: vi.fn(),
     deleteTask: vi.fn(),
     setExamDate: vi.fn(),
     addExam: vi.fn(),
+    updateExam: vi.fn(),
     removeExam: vi.fn(),
   };
 }
@@ -270,7 +283,8 @@ describe('App (root component)', () => {
     dateInput!.dispatchEvent(new Event('change'));
     addBtn!.click();
 
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5));
+    // Deadline is the default kind — a plain add never creates an EXAM
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'DEADLINE');
   });
 
   // ── Test 10: Completing passes the recorded actual minutes ──
@@ -345,6 +359,179 @@ describe('App (root component)', () => {
     submitBtn?.click();
 
     expect(mockStore.addTask).toHaveBeenCalledWith('Read Chapter 5', 'SNACK', undefined, 40);
+  });
+
+  // ── Test 13: Deadlines are the default; the toggle escalates to EXAM ──
+
+  it('should create a high-stakes EXAM when the kind toggle is switched to Exam', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    // Deadline is the active option by default
+    expect(
+      compiled.querySelector('[data-testid="exam-kind-deadline"]')?.classList
+    ).toContain('kind-option-active');
+
+    // Flip the kind to EXAM
+    const examOption = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-kind-exam"]');
+    expect(examOption).toBeTruthy();
+    examOption!.click();
+    fixture.detectChanges();
+
+    const subjectInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-subject"]');
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]');
+    subjectInput!.value = 'MATH';
+    subjectInput!.dispatchEvent(new Event('input'));
+    dateInput!.value = isoDaysFromNow(5);
+    dateInput!.dispatchEvent(new Event('change'));
+
+    const addBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]');
+    addBtn!.click();
+
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'EXAM');
+  });
+
+  // ── Test 14: Chips show the kind; "Due" vs the escalated "Exam" ──
+
+  it('should show a Due tag for deadlines and a stronger Exam tag for exams', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([
+      makeExam('exam-1', 9, 'BIO'),
+      { id: 'exam-2', subjectTag: 'MATH', dateIso: isoDaysFromNow(3), kind: 'EXAM' },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const chips = compiled.querySelectorAll('[data-testid="exam-chip"]');
+    expect(chips.length).toBe(2);
+
+    const highChip = compiled.querySelector('.exam-chip-high');
+    expect(highChip?.textContent).toContain('Exam');
+    // The plain deadline chip still shows its muted Due tag
+    const lowChip = Array.from(chips).find(c => !c.classList.contains('exam-chip-high'));
+    expect(lowChip?.textContent).toContain('Due');
+  });
+
+  // ── Test 15: Countdown names the nearest item explicitly ──
+
+  it('should say "deadline" or "exam" in the countdown depending on the nearest item', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([makeExam('exam-1', 3, 'BIO')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    let fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-countdown"]')?.textContent)
+      .toContain('deadline');
+
+    mockStore.exams.set([
+      { id: 'exam-1', subjectTag: 'BIO', dateIso: isoDaysFromNow(3), kind: 'EXAM' },
+    ]);
+    fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="exam-countdown"]')?.textContent)
+      .toContain('exam');
+  });
+
+  // ── Test 16: Active tasks can be edited in place ─────────
+
+  it('should open an inline edit form and call store.updateTask() on save', () => {
+    mockStore = createMockStore();
+    mockStore.tasks.set([makeTask('Old title', 'Old subj', { estimatedMinutes: 30 })]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const editBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-btn"]');
+    expect(editBtn).toBeTruthy();
+    editBtn!.click();
+    fixture.detectChanges();
+
+    const titleInput = compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-title"]');
+    expect(titleInput?.value).toBe('Old title'); // pre-filled with current values
+    const subjectInput = compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-subject"]');
+    expect(subjectInput?.value).toBe('Old subj');
+
+    titleInput!.value = '  New title  ';
+    titleInput!.dispatchEvent(new Event('input'));
+    subjectInput!.value = 'New subject';
+    subjectInput!.dispatchEvent(new Event('input'));
+
+    const saveBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-save"]');
+    expect(saveBtn?.disabled).toBe(false);
+    saveBtn!.click();
+
+    expect(mockStore.updateTask).toHaveBeenCalledWith(
+      expect.any(String), 'New title', expect.anything(), 'New subject', expect.anything()
+    );
+  });
+
+  // ── Test 17: Blank title can never overwrite a task ──────
+
+  it('should keep the save button disabled while the edited title is blank', () => {
+    mockStore = createMockStore();
+    mockStore.tasks.set([makeTask('Real title')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-btn"]')!.click();
+    fixture.detectChanges();
+
+    const titleInput = compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-title"]');
+    titleInput!.value = '   ';
+    titleInput!.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    const saveBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-save"]');
+    expect(saveBtn?.disabled).toBe(true);
+    expect(mockStore.updateTask).not.toHaveBeenCalled();
+  });
+
+  // ── Test 18: Deadline chips can be edited (subject/date/kind) ──
+
+  it('should open the chip edit form pre-filled and call store.updateExam() on save', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([makeExam('exam-1', 9, 'BIO')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const editBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-chip-edit"]');
+    expect(editBtn).toBeTruthy();
+    editBtn!.click();
+    fixture.detectChanges();
+
+    const subjectInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-edit-subject"]');
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-edit-date"]');
+    expect(subjectInput?.value).toBe('BIO'); // pre-filled with current values
+
+    subjectInput!.value = 'BIO 201';
+    subjectInput!.dispatchEvent(new Event('input'));
+    dateInput!.value = isoDaysFromNow(12);
+    dateInput!.dispatchEvent(new Event('change'));
+
+    // Escalate to a high-stakes EXAM via the kind toggle in the edit form
+    const examOption = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-edit-kind-exam"]');
+    expect(examOption).toBeTruthy();
+    examOption!.click();
+    fixture.detectChanges();
+
+    const saveBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-edit-save"]');
+    expect(saveBtn).toBeTruthy();
+    saveBtn!.click();
+
+    expect(mockStore.updateExam).toHaveBeenCalledWith('exam-1', 'BIO 201', isoDaysFromNow(12), 'EXAM');
   });
 });
 

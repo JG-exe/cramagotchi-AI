@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MonsterStoreService, EvolutionStage, MonsterStatus } from '../../services/monster-store.service';
+import { MonsterStoreService, EvolutionStage, MonsterStatus, ExamKind } from '../../services/monster-store.service';
 
 export function subjectTagToHue(subjectTag: string): number {
   let hash = 0;
@@ -73,6 +73,14 @@ export class MonsterSanctuaryComponent {
 
   examSubjectInput = signal('');
   examDateInput = signal('');
+  /** Every dated item starts as a plain deadline; escalate to EXAM explicitly. */
+  examKindInput = signal<ExamKind>('DEADLINE');
+
+  /** Which exam/deadline chip is currently being edited (id), if any. */
+  editingExamId = signal<string | null>(null);
+  editExamSubject = signal('');
+  editExamDate = signal('');
+  editExamKind = signal<ExamKind>('DEADLINE');
 
   /** Lowercased evolution stage, used to pick the body symbol: #cram-body-… */
   readonly stageKey = computed(() => this.store.monster().stage.toLowerCase());
@@ -82,6 +90,9 @@ export class MonsterSanctuaryComponent {
 
   /** Level + label for the current evolution stage. */
   readonly stageMeta = computed(() => STAGE_META[this.store.monster().stage]);
+
+  /** True when the nearest upcoming dated item is the high-stakes EXAM kind. */
+  readonly nearestIsExam = computed(() => this.store.nearestUpcomingExam()?.kind === 'EXAM');
 
   /** Companion-tone label for the current status. */
   readonly statusTone = computed(() => STATUS_TONE[this.store.monster().status]);
@@ -109,13 +120,38 @@ export class MonsterSanctuaryComponent {
     // Empty submissions are ignored, and only a well-formed calendar date
     // reaches the engine (which stores dateIso verbatim).
     if (!date || !isValidIsoDate(date)) return;
-    this.store.addExam(this.examSubjectInput().trim() || null, date);
+    this.store.addExam(this.examSubjectInput().trim() || null, date, this.examKindInput());
     this.examSubjectInput.set('');
     this.examDateInput.set('');
+    this.examKindInput.set('DEADLINE');
   }
 
   removeExam(examId: string): void {
     this.store.removeExam(examId);
+  }
+
+  /** Open the inline edit form for one exam/deadline chip. */
+  startEditExam(examId: string): void {
+    const exam = this.store.exams().find(e => e.id === examId);
+    if (!exam) return;
+    this.editingExamId.set(examId);
+    this.editExamSubject.set(exam.subjectTag ?? '');
+    this.editExamDate.set(exam.dateIso);
+    this.editExamKind.set(exam.kind ?? 'DEADLINE');
+  }
+
+  cancelEditExam(): void {
+    this.editingExamId.set(null);
+  }
+
+  /** Persist the chip edit — only a valid calendar date reaches the engine. */
+  saveEditExam(): void {
+    const examId = this.editingExamId();
+    if (!examId) return;
+    const date = this.editExamDate();
+    if (!date || !isValidIsoDate(date)) return;
+    this.store.updateExam(examId, this.editExamSubject().trim() || null, date, this.editExamKind());
+    this.editingExamId.set(null);
   }
 
   subjectHue(subjectTag: string): number {

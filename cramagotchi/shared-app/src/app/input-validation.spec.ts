@@ -35,13 +35,16 @@ function createMockStore() {
     exams,
     dayTick: signal(0),
     nearestExamDays: computed(() => null),
+    nearestUpcomingExam: computed(() => null),
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
     devouredTasks: computed(() => tasks().filter(t => t.completed)),
     xpProgress: computed(() => ({ current: 0, next: 50, percent: 0 })),
     addTask: vi.fn(),
+    updateTask: vi.fn(),
     completeTaskWithTime: vi.fn(),
     deleteTask: vi.fn(),
     addExam: vi.fn(),
+    updateExam: vi.fn(),
     removeExam: vi.fn(),
   };
 }
@@ -169,7 +172,7 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     );
     compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
 
-    expect(mockStore.addExam).toHaveBeenCalledWith(null, '2020-01-15');
+    expect(mockStore.addExam).toHaveBeenCalledWith(null, '2020-01-15', 'DEADLINE');
   });
 
   // ── Task estimate ──────────────────────────────────────────────────
@@ -260,5 +263,49 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     setInput(actual, '-3');
     checkbox.click();
     expect(mockStore.completeTaskWithTime.mock.calls[0][1]).toBeNull();
+  });
+
+  // ── Edit forms: same guards apply ──────────────────────────────────
+
+  it('exam edit form never hands a malformed date to updateExam', () => {
+    mockStore.exams.set([{ id: 'exam-1', subjectTag: 'BIO', dateIso: '2026-12-11', kind: 'DEADLINE' }]);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-chip-edit"]')!.click();
+    fixture.detectChanges();
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-edit-date"]')!,
+      '2026-02-30' // impossible calendar date
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-edit-save"]')!.click();
+
+    expect(mockStore.updateExam).not.toHaveBeenCalled();
+  });
+
+  it('task edit form never hands garbage or non-positive estimates to updateTask', () => {
+    mockStore.tasks.set([makeTask('Problem set')]);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-btn"]')!.click();
+    fixture.detectChanges();
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-title"]')!,
+      'Edited title'
+    );
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="task-edit-estimate"]')!,
+      'abc'
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="task-edit-save"]')!.click();
+
+    expect(mockStore.updateTask).toHaveBeenCalledTimes(1);
+    // Garbage estimate must pass null (cleared), never the raw string
+    expect(mockStore.updateTask.mock.calls[0][4]).toBeNull();
   });
 });

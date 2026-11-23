@@ -25,6 +25,17 @@ enum class EvolutionStage(val level: Int, val minXp: Int) {
     GRADUATED_BEAST(4, 300)
 }
 
+/**
+ * What kind of dated item this entry is. Every dated item is by default a
+ * plain DEADLINE; flipping it to EXAM marks it as the high-stakes variant
+ * (a deadline the user upgraded, e.g. the actual exam day).
+ */
+@TsExport
+enum class ExamKind {
+    DEADLINE,
+    EXAM
+}
+
 @TsExport
 @Serializable
 data class StudyTask(
@@ -41,14 +52,19 @@ data class StudyTask(
     val awardedXp: Int? = null
 )
 
-/** One upcoming exam, contributing its own countdown. */
+/**
+ * One upcoming exam or deadline, contributing its own countdown.
+ * `kind` defaults to DEADLINE, so legacy payloads (written before the
+ * deadline/exam distinction existed) deserialise as plain deadlines.
+ */
 @TsExport
 @Serializable
 data class Exam(
     val id: String,
     val subjectTag: String? = null,
     /** ISO date, `YYYY-MM-DD`. */
-    val dateIso: String
+    val dateIso: String,
+    val kind: ExamKind = ExamKind.DEADLINE
 )
 
 @TsExport
@@ -70,6 +86,6 @@ data class AppState(
     val monster: MonsterState,
     /** Legacy single-exam field — kept for deserialization of old storage. */
     val examDateIso: String? = null,
-    /** Active exams; the countdown targets the nearest upcoming one. */
+    /** Active exams and deadlines; the countdown targets the nearest upcoming one. */
     val exams: List<Exam> = emptyList()
 )

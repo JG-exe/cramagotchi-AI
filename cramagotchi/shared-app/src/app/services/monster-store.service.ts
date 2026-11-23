@@ -11,6 +11,8 @@ type KmpAppState = import('../../assets/kmp/cramagotchi-shared-logic.js').com.cr
 export type TaskWeight = 'SNACK' | 'MEAL';
 export type MonsterStatus = 'IDLE' | 'HUNGRY' | 'EATING' | 'SLEEPING';
 export type EvolutionStage = 'EGG' | 'HATCHLING' | 'SCHOLAR' | 'GRADUATED_BEAST';
+/** Every dated item is a DEADLINE by default; EXAM is the high-stakes upgrade. */
+export type ExamKind = 'DEADLINE' | 'EXAM';
 
 export interface StudyTask {
   id: string;
@@ -26,11 +28,12 @@ export interface StudyTask {
   awardedXp?: number | null;
 }
 
-/** One upcoming exam, as exposed to the UI. */
+/** One upcoming exam or deadline, as exposed to the UI. */
 export interface ExamRef {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  kind?: ExamKind;
 }
 
 export interface MonsterState {
@@ -84,6 +87,13 @@ export class MonsterStoreService {
     return Engine.nearestExamDays(this.kmpState(), Date.now()) ?? null;
   });
 
+  /** Nearest upcoming exam/deadline entry (exam day >= today), or null. */
+  readonly nearestUpcomingExam = computed<ExamRef | null>(() => {
+    this.dayTick();
+    const nearest = Engine.nearestUpcomingExam(this.kmpState(), Date.now());
+    return nearest ? toExamRef(nearest) : null;
+  });
+
   /** Active (uncompleted) tasks */
   readonly activeTasks = computed(() => this.tasks().filter(t => !t.completed));
 
@@ -134,6 +144,34 @@ export class MonsterStoreService {
     this.persistToStorage();
   }
 
+  /**
+   * Edit an uncompleted task: replaces title/weight/subject/estimate.
+   * Delegates to the engine — completed tasks and unknown ids are no-ops.
+   */
+  updateTask(
+    taskId: string,
+    title: string,
+    weight: TaskWeight,
+    subjectTag?: string | null,
+    estimatedMinutes?: number | null
+  ): void {
+    const trimmed = title.trim();
+    if (!trimmed) return; // never push an empty title into the engine
+
+    const kmpWeight = weight === 'SNACK' ? Model.TaskWeight.SNACK : Model.TaskWeight.MEAL;
+    this.kmpState.set(
+      Engine.updateTask(
+        this.kmpState(),
+        taskId,
+        trimmed,
+        kmpWeight,
+        subjectTag?.trim() || null,
+        estimatedMinutes ?? null
+      )
+    );
+    this.persistToStorage();
+  }
+
   completeTask(taskId: string): void {
     this.completeTaskWithTime(taskId, null);
   }
@@ -150,9 +188,18 @@ export class MonsterStoreService {
     this.persistToStorage();
   }
 
-  /** Add an exam (subject label optional) to the exam portfolio. */
-  addExam(subjectTag: string | null, dateIso: string): void {
-    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now()));
+  /** Add an exam or deadline (subject label optional); deadline is the default kind. */
+  addExam(subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+    const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
+    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now(), kmpKind));
+    this.persistToStorage();
+  }
+
+  /** Edit an exam/deadline in place: subject, date and kind. */
+  updateExam(examId: string, subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+    if (!dateIso) return;
+    const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
+    this.kmpState.set(Engine.updateExam(this.kmpState(), examId, subjectTag, dateIso, kmpKind));
     this.persistToStorage();
   }
 
@@ -241,12 +288,15 @@ type KmpExam = {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  kind?: { name: string } | string;
 };
 
 function toExamRef(e: KmpExam): ExamRef {
+  const kindName = typeof e.kind === 'string' ? e.kind : e.kind?.name;
   return {
     id: e.id,
     subjectTag: e.subjectTag ?? undefined,
     dateIso: e.dateIso,
+    kind: (kindName === 'EXAM' ? 'EXAM' : 'DEADLINE') as ExamKind,
   };
 }

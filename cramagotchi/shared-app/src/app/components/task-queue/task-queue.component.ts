@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, TaskWeight } from '../../services/monster-store.service';
 
@@ -33,7 +32,6 @@ function subjectTagToHue(subjectTag: string): number {
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
-    MatRadioModule,
     MatButtonModule,
   ],
   templateUrl: './task-queue.component.html',
@@ -50,6 +48,53 @@ export class TaskQueueComponent {
 
   /** Actual minutes spent, keyed by task id — user-recorded per task. */
   actualMinutes: Record<string, string> = {};
+
+  /** Which active task is currently being edited (id), if any. */
+  editingTaskId = signal<string | null>(null);
+  editTitle = signal('');
+  editSubject = signal('');
+  editEstimate = signal('');
+  editWeight = signal<TaskWeight>('SNACK');
+
+  /** Open the inline edit form for one active task card. */
+  startEditTask(taskId: string): void {
+    const task = this.store.activeTasks().find(t => t.id === taskId);
+    if (!task) return;
+    this.editingTaskId.set(taskId);
+    this.editTitle.set(task.title);
+    this.editSubject.set(task.subjectTag ?? '');
+    this.editEstimate.set(task.estimatedMinutes != null ? String(task.estimatedMinutes) : '');
+    this.editWeight.set(task.weight);
+  }
+
+  cancelEditTask(): void {
+    this.editingTaskId.set(null);
+  }
+
+  /**
+   * Persist the task edit. The title is required (blank input aborts, the
+   * old task is kept); the estimate must be a positive number if supplied —
+   * the same invalid-input rules as the add form.
+   */
+  saveEditTask(): void {
+    const taskId = this.editingTaskId();
+    if (!taskId) return;
+
+    const title = this.editTitle().trim();
+    if (!title) return;
+
+    const estimate = Number(this.editEstimate());
+    const validEstimate = Number.isFinite(estimate) && estimate > 0 ? estimate : null;
+
+    this.store.updateTask(
+      taskId,
+      title,
+      this.editWeight(),
+      this.editSubject().trim() || null,
+      validEstimate
+    );
+    this.editingTaskId.set(null);
+  }
 
   onSubmit(): void {
     const title = this.titleInput().trim();
