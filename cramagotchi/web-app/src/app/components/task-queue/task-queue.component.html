@@ -1,3 +1,132 @@
-<section class="task-queue">
-  <p>Task queue placeholder</p>
+<section class="task-queue-container">
+  <header class="section-header">
+    <h2 class="section-title">Study Tasks</h2>
+    <span class="active-count">{{ store.activeTasks().length }} active</span>
+  </header>
+
+  <!-- Task Creation Form -->
+  <form class="task-form" (ngSubmit)="onSubmit()" data-testid="task-form">
+    <div class="form-row">
+      <input
+        type="text"
+        name="title"
+        class="input-title"
+        placeholder="What are you studying?"
+        [ngModel]="titleInput()"
+        (ngModelChange)="titleInput.set($event)"
+        required
+        data-testid="task-title-input"
+      />
+      <button type="submit" class="btn-add" [disabled]="!titleInput().trim()" data-testid="task-submit-btn">
+        + Add
+      </button>
+    </div>
+
+    <div class="form-controls">
+      <div class="weight-selector" role="radiogroup" aria-label="Task size">
+        <label class="radio-label" [class.selected]="weightInput() === 'SNACK'">
+          <input
+            type="radio"
+            name="weight"
+            value="SNACK"
+            [checked]="weightInput() === 'SNACK'"
+            (change)="weightInput.set('SNACK')"
+          />
+          <span class="pill pill-snack">Snack (+10 XP)</span>
+        </label>
+        <label class="radio-label" [class.selected]="weightInput() === 'MEAL'">
+          <input
+            type="radio"
+            name="weight"
+            value="MEAL"
+            [checked]="weightInput() === 'MEAL'"
+            (change)="weightInput.set('MEAL')"
+          />
+          <span class="pill pill-meal">Meal (+25 XP)</span>
+        </label>
+      </div>
+
+      <input
+        type="text"
+        name="subject"
+        class="input-subject"
+        placeholder="Subject / Topic (optional)"
+        [ngModel]="subjectInput()"
+        (ngModelChange)="subjectInput.set($event)"
+      />
+    </div>
+  </form>
+
+  <!-- Active Tasks List -->
+  <div class="task-list" data-testid="active-tasks-list">
+    @if (store.activeTasks().length === 0) {
+      <div class="empty-state">
+        <p>No study tasks queued. Add a snack or meal to keep your Cramagotchi fed!</p>
+      </div>
+    }
+
+    @for (task of store.activeTasks(); track task.id) {
+      <div class="task-card" [attr.data-task-id]="task.id">
+        <label class="task-checkbox-label">
+          <input
+            type="checkbox"
+            class="task-checkbox"
+            (change)="store.completeTask(task.id)"
+            [checked]="task.completed"
+          />
+          <span class="custom-checkbox"></span>
+        </label>
+
+        <div class="task-info">
+          <span class="task-title">{{ task.title }}</span>
+          <div class="task-badges">
+            <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
+              {{ task.weight === 'SNACK' ? '🍿 Snack (+10)' : '🍱 Meal (+25)' }}
+            </span>
+            @if (task.subjectTag) {
+              <span class="badge badge-subject">{{ task.subjectTag }}</span>
+            }
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="btn-delete"
+          (click)="store.deleteTask(task.id)"
+          aria-label="Delete task"
+          title="Delete task"
+        >
+          ✕
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Devoured History Accordion -->
+  @if (store.devouredTasks().length > 0) {
+    <div class="devoured-section">
+      <button
+        type="button"
+        class="btn-toggle-devoured"
+        (click)="toggleDevoured()"
+      >
+        <span>🍽️ Devoured Tasks ({{ store.devouredTasks().length }})</span>
+        <span>{{ showDevoured() ? '▲' : '▼' }}</span>
+      </button>
+
+      @if (showDevoured()) {
+        <div class="devoured-list">
+          @for (task of store.devouredTasks(); track task.id) {
+            <div class="devoured-item">
+              <span class="devoured-check">✓</span>
+              <span class="devoured-title">{{ task.title }}</span>
+              <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
+                +{{ task.weight === 'SNACK' ? '10' : '25' }} XP
+              </span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
 </section>

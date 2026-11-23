@@ -24,10 +24,15 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
 
   const monster = signal(monsterState);
   const tasks = signal<StudyTask[]>([]);
+  const examDateIso = signal<string | null>(null);
 
   return {
     monster,
     tasks,
+    examDateIso,
+    activeTasks: computed(() => tasks().filter(t => !t.completed)),
+    devouredTasks: computed(() => tasks().filter(t => t.completed)),
+    examCountdownDays: computed(() => null),
     xpProgress: computed(() => {
       const xp = monster().xp;
       if (xp < 50) return { current: xp, next: 50, percent: (xp / 50) * 100 };
@@ -38,6 +43,7 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     addTask: vi.fn(),
     completeTask: vi.fn(),
     deleteTask: vi.fn(),
+    setExamDate: vi.fn(),
   };
 }
 

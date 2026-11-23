@@ -3,6 +3,10 @@ plugins {
     kotlin("plugin.serialization")
 }
 
+repositories {
+    mavenCentral()
+}
+
 kotlin {
     js(IR) {
         browser {
@@ -12,20 +16,17 @@ kotlin {
                 }
             }
         }
+        nodejs()
         binaries.executable()
         generateTypeScriptDefinitions()
     }
 
     sourceSets {
-        val commonMain by getting {
-            dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-            }
+        commonMain.dependencies {
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
         }
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test"))
-            }
+        commonTest.dependencies {
+            implementation(kotlin("test"))
         }
     }
 }

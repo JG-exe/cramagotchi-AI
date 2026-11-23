@@ -1,31 +1,10 @@
 <div class="app-layout">
-  <!-- Monster panel -->
+  <!-- Monster sanctuary panel -->
   <section class="monster-panel" data-testid="monster-panel">
     <app-monster-sanctuary />
-
-    <!-- Status badge -->
-    <span class="status-badge" data-testid="status-badge">
-      {{ store.monster().status }}
-    </span>
-
-    <!-- Anti-distraction message -->
-    @if (store.monster().status === 'SLEEPING') {
-      <p class="digesting-message" data-testid="digesting-message">
-        Digesting peacefully... keep studying!
-      </p>
-    }
-
-    <!-- XP bar -->
-    <div class="xp-bar" data-testid="xp-bar">
-      <div
-        class="xp-fill"
-        [style.width.%]="store.xpProgress().percent"
-      ></div>
-      <span class="xp-label">{{ store.monster().xp }} XP</span>
-    </div>
   </section>
 
-  <!-- Task panel -->
+  <!-- Study tasks panel -->
   <section class="task-panel" data-testid="task-panel">
     <app-task-queue />
   </section>
