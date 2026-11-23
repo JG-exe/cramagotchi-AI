@@ -7,12 +7,12 @@ export declare namespace com.cramagotchi.engine {
         deleteTask(state: com.cramagotchi.model.AppState, taskId: string): com.cramagotchi.model.AppState;
         evaluateTime(state: com.cramagotchi.model.AppState, now: number): com.cramagotchi.model.AppState;
         calculateEvolution(xp: number): com.cramagotchi.model.EvolutionStage;
+        examCountdownDays(state: com.cramagotchi.model.AppState, now: number): Nullable<number>;
     };
 }
 export declare namespace com.cramagotchi.model {
     abstract class TaskWeight {
         private constructor();
-        get xpValue(): number;
         static get SNACK(): com.cramagotchi.model.TaskWeight & {
             get name(): "SNACK";
             get ordinal(): 0;
@@ -21,10 +21,11 @@ export declare namespace com.cramagotchi.model {
             get name(): "MEAL";
             get ordinal(): 1;
         };
-        static values(): Array<com.cramagotchi.model.TaskWeight>;
-        static valueOf(value: string): com.cramagotchi.model.TaskWeight;
         get name(): "SNACK" | "MEAL";
         get ordinal(): 0 | 1;
+        get xpValue(): number;
+        static values(): Array<com.cramagotchi.model.TaskWeight>;
+        static valueOf(value: string): com.cramagotchi.model.TaskWeight;
     }
     abstract class MonsterStatus {
         private constructor();
@@ -44,15 +45,13 @@ export declare namespace com.cramagotchi.model {
             get name(): "SLEEPING";
             get ordinal(): 3;
         };
-        static values(): Array<com.cramagotchi.model.MonsterStatus>;
-        static valueOf(value: string): com.cramagotchi.model.MonsterStatus;
         get name(): "IDLE" | "HUNGRY" | "EATING" | "SLEEPING";
         get ordinal(): 0 | 1 | 2 | 3;
+        static values(): Array<com.cramagotchi.model.MonsterStatus>;
+        static valueOf(value: string): com.cramagotchi.model.MonsterStatus;
     }
     abstract class EvolutionStage {
         private constructor();
-        get level(): number;
-        get minXp(): number;
         static get EGG(): com.cramagotchi.model.EvolutionStage & {
             get name(): "EGG";
             get ordinal(): 0;
@@ -69,10 +68,12 @@ export declare namespace com.cramagotchi.model {
             get name(): "GRADUATED_BEAST";
             get ordinal(): 3;
         };
-        static values(): Array<com.cramagotchi.model.EvolutionStage>;
-        static valueOf(value: string): com.cramagotchi.model.EvolutionStage;
         get name(): "EGG" | "HATCHLING" | "SCHOLAR" | "GRADUATED_BEAST";
         get ordinal(): 0 | 1 | 2 | 3;
+        get level(): number;
+        get minXp(): number;
+        static values(): Array<com.cramagotchi.model.EvolutionStage>;
+        static valueOf(value: string): com.cramagotchi.model.EvolutionStage;
     }
     class StudyTask {
         constructor(id: string, title: string, subjectTag: Nullable<string> | undefined, weight: com.cramagotchi.model.TaskWeight, completed: boolean | undefined, createdAt: number, completedAt?: Nullable<number>);

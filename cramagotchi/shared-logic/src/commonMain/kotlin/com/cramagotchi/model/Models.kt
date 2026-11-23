@@ -1,15 +1,15 @@
 package com.cramagotchi.model
 
-import kotlin.js.JsExport
+import com.cramagotchi.export.TsExport
 import kotlinx.serialization.Serializable
 
-@JsExport
+@TsExport
 enum class TaskWeight(val xpValue: Int) {
     SNACK(10),
     MEAL(25)
 }
 
-@JsExport
+@TsExport
 enum class MonsterStatus {
     IDLE,
     HUNGRY,
@@ -17,7 +17,7 @@ enum class MonsterStatus {
     SLEEPING
 }
 
-@JsExport
+@TsExport
 enum class EvolutionStage(val level: Int, val minXp: Int) {
     EGG(1, 0),
     HATCHLING(2, 50),
@@ -25,7 +25,7 @@ enum class EvolutionStage(val level: Int, val minXp: Int) {
     GRADUATED_BEAST(4, 300)
 }
 
-@JsExport
+@TsExport
 @Serializable
 data class StudyTask(
     val id: String,
@@ -37,7 +37,7 @@ data class StudyTask(
     val completedAt: Double? = null
 )
 
-@JsExport
+@TsExport
 @Serializable
 data class MonsterState(
     val name: String = "Munch",
@@ -49,7 +49,7 @@ data class MonsterState(
     val sleepUntil: Double? = null
 )
 
-@JsExport
+@TsExport
 @Serializable
 data class AppState(
     val tasks: Array<StudyTask> = emptyArray(),

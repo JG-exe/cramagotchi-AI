@@ -1,13 +1,13 @@
 package com.cramagotchi.engine
 
 import com.cramagotchi.model.*
-import kotlin.js.JsExport
+import com.cramagotchi.export.TsExport
 
 /**
  * Pure, deterministic state machine for Cramagotchi.
  * All methods are side-effect-free and return new state.
  */
-@JsExport
+@TsExport
 object CramagotchiEngine {
 
     private const val ID_PREFIX = "task-"
@@ -153,5 +153,48 @@ object CramagotchiEngine {
             xp >= 50 -> EvolutionStage.HATCHLING
             else -> EvolutionStage.EGG
         }
+    }
+
+    /**
+     * Days remaining until the exam (agents.md §5 Should Have), computed by
+     * the KMP engine so every platform shares one implementation.
+     *
+     * The countdown is a whole-calendar-day difference in UTC — independent
+     * of the caller's local timezone and of the time-of-day inside `now` —
+     * so the same state always evaluates identically on JS, desktop and
+     * Android. Returns null when no exam date is set, 0 on the exam day
+     * itself, and a negative value once the exam day has passed.
+     *
+     * `examDateIso` must be `YYYY-MM-DD` (as produced by `<input type="date">`).
+     */
+    fun examCountdownDays(state: AppState, now: Double): Int? {
+        val iso = state.examDateIso ?: return null
+        val examDay = isoDaysFromCivil(iso) ?: return null
+        val todayDay = kotlin.math.floor(now / MILLIS_PER_DAY)
+        return (examDay - todayDay).toInt()
+    }
+
+    private const val MILLIS_PER_DAY = 86_400_000.0
+
+    /**
+     * Parse a `YYYY-MM-DD` string into a day count since the Unix epoch
+     * (days from civil date algorithm — valid for the proleptic Gregorian
+     * calendar, no fractional or DST adjustments).
+     */
+    private fun isoDaysFromCivil(iso: String): Double? {
+        val parts = iso.split('-')
+        if (parts.size != 3) return null
+        val year = parts[0].toIntOrNull() ?: return null
+        val month = parts[1].toIntOrNull() ?: return null
+        val day = parts[2].toIntOrNull() ?: return null
+        if (month !in 1..12 || day !in 1..31) return null
+
+        val y = if (month <= 2) year - 1 else year
+        val era = kotlin.math.floor(y / 400.0)
+        val yoe = y - era * 400                                  // [0, 399]
+        val mp = (month + 9) % 12                                // [0, 11]
+        val doy = kotlin.math.floor((153 * mp + 2) / 5.0) + day - 1     // [0, 365]
+        val doe = yoe * 365 + kotlin.math.floor(yoe / 4.0) - kotlin.math.floor(yoe / 100.0) + doy // [0, 146096]
+        return era * 146_097 + doe - 719_468
     }
 }
