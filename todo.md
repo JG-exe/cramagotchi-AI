@@ -300,9 +300,11 @@ Metric: **V** = done
   KMP so all three platforms share it; UI button per chip in `exam-portfolio`.
   **Shipped:** engine `finishExam()` + `earlyFinishXp()` tiers (base 25; +10 at
   1–2 days, +20 at 3–6, +35 at ≥7; none on/after the day) in shared-logic,
-  tested in `FinishExamTest.kt`; store `finishExam()`; sage check button per
-  chip (`exam-chip-finish`). Feeding mirrors task completion (SLEEPING banks
-  XP without resetting the timer) and evolution crossings auto-collect.
+  tested in `FinishExamTest.kt`; store `finishExam()`; labeled sage "Finish"
+  pill on DEADLINE chips only (`exam-chip-finish`) — EXAM chips never offer it
+  (the exam day is its own milestone, and the engine refuses EXAM kind anyway).
+  Feeding mirrors task completion (SLEEPING banks XP without resetting the
+  timer) and evolution crossings auto-collect.
 
 - V **Collectible monsters with random hue (done):** make monsters collectible — a
   collection of distinct monsters the user can unlock (e.g. by levelling /

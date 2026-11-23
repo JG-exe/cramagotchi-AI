@@ -294,19 +294,24 @@
   color: var(--color-status-hungry);
 }
 
-/* "I'm done with this" chip action — gentle sage, warms on hover. */
+/* "I'm done with this" — deadline-only chip action, a small sage pill so the
+   option is unmistakable (EXAM chips don't render it; the exam day is their
+   own milestone). */
 .btn-finish {
-  background: none;
+  background: color-mix(in srgb, var(--color-sage-base, #6E9E7B) 14%, var(--color-surface-elevated, #FFFDF9));
   border: none;
-  color: var(--color-text-muted);
+  color: color-mix(in srgb, var(--color-sage-base, #6E9E7B) 70%, var(--color-espresso-dark, #2C221E));
   font-size: var(--text-xs);
+  font-weight: 600;
   cursor: pointer;
-  padding: 2px var(--space-2xs);
-  border-radius: var(--radius-sm);
+  padding: 2px var(--space-xs, 8px);
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .btn-finish:hover {
-  color: var(--color-sage-base, #6E9E7B);
+  background: var(--color-sage-base, #6E9E7B);
+  color: #FFFDF9;
 }
 
 /* ── Fallback calendar (engines without native showPicker, e.g.

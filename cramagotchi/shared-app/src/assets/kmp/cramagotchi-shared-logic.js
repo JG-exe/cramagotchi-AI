@@ -55,7 +55,6 @@
   var THROW_IAE = kotlin_kotlin.$_$.g5;
   var Enum = kotlin_kotlin.$_$.b5;
   var initMetadataForClass = kotlin_kotlin.$_$.k3;
-  var enumEntries = kotlin_kotlin.$_$.s2;
   var createSimpleEnumSerializer = kotlin_org_jetbrains_kotlinx_kotlinx_serialization_core.$_$.k1;
   var initMetadataForCompanion = kotlin_kotlin.$_$.l3;
   var PluginGeneratedSerialDescriptor = kotlin_org_jetbrains_kotlinx_kotlinx_serialization_core.$_$.i1;
@@ -169,9 +168,12 @@
   }
   function unlockSpeciesForEvolution($this, state, oldStage, newStage, now, hueRng) {
     var next = state;
-    var _iterator__ex2g4s = get_entries().e();
-    while (_iterator__ex2g4s.f()) {
-      var stage = _iterator__ex2g4s.g();
+    var indexedObject = values_1();
+    var inductionVariable = 0;
+    var last = indexedObject.length;
+    while (inductionVariable < last) {
+      var stage = indexedObject[inductionVariable];
+      inductionVariable = inductionVariable + 1 | 0;
       if (stage.level > oldStage.level && stage.level <= newStage.level) {
         var stirred = (hueRng + stage.level * 0.13) % 1.0;
         next = $this.unlockCollectible(next, stage.k1_1, now, stirred);
@@ -759,6 +761,8 @@
       tmp = tmp0_elvis_lhs;
     }
     var exam = tmp;
+    if (exam.kind.equals(ExamKind_EXAM_getInstance()))
+      return state;
     // Inline function 'kotlin.math.floor' call
     var x = now / 8.64E7;
     var todayDay = Math.floor(x);
@@ -925,11 +929,6 @@
         break;
     }
   }
-  function get_entries() {
-    if ($ENTRIES == null)
-      $ENTRIES = enumEntries(values_1());
-    return $ENTRIES;
-  }
   var EvolutionStage_entriesInitialized;
   function EvolutionStage_initEntries() {
     if (EvolutionStage_entriesInitialized)
@@ -940,7 +939,6 @@
     EvolutionStage_SCHOLAR_instance = new EvolutionStage('SCHOLAR', 2, 3, 150);
     EvolutionStage_GRADUATED_BEAST_instance = new EvolutionStage('GRADUATED_BEAST', 3, 4, 300);
   }
-  var $ENTRIES;
   function EvolutionStage(name, ordinal, level, minXp) {
     Enum.call(this, name, ordinal);
     this.level = level;

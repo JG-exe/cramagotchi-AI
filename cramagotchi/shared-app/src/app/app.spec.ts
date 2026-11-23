@@ -619,9 +619,9 @@ describe('App (root component)', () => {
     expect(title()).not.toBe(afterNext);
   });
 
-  // ── Finish-in-advance: bonus XP chip action ──────────────
+  // ── Finish-in-advance: deadline-only chip action ──────────
 
-  it('should call store.finishExam() with the exam id from the finish chip button', () => {
+  it('should call store.finishExam() from the Finish button on a DEADLINE chip', () => {
     mockStore = createMockStore();
     mockStore.exams.set([makeExam('exam-1', 9, 'HISTORY')]);
     TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
@@ -632,9 +632,26 @@ describe('App (root component)', () => {
 
     const finishBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-chip-finish"]');
     expect(finishBtn).toBeTruthy();
+    expect(finishBtn!.textContent?.trim()).toBe('Finish');
     finishBtn!.click();
 
     expect(mockStore.finishExam).toHaveBeenCalledWith('exam-1');
+  });
+
+  it('should NOT render the Finish button on high-stakes EXAM chips', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([
+      { id: 'exam-1', subjectTag: 'HISTORY', dateIso: isoDaysFromNow(9), kind: 'DEADLINE' },
+      { id: 'exam-2', subjectTag: 'MATH', dateIso: isoDaysFromNow(9), kind: 'EXAM' },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelectorAll('[data-testid="exam-chip"]').length).toBe(2);
+    expect(compiled.querySelectorAll('[data-testid="exam-chip-finish"]').length).toBe(1);
   });
 
   // ── Collectible monster roster gallery ───────────────────

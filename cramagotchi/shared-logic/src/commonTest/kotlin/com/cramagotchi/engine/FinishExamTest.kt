@@ -10,8 +10,10 @@ import kotlin.test.assertTrue
  * with bonus XP").
  *
  * Contract:
- *  - `finishExam(state, examId, now, rng, hueRng)` removes the entry from the
+ *  - `finishExam(state, examId, now, hueRng)` removes the entry from the
  *    portfolio (like removeExam) AND feeds the monster the awarded XP.
+ *  - EXAM-kind entries are NEVER finishable — the exam day is its own
+ *    milestone — so finishing one is a no-op; only plain deadlines finish.
  *  - `earlyFinishXp(daysRemaining)` = base 25 + tier bonus: 0 bonus on/after
  *    the due day (days <= 0), +10 at 1–2 days, +20 at 3–6 days, +35 at ≥7
  *    days. Never negative, no punishment for finishing late.
@@ -116,5 +118,16 @@ class FinishExamTest {
         val state = stateWithExamAt("2026-12-11")
         val finished = CramagotchiEngine.finishExam(state, "exam-404", dec1)
         assertEquals(state, finished)
+    }
+
+    @Test
+    fun testExamKindEntriesCanNeverBeFinished() {
+        val state = CramagotchiEngine.addExam(
+            freshState(), "HISTORY", "2026-12-11", baseTime, ExamKind.EXAM
+        )
+        val refused = CramagotchiEngine.finishExam(state, "exam-1", dec1)
+        assertEquals(state, refused)
+        assertEquals(1, refused.exams.size)
+        assertEquals(0, refused.monster.xp)
     }
 }

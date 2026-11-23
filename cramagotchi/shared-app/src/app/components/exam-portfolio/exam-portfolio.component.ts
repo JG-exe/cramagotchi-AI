@@ -257,8 +257,9 @@ export class ExamPortfolioComponent {
     this.store.removeExam(examId);
   }
 
-  /** "I'm done with this" — removes the entry and feeds the monster; the engine
-   *  awards the early-finish bonus XP tier. */
+  /** "I'm done with this" — deadline chips only (an exam day is its own milestone;
+   *  the engine refuses EXAM kind anyway). Removes the entry and feeds the
+   *  monster, with the engine-side early-finish bonus XP tier. */
   finishExam(examId: string): void {
     this.store.finishExam(examId);
   }
