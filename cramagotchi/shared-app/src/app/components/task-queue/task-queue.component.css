@@ -18,22 +18,25 @@
 
 .active-count {
   font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   color: var(--color-text-muted);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
+  box-shadow: var(--shadow-diffuse-sm);
   border-radius: var(--radius-pill);
   padding: var(--space-2xs) var(--space-sm);
 }
 
-/* Form */
+/* ── Form ──────────────────────────────────────────────────────────── */
 .task-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   background: var(--color-surface);
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
+  box-shadow: var(--shadow-diffuse-sm);
 }
 
 .form-row {
@@ -84,7 +87,7 @@
   font-size: var(--text-xs);
 }
 
-/* Task list */
+/* ── Task list ─────────────────────────────────────────────────────── */
 .task-list {
   display: flex;
   flex-direction: column;
@@ -96,8 +99,8 @@
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
-  background: var(--color-surface);
-  border: 1px dashed var(--color-border);
+  background: #F2EEE8;
+  background: var(--color-surface-recessed);
   border-radius: var(--radius-md);
 }
 
@@ -107,13 +110,14 @@
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  transition: box-shadow var(--duration-fast);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
+  box-shadow: var(--shadow-diffuse-sm);
+  transition: box-shadow var(--duration-fast) var(--ease-standard);
 }
 
 .task-card:hover {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-diffuse-md);
 }
 
 .task-info {
@@ -125,7 +129,7 @@
 
 .task-title {
   font-size: var(--text-base);
-  font-weight: var(--weight-regular);
+  font-weight: var(--weight-medium);
   color: var(--color-text-primary);
 }
 
@@ -138,8 +142,8 @@
 
 .actual-minutes-input {
   width: 110px;
-  padding: var(--space-2xs);
-  border: 1px solid var(--color-border);
+  padding: var(--space-2xs) var(--space-xs);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: var(--text-xs);
@@ -154,23 +158,33 @@
 
 .badge {
   font-size: var(--text-xs);
-  padding: 1px var(--space-xs);
+  font-weight: var(--weight-semibold);
+  padding: 2px var(--space-xs);
   border-radius: var(--radius-pill);
 }
 
 .badge-snack {
-  background: #FFF3E0;
-  color: var(--color-accent-snack);
+  background: #F9EEE0;
+  color: #9A6E3A;
+  background: var(--tag-ochre-bg);
+  color: var(--tag-ochre-fg);
 }
 
 .badge-meal {
-  background: #E8F5E9;
-  color: var(--color-accent-meal);
+  background: #EAEFE6;
+  color: #5A795F;
+  background: var(--tag-sage-bg);
+  color: var(--tag-sage-fg);
 }
 
+/* Subject pills: deterministic per-tag hue, tonally mixed into the warm
+   gamut so cool hues read as calm neutrals, never saturated blue. */
 .badge-subject {
-  background: hsl(var(--subject-hue, 210), 45%, 88%);
-  color: hsl(var(--subject-hue, 210), 45%, 28%);
+  --tag-tint: hsl(var(--subject-hue, 40) 42% 46%);
+  background: hsl(var(--subject-hue, 40) 42% 90%);
+  color: hsl(var(--subject-hue, 40) 42% 30%);
+  background: color-mix(in srgb, var(--tag-tint) 14%, var(--color-surface-elevated));
+  color: color-mix(in srgb, var(--tag-tint) 60%, var(--color-espresso-dark));
 }
 
 .btn-delete {
@@ -181,14 +195,14 @@
   cursor: pointer;
   padding: var(--space-2xs);
   border-radius: var(--radius-sm);
-  transition: color var(--duration-fast);
+  transition: color var(--duration-fast) var(--ease-standard);
 }
 
 .btn-delete:hover {
-  color: #E53E3E;
+  color: var(--color-status-hungry);
 }
 
-/* Devoured history */
+/* ── Devoured history ──────────────────────────────────────────────── */
 .devoured-section {
   margin-top: var(--space-sm);
 }
@@ -199,11 +213,12 @@
   justify-content: space-between;
   align-items: center;
   padding: var(--space-xs) var(--space-sm);
-  background: transparent;
-  border: 1px dashed var(--color-border);
+  background: var(--color-surface-recessed);
+  border: none;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
   color: var(--color-text-muted);
 }
 
@@ -219,7 +234,8 @@
   align-items: center;
   gap: var(--space-xs);
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 253, 249, 0.6);
+  background: color-mix(in srgb, var(--color-surface-elevated) 60%, transparent);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   color: var(--color-text-muted);

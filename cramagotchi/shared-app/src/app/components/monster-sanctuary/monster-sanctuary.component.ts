@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,6 +12,15 @@ export function subjectTagToHue(subjectTag: string): number {
     hash = (hash * 31 + subjectTag.charCodeAt(i)) | 0;
   }
   return Math.abs(hash) % 360;
+}
+
+/** Strict `YYYY-MM-DD` + real-calendar-day check (no 2026-02-30 leaks). */
+export function isValidIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  if (month < 1 || month > 12 || day < 1) return false;
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return day <= daysInMonth;
 }
 
 @Component({
@@ -33,9 +42,17 @@ export class MonsterSanctuaryComponent {
   examSubjectInput = signal('');
   examDateInput = signal('');
 
+  /** Lowercased evolution stage, used to pick the body symbol: #cram-body-… */
+  readonly stageKey = computed(() => this.store.monster().stage.toLowerCase());
+
+  /** Lowercased status, used to pick the face symbol: #cram-face-… */
+  readonly statusKey = computed(() => this.store.monster().status.toLowerCase());
+
   onAddExam(): void {
     const date = this.examDateInput();
-    if (!date) return;
+    // Empty submissions are ignored, and only a well-formed calendar date
+    // reaches the engine (which stores dateIso verbatim).
+    if (!date || !isValidIsoDate(date)) return;
     this.store.addExam(this.examSubjectInput().trim() || null, date);
     this.examSubjectInput.set('');
     this.examDateInput.set('');

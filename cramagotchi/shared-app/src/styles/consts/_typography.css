@@ -1,13 +1,23 @@
-/* Typography tokens */
+/* ─── Typography tokens ──────────────────────────────────────────────
+   Quicksand is loaded via <link rel="preconnect"> + stylesheet links in
+   src/index.html (faster than a CSS @import and avoids render-blocking
+   import-order pitfalls in the bundler). */
+
 :root {
-  --font-sans: system-ui, -apple-system, sans-serif;
-  --font-mono: ui-monospace, monospace;
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.25rem;
-  --text-xl: 1.5rem;
-  --weight-regular: 400;
-  --weight-semibold: 600;
-  --weight-bold: 700;
+    --font-sans: 'Quicksand', system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.25rem;
+    --text-xl: 1.5rem;
+
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+
+    --leading-tight: 1.25;
+    --leading-normal: 1.5;
 }
