@@ -46,7 +46,6 @@ export interface MonsterState {
 export interface AppState {
   tasks: StudyTask[];
   monster: MonsterState;
-  examDateIso?: string;
   exams?: ExamRef[];
 }
 
@@ -70,17 +69,9 @@ export class MonsterStoreService {
     this.kmpState().tasks.map(toStudyTask)
   );
 
-  readonly examDateIso = signal<string | null>(null);
-
-  /** Ticks once per interval pass so date-derived computeds (like the
-   *  exam countdown) refresh when the calendar day changes. */
+  /** Ticks once per interval pass so date-derived computeds refresh when
+   *  the calendar day changes. */
   readonly dayTick = signal(0);
-
-  /** Days remaining until exam — delegated to the KMP engine (agents.md §5). */
-  readonly examCountdownDays = computed<number | null>(() => {
-    this.dayTick(); // re-evaluate when the interval ticks
-    return Engine.examCountdownDays(this.kmpState(), Date.now()) ?? null;
-  });
 
   /** Exam portfolio — every exam the user tracks. */
   readonly exams = computed<ExamRef[]>(() =>
@@ -118,13 +109,6 @@ export class MonsterStoreService {
         this.dayTick.update(t => t + 1);
       }, 1000);
     }
-  }
-
-  setExamDate(isoString: string | null): void {
-    this.examDateIso.set(isoString);
-    const s = this.kmpState();
-    this.kmpState.set(new Model.AppState(s.tasks, s.monster, isoString ?? undefined));
-    this.persistToStorage();
   }
 
   addTask(
@@ -217,9 +201,6 @@ export class MonsterStoreService {
       const restored = Storage.deserialize(raw);
       if (restored) {
         this.kmpState.set(restored);
-        if (restored.examDateIso) {
-          this.examDateIso.set(restored.examDateIso);
-        }
         // Immediately evaluate offline elapsed time
         this.evaluateTime(Date.now());
       }
