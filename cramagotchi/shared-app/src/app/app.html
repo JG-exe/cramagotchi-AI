@@ -1,18 +1,30 @@
 <div class="app-shell">
   <header class="app-header">
-    <h1 class="app-title">🥚 Cramagotchi</h1>
+    <h1 class="app-title">
+      <!-- Egg mark: inline line-art (fonts/emoji render differently on the
+           JavaFX WebView, so the brand never relies on an emoji glyph) -->
+      <svg class="app-logo" viewBox="0 0 220 220" aria-hidden="true" focusable="false">
+        <path d="M110 54 C138 54, 153 80, 157 106 C161 136, 150 170, 110 170 C70 170, 59 136, 63 106 C67 80, 82 54, 110 54 Z"
+              fill="var(--monster-fill-egg, #FAF1E3)"
+              stroke="var(--color-espresso-dark, #2C221E)"
+              stroke-width="20"
+              stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      Cramagotchi
+    </h1>
     <p class="app-tagline">Calm, zero-punishment study sanctuary</p>
   </header>
 
   <main class="app-layout">
+    <!-- Study tasks panel: Deadlines & Exams first, then the Study Queue -->
+    <section class="task-panel" data-testid="task-panel">
+      <app-exam-portfolio />
+      <app-task-queue />
+    </section>
+
     <!-- Monster sanctuary panel -->
     <section class="monster-panel" data-testid="monster-panel">
       <app-monster-sanctuary />
-    </section>
-
-    <!-- Study tasks panel -->
-    <section class="task-panel" data-testid="task-panel">
-      <app-task-queue />
     </section>
   </main>
 </div>

@@ -7,18 +7,23 @@
   <!-- Task Creation Form -->
   <form class="task-form" (ngSubmit)="onSubmit()" data-testid="task-form">
     <div class="form-row">
-      <mat-form-field appearance="outline" class="field-title">
-        <mat-label>What are you studying?</mat-label>
-        <input
-          type="text"
-          name="title"
-          matInput
-          [value]="titleInput()"
-          (input)="titleInput.set($any($event.target).value)"
-          required
-          data-testid="task-title-input"
-        />
-      </mat-form-field>
+      <div class="field-title-wrap">
+        <mat-form-field appearance="outline" class="field-title">
+          <mat-label>What are you studying?</mat-label>
+          <input
+            type="text"
+            name="title"
+            matInput
+            [value]="titleInput()"
+            (input)="onTitleInput($any($event.target).value)"
+            required
+            data-testid="task-title-input"
+          />
+        </mat-form-field>
+        @if (taskFormError()) {
+          <p class="form-error" data-testid="task-form-error">{{ taskFormError() }}</p>
+        }
+      </div>
       <mat-form-field appearance="outline" class="field-estimate">
         <mat-label>Estimate (min)</mat-label>
         <input
@@ -43,27 +48,18 @@
     </div>
 
     <div class="form-controls">
-      <div
-        class="weight-segmented"
+      <app-sliding-toggle
         role="radiogroup"
         aria-label="Task size"
         data-testid="task-weight-toggle"
-      >
-        <button
-          type="button"
-          class="weight-option"
-          [class.weight-option-active]="weightInput() === 'SNACK'"
-          (click)="weightInput.set('SNACK')"
-          data-testid="task-weight-snack"
-        >Snack (≈10 XP)</button>
-        <button
-          type="button"
-          class="weight-option"
-          [class.weight-option-active]="weightInput() === 'MEAL'"
-          (click)="weightInput.set('MEAL')"
-          data-testid="task-weight-meal"
-        >Meal (≈25 XP)</button>
-      </div>
+        left="Snack (≈10 XP)"
+        right="Meal (≈25 XP)"
+        leftTestId="task-weight-snack"
+        rightTestId="task-weight-meal"
+        [value]="weightInput()"
+        rightValue="MEAL"
+        (change)="onWeightToggle($event)"
+      />
 
       <mat-form-field appearance="outline" class="field-subject">
         <mat-label>Subject / Topic (optional)</mat-label>
@@ -130,27 +126,18 @@
                   data-testid="task-edit-subject"
                 />
               </mat-form-field>
-              <div
-                class="weight-segmented"
+              <app-sliding-toggle
                 role="radiogroup"
                 aria-label="Task size"
                 data-testid="task-edit-weight"
-              >
-                <button
-                  type="button"
-                  class="weight-option"
-                  [class.weight-option-active]="editWeight() === 'SNACK'"
-                  (click)="editWeight.set('SNACK')"
-                  data-testid="task-edit-weight-snack"
-                >Snack (≈10 XP)</button>
-                <button
-                  type="button"
-                  class="weight-option"
-                  [class.weight-option-active]="editWeight() === 'MEAL'"
-                  (click)="editWeight.set('MEAL')"
-                  data-testid="task-edit-weight-meal"
-                >Meal (≈25 XP)</button>
-              </div>
+                left="Snack (≈10 XP)"
+                right="Meal (≈25 XP)"
+                leftTestId="task-edit-weight-snack"
+                rightTestId="task-edit-weight-meal"
+                [value]="editWeight()"
+                rightValue="MEAL"
+                (change)="onEditWeightToggle($event)"
+              />
             </div>
             <div class="task-edit-actions">
               <button
@@ -181,7 +168,7 @@
             <span class="task-title">{{ task.title }}</span>
             <div class="task-badges">
               <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
-                {{ task.weight === 'SNACK' ? '🍿 Snack (≈10 XP)' : '🍱 Meal (≈25 XP)' }}
+                {{ task.weight === 'SNACK' ? 'Snack (≈10 XP)' : 'Meal (≈25 XP)' }}
               </span>
               @if (task.estimatedMinutes != null && task.estimatedMinutes > 0) {
                 <span class="badge badge-estimate">≈ {{ task.estimatedMinutes }} min</span>
@@ -215,7 +202,7 @@
               aria-label="Edit task"
               title="Edit task"
               data-testid="task-edit-btn"
-            >✎</button>
+            ><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M11.2 3.2 L12.8 4.8 L5.6 12 L3.2 12.8 L4 10.4 Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
             <button
               type="button"
               class="btn-delete"
@@ -223,7 +210,7 @@
               aria-label="Delete task"
               title="Delete task"
             >
-              ✕
+              <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5 L11.5 11.5 M11.5 4.5 L4.5 11.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
             </button>
           </div>
         }
@@ -239,7 +226,7 @@
         class="btn-toggle-devoured"
         (click)="toggleDevoured()"
       >
-        <span>🍽️ Devoured Tasks ({{ store.devouredTasks().length }})</span>
+        <span>Devoured Tasks ({{ store.devouredTasks().length }})</span>
         <span>{{ showDevoured() ? '▲' : '▼' }}</span>
       </button>
 
@@ -247,7 +234,7 @@
         <div class="devoured-list">
           @for (task of store.devouredTasks(); track task.id) {
             <div class="devoured-item">
-              <span class="devoured-check">✓</span>
+              <span class="devoured-check"><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 L6.5 11.5 L12.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
               <span class="devoured-title">{{ task.title }}</span>
               <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
                 +{{ task.awardedXp ?? (task.weight === 'SNACK' ? 10 : 25) }} XP

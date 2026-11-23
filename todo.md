@@ -226,3 +226,61 @@ Metric: **V** = done
   `%APPDATA%\Cramagotchi\webview` resets desktop state.
 - Nothing else references JavaFX or the desktop toolchain (verified by grep),
   so the blast radius is limited to `desktopApp`.
+
+---
+
+# Layout coherence pass (deadlines card + emoji-free chrome)
+
+Branch: `fix/layout-deadlines-card` (from `dev`).
+
+Metric: **V** = done
+
+- V **Header tofu fixed:** the 🥚 emoji behind/next to the brand name rendered as a
+  hollow rectangle on the desktop WebView (no emoji font in JavaFX's WebKit).
+  Replaced by an inline line-art egg SVG (same path family as the EGG stage),
+  so the logo is font-independent everywhere. All other emoji/glyphs (⏳ 🌿 🎓
+  ✎ ✕ ✓ 🍿 🍱 🍽️) replaced with inline SVGs or plain text for the same reason.
+- V **New `exam-portfolio` component:** the deadlines/exams banner + chips + add
+  form moved out of `monster-sanctuary` into a dedicated card styled like the
+  task maker (same surface/radius/diffuse shadow), with a "Deadlines & Exams"
+  section header echoing "Study Queue".
+- V **Left pane order (all platforms — one shared bundle):** Deadlines & Exams
+  card → task maker form → task list. Monster card stays in its sticky right
+  panel; mobile stacks tasks first, sanctuary last.
+- V `monster-sanctuary` keeps only the monster: card, avatar symbols, motion,
+  sleep banner, XP bar (exam logic/markup/CSS fully extracted).
+- V Verified: 32/32 `ng test`, `ng build` clean, JS re-synced, desktop bundle
+  rebuilt, android + engine tests green. Desktop shows this structure on the
+  user's next launch (new WebKit renders the card same as web).
+
+- V **Form polish (follow-up):** Deadline/Exam toggle and Snack/Meal toggle now
+  match the Material buttons' 40px control height; exam Add button switched
+  from a washed-out stroked style to the flat sage treatment (readable rest &
+  disabled states). Due/exam date fields: `DateMaskDirective` formats digits
+  as you type into `YYYY-MM-DD` (placeholder shows the expected shape) while a
+  calendar suffix button + click open the native date picker (`showPicker()`,
+  ideal on Android/mobile; engines without it fall back to typed input).
+  Separator garbage (e.g. `2026/02/10`) is never healed by the mask — the
+  validity guard still rejects it. Verified: 34/34 `ng test`, build clean.
+- V **Proper sliding toggle:** the segmented buttons (which had a fake sliding
+  white background) are replaced by a shared `SlidingToggleComponent` — one
+  track, one thumb gliding between the two halves via a 220ms transform.
+  Used for Deadline/Exam (add + edit forms) and Snack/Meal (add + task edit).
+  Labels stay real buttons; testids unchanged; active-class contract updated
+  to `toggle-option-active`. Verified: 34/34 `ng test`, build clean, bundles
+  rebuilt.
+- V **Empty-name rejection:** a deadline/exam without a (non-whitespace) name is
+  now rejected in both the add form and the inline edit form; blank task titles
+  already were — all three surface a calm inline flag (`exam-form-error`,
+  `exam-edit-error`, `task-form-error`) that clears as soon as typing resumes.
+  Engine still never sees a blank name from the UI (chips may still render
+  legacy subject-less exams). Verified: 36/36 `ng test`, build clean.
+- V **Warnings under their own fields:** every form flag now renders directly
+  beneath the input it belongs to, replacing the single bottom-of-form error
+  paragraph. The exam/task structures split their form-level signals into
+  per-field ones (`examNameError`/`examDateError`, `editNameError`/
+  `editDateError`; `taskFormError` moves under the title field). Fields are
+  wrapped in `.field-*-wrap` column wrappers that carry the old flex sizing;
+  testids preserved (`exam-form-error`, `exam-edit-error`, `exam-date-error`,
+  `exam-edit-date-error`, `task-form-error`). Native-pick + edit-start clear
+  the matching flag. Verified: 36/36 `ng test`, build clean, bundles synced.
