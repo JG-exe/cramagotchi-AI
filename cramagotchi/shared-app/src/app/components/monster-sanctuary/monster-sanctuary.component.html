@@ -1,23 +1,76 @@
 <section class="sanctuary-container" data-testid="monster-sanctuary">
-  <!-- Exam Countdown Banner -->
+  <!-- Exam Portfolio: countdown targets the nearest upcoming exam -->
   <div class="exam-banner">
-    @if (store.examCountdownDays() !== null) {
+    @if (store.nearestExamDays() !== null) {
       <span class="countdown-tag" data-testid="exam-countdown">
-        ⏳ <strong>{{ store.examCountdownDays() }}</strong> days until exam
+        ⏳ <strong>{{ store.nearestExamDays() }}</strong> days until next exam
       </span>
     } @else {
-      <span class="countdown-prompt">Set exam date:</span>
+      <span class="countdown-prompt">No upcoming exam — add one below:</span>
     }
-    <mat-form-field appearance="outline" class="field-exam-date">
-      <mat-label>Exam date</mat-label>
-      <input
-        type="date"
-        matInput
-        [value]="store.examDateIso() ?? ''"
-        (change)="onExamDateChange($event)"
-        title="Set target exam date"
-      />
-    </mat-form-field>
+  </div>
+
+  <!-- Exam chips + add form -->
+  <div class="exam-manager">
+    @if (store.exams().length > 0) {
+      <div class="exams-list" data-testid="exams-list">
+        @for (exam of store.exams(); track exam.id) {
+          <span class="exam-chip" data-testid="exam-chip">
+            @if (exam.subjectTag) {
+              <span
+                class="badge badge-subject"
+                [style.--subject-hue]="subjectHue(exam.subjectTag)"
+              >{{ exam.subjectTag }}</span>
+            }
+            <span class="exam-chip-date">{{ exam.dateIso }}</span>
+            <button
+              type="button"
+              class="btn-delete"
+              (click)="removeExam(exam.id)"
+              aria-label="Remove exam"
+              title="Remove exam"
+              data-testid="exam-chip-remove"
+            >
+              ✕
+            </button>
+          </span>
+        }
+      </div>
+    }
+
+    <form class="exam-add-form" (ngSubmit)="onAddExam()" data-testid="exam-form">
+      <mat-form-field appearance="outline" class="field-exam-subject">
+        <mat-label>Subject</mat-label>
+        <input
+          type="text"
+          name="examSubject"
+          matInput
+          [value]="examSubjectInput()"
+          (input)="examSubjectInput.set($any($event.target).value)"
+          data-testid="exam-input-subject"
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="field-exam-date">
+        <mat-label>Exam date</mat-label>
+        <input
+          type="date"
+          name="examDate"
+          matInput
+          [value]="examDateInput()"
+          (input)="examDateInput.set($any($event.target).value)"
+          (change)="examDateInput.set($any($event.target).value)"
+          data-testid="exam-input-date"
+        />
+      </mat-form-field>
+      <button
+        type="submit"
+        mat-stroked-button
+        class="btn-add-exam"
+        data-testid="exam-add-btn"
+      >
+        + Exam
+      </button>
+    </form>
   </div>
 
   <!-- Monster Card -->

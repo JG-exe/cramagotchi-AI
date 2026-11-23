@@ -2,6 +2,7 @@ package com.cramagotchi.engine
 
 import com.cramagotchi.model.*
 import com.cramagotchi.export.TsExport
+import kotlin.math.roundToInt
 
 /**
  * Pure, deterministic state machine for Cramagotchi.
@@ -11,6 +12,7 @@ import com.cramagotchi.export.TsExport
 object CramagotchiEngine {
 
     private const val ID_PREFIX = "task-"
+    private const val EXAM_ID_PREFIX = "exam-"
 
     /**
      * Derive the next task ID from the highest existing numeric suffix.
@@ -22,6 +24,14 @@ object CramagotchiEngine {
             .mapNotNull { it.id.removePrefix(ID_PREFIX).toIntOrNull() }
             .maxOrNull() ?: 0
         return ID_PREFIX + (highest + 1)
+    }
+
+    /** Same collision-free scheme as [nextId], for exam IDs. */
+    private fun nextExamId(state: AppState): String {
+        val highest = state.exams
+            .mapNotNull { it.id.removePrefix(EXAM_ID_PREFIX).toIntOrNull() }
+            .maxOrNull() ?: 0
+        return EXAM_ID_PREFIX + (highest + 1)
     }
 
     /** Create a fresh AppState with the given monster name and current timestamp. */
@@ -38,8 +48,15 @@ object CramagotchiEngine {
         )
     }
 
-    /** Add a new uncompleted task to the state. */
-    fun addTask(state: AppState, title: String, weight: TaskWeight, now: Double, subjectTag: String? = null): AppState {
+    /** Add a new uncompleted task to the state, with an optional time estimate. */
+    fun addTask(
+        state: AppState,
+        title: String,
+        weight: TaskWeight,
+        now: Double,
+        subjectTag: String? = null,
+        estimatedMinutes: Double? = null
+    ): AppState {
         val newTask = StudyTask(
             id = nextId(state),
             title = title,
@@ -47,27 +64,60 @@ object CramagotchiEngine {
             weight = weight,
             completed = false,
             createdAt = now,
-            completedAt = null
+            completedAt = null,
+            estimatedMinutes = estimatedMinutes
         )
         return state.copy(
             tasks = state.tasks + newTask
         )
     }
 
-    /** Mark a task as completed: award XP, feed the monster, start eat/sleep cycle. */
-    fun completeTask(state: AppState, taskId: String, now: Double): AppState {
+    /**
+     * Mark a task as completed: award XP, feed the monster, start eat/sleep cycle.
+     *
+     * XP = round(base × timeVariation × accuracyBonus):
+     *  - base = task weight's xpValue;
+     *  - timeVariation = 0.85 + 0.30 × rng (rng ∈ [0,1], supplied by the caller
+     *    so this pure engine stays deterministic under test — a slight
+     *    variability gamifies the reward);
+     *  - accuracyBonus = 1.5 when the user supplied an estimate AND actual
+     *    minutes with |actual − estimate| ≤ 25% of the estimate, else 1.0.
+     * A wrong estimate is never punished (no penalty below the variation
+     * floor). The actual amount is written to `awardedXp` — the UI must not
+     * reveal it before completion.
+     */
+    fun completeTask(
+        state: AppState,
+        taskId: String,
+        now: Double,
+        actualMinutes: Double? = null,
+        rng: Double = 0.5
+    ): AppState {
         val taskIndex = state.tasks.indexOfFirst { it.id == taskId }
         if (taskIndex == -1) return state
 
         val task = state.tasks[taskIndex]
         if (task.completed) return state
 
+        // Gamified XP: slight variability + estimation-accuracy bonus.
+        val variation = 0.85 + 0.30 * rng.coerceIn(0.0, 1.0)
+        val estimate = task.estimatedMinutes
+        val accuracyBonus =
+            if (estimate != null && actualMinutes != null &&
+                kotlin.math.abs(actualMinutes - estimate) <= 0.25 * estimate
+            ) 1.5 else 1.0
+        val awardedXp = (task.weight.xpValue * variation * accuracyBonus).roundToInt()
+
         // Mark the task as completed
         val updatedTasks = state.tasks.copyOf()
-        updatedTasks[taskIndex] = task.copy(completed = true, completedAt = now)
+        updatedTasks[taskIndex] = task.copy(
+            completed = true,
+            completedAt = now,
+            awardedXp = awardedXp
+        )
 
         // Award XP
-        val newXp = state.monster.xp + task.weight.xpValue
+        val newXp = state.monster.xp + awardedXp
         val newStage = calculateEvolution(newXp)
 
         // Determine monster status and timers
@@ -165,6 +215,9 @@ object CramagotchiEngine {
      * Android. Returns null when no exam date is set, 0 on the exam day
      * itself, and a negative value once the exam day has passed.
      *
+     * Legacy single-date contract: reads only `state.examDateIso`. For the
+     * multi-exam portfolio use [nearestExamDays].
+     *
      * `examDateIso` must be `YYYY-MM-DD` (as produced by `<input type="date">`).
      */
     fun examCountdownDays(state: AppState, now: Double): Int? {
@@ -172,6 +225,36 @@ object CramagotchiEngine {
         val examDay = isoDaysFromCivil(iso) ?: return null
         val todayDay = kotlin.math.floor(now / MILLIS_PER_DAY)
         return (examDay - todayDay).toInt()
+    }
+
+    /**
+     * Days until the nearest UPCOMING exam across the exam portfolio (and
+     * the legacy `examDateIso` fallback), in whole UTC calendar days —
+     * 0 on the exam day itself. Past exams are ignored when any future one
+     * exists; returns null when nothing is upcoming.
+     */
+    fun nearestExamDays(state: AppState, now: Double): Int? {
+        val todayDay = kotlin.math.floor(now / MILLIS_PER_DAY)
+        val dates = state.exams.map { it.dateIso } + listOfNotNull(state.examDateIso)
+        return dates
+            .mapNotNull { iso -> isoDaysFromCivil(iso)?.let { (it - todayDay).toInt() } }
+            .filter { it >= 0 }
+            .minOrNull()
+    }
+
+    /** Add an exam to the portfolio, with a unique id. */
+    fun addExam(state: AppState, subjectTag: String?, dateIso: String, now: Double): AppState {
+        val exam = Exam(
+            id = nextExamId(state),
+            subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
+            dateIso = dateIso
+        )
+        return state.copy(exams = state.exams + exam)
+    }
+
+    /** Remove an exam from the portfolio by id; the remaining exams keep their data. */
+    fun removeExam(state: AppState, examId: String): AppState {
+        return state.copy(exams = state.exams.filter { it.id != examId })
     }
 
     private const val MILLIS_PER_DAY = 86_400_000.0

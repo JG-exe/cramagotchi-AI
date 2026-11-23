@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220" role="img" aria-label="Cramagotchi Scholar Blob">
+  
+  <ellipse cx="110" cy="176" rx="46" ry="7" fill="#2C221E" opacity="0.07" />
+
+  
+  <path d="M110 46
+       C136 46, 152 66, 157 92
+       C163 121, 169 148, 150 162
+       C134 173, 86 173, 70 162
+       C51 148, 57 121, 63 92
+       C68 66, 84 46, 110 46 Z" fill="var(--monster-fill-scholar, #EBF1E8)" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" />
+
+  
+  <ellipse cx="83" cy="107" rx="6.5" ry="3.5" fill="var(--monster-blush, rgba(217, 119, 87, 0.28))" />
+  <ellipse cx="137" cy="107" rx="6.5" ry="3.5" fill="var(--monster-blush, rgba(217, 119, 87, 0.28))" />
+
+  
+  <circle cx="94" cy="95" r="11" fill="#FFFDF9" fill-opacity="0.45" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.25" />
+  <circle cx="126" cy="95" r="11" fill="#FFFDF9" fill-opacity="0.45" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.25" />
+  <path d="M105 95 Q110 92 115 95" fill="none" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.25" stroke-linecap="round" />
+
+  
+  <circle cx="94" cy="95" r="2.2" fill="var(--color-espresso-dark, #2C221E)" />
+  <circle cx="126" cy="95" r="2.2" fill="var(--color-espresso-dark, #2C221E)" />
+  <path d="M105 106 Q110 110 115 106" fill="none" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.25" stroke-linecap="round" />
+
+  
+  <path d="M88 134 Q99 130 110 135 Q121 130 132 134 L130 150 Q120 146 110 151 Q100 146 90 150 Z" fill="var(--color-cream-base, #FAF6F0)" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.25" stroke-linejoin="round" />
+  <line x1="110" y1="135" x2="110" y2="151" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2" stroke-linecap="round" />
+
+  
+  <path d="M84 138 C79 139, 79 146, 86 146" fill="var(--monster-fill-scholar, #EBF1E8)" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M136 138 C141 139, 141 146, 134 146" fill="var(--monster-fill-scholar, #EBF1E8)" stroke="var(--color-espresso-dark, #2C221E)" stroke-width="2.5" stroke-linecap="round" />
+</svg>

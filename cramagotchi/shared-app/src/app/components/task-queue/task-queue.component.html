@@ -13,17 +13,29 @@
           type="text"
           name="title"
           matInput
-          [ngModel]="titleInput()"
-          (ngModelChange)="titleInput.set($event)"
+          [value]="titleInput()"
+          (input)="titleInput.set($any($event.target).value)"
           required
           data-testid="task-title-input"
+        />
+      </mat-form-field>
+      <mat-form-field appearance="outline" class="field-estimate">
+        <mat-label>Estimate (min)</mat-label>
+        <input
+          type="number"
+          name="estimate"
+          matInput
+          min="1"
+          step="1"
+          [value]="estimateInput()"
+          (input)="estimateInput.set($any($event.target).value)"
+          data-testid="task-estimate-minutes"
         />
       </mat-form-field>
       <button
         type="submit"
         mat-flat-button
         class="btn-add"
-        [disabled]="!titleInput().trim()"
         data-testid="task-submit-btn"
       >
         + Add
@@ -38,8 +50,8 @@
         [ngModel]="weightInput()"
         (ngModelChange)="weightInput.set($event)"
       >
-        <mat-radio-button value="SNACK" class="radio-label pill-snack">Snack (+10 XP)</mat-radio-button>
-        <mat-radio-button value="MEAL" class="radio-label pill-meal">Meal (+25 XP)</mat-radio-button>
+        <mat-radio-button value="SNACK" class="radio-label pill-snack">Snack (≈10 XP)</mat-radio-button>
+        <mat-radio-button value="MEAL" class="radio-label pill-meal">Meal (≈25 XP)</mat-radio-button>
       </mat-radio-group>
 
       <mat-form-field appearance="outline" class="field-subject">
@@ -48,8 +60,8 @@
           type="text"
           name="subject"
           matInput
-          [ngModel]="subjectInput()"
-          (ngModelChange)="subjectInput.set($event)"
+          [value]="subjectInput()"
+          (input)="subjectInput.set($any($event.target).value)"
         />
       </mat-form-field>
     </div>
@@ -67,7 +79,7 @@
       <div class="task-card" [attr.data-task-id]="task.id">
         <mat-checkbox
           class="task-checkbox"
-          (change)="store.completeTask(task.id)"
+          (change)="complete(task.id)"
           [checked]="task.completed"
           aria-label="Complete and feed to Cramagotchi"
         />
@@ -76,8 +88,19 @@
           <span class="task-title">{{ task.title }}</span>
           <div class="task-badges">
             <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
-              {{ task.weight === 'SNACK' ? '🍿 Snack (+10)' : '🍱 Meal (+25)' }}
+              {{ task.weight === 'SNACK' ? '🍿 Snack (≈10 XP)' : '🍱 Meal (≈25 XP)' }}
             </span>
+            <input
+              type="number"
+              class="actual-minutes-input"
+              min="0"
+              step="1"
+              placeholder="min used"
+              [value]="actualMinutes[task.id] ?? ''"
+              (input)="actualMinutes[task.id] = $any($event.target).value"
+              aria-label="Minutes actually spent"
+              data-testid="task-actual-minutes"
+            />
             @if (task.subjectTag) {
               <span
                 class="badge badge-subject"
@@ -120,7 +143,7 @@
               <span class="devoured-check">✓</span>
               <span class="devoured-title">{{ task.title }}</span>
               <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
-                +{{ task.weight === 'SNACK' ? '10' : '25' }} XP
+                +{{ task.awardedXp ?? (task.weight === 'SNACK' ? 10 : 25) }} XP
               </span>
             </div>
           }

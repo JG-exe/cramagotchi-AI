@@ -45,21 +45,35 @@ export class TaskQueueComponent {
   titleInput = signal('');
   weightInput = signal<TaskWeight>('SNACK');
   subjectInput = signal('');
+  estimateInput = signal('');
   showDevoured = signal(false);
+
+  /** Actual minutes spent, keyed by task id — user-recorded per task. */
+  actualMinutes: Record<string, string> = {};
 
   onSubmit(): void {
     const title = this.titleInput().trim();
     if (!title) return;
 
+    const estimate = Number(this.estimateInput());
     this.store.addTask(
       title,
       this.weightInput(),
-      this.subjectInput().trim() || undefined
+      this.subjectInput().trim() || undefined,
+      Number.isFinite(estimate) && estimate > 0 ? estimate : undefined
     );
 
     this.titleInput.set('');
     this.subjectInput.set('');
+    this.estimateInput.set('');
     this.weightInput.set('SNACK');
+  }
+
+  /** Complete a task, passing the minutes the user recorded for it. */
+  complete(taskId: string): void {
+    const recorded = Number(this.actualMinutes[taskId]);
+    const actual = Number.isFinite(recorded) && recorded > 0 ? recorded : null;
+    this.store.completeTaskWithTime(taskId, actual);
   }
 
   subjectHue(subjectTag: string): number {

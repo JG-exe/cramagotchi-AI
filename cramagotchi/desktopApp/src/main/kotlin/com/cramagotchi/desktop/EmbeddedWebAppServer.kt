@@ -27,9 +27,11 @@ class EmbeddedWebAppServer private constructor(
         override fun handle(exchange: HttpExchange) {
             val uriPath = exchange.requestURI.path.trimStart('/')
             val file = File(rootDir, if (uriPath.isBlank()) "index.html" else uriPath)
-            val resolved = if (file.isFile) file else File(rootDir, "index.html")
+            val resolved = (if (file.isFile) file else File(rootDir, "index.html")).canonicalFile
 
-            if (!resolved.isFile) {
+            // The request must resolve inside the extracted webapp dir,
+            // never out through ".." segments.
+            if (!resolved.isFile || !resolved.path.startsWith(rootDir.canonicalPath)) {
                 exchange.sendResponseHeaders(404, -1)
                 exchange.close()
                 return
