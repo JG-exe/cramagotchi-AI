@@ -82,6 +82,17 @@ export class MonsterStoreService {
     return Engine.examCountdownDays(this.kmpState(), Date.now()) ?? null;
   });
 
+  /** Exam portfolio — every exam the user tracks. */
+  readonly exams = computed<ExamRef[]>(() =>
+    this.kmpState().exams.asJsReadonlyArrayView().map(toExamRef)
+  );
+
+  /** Days until the nearest upcoming exam across the portfolio. */
+  readonly nearestExamDays = computed<number | null>(() => {
+    this.dayTick(); // re-evaluate when the interval ticks
+    return Engine.nearestExamDays(this.kmpState(), Date.now()) ?? null;
+  });
+
   /** Active (uncompleted) tasks */
   readonly activeTasks = computed(() => this.tasks().filter(t => !t.completed));
 
@@ -116,19 +127,54 @@ export class MonsterStoreService {
     this.persistToStorage();
   }
 
-  addTask(title: string, weight: TaskWeight, subjectTag?: string): void {
+  addTask(
+    title: string,
+    weight: TaskWeight,
+    subjectTag?: string,
+    estimatedMinutes?: number | null
+  ): void {
     const trimmed = title.trim();
     if (!trimmed) return;
 
     const kmpWeight = weight === 'SNACK' ? Model.TaskWeight.SNACK : Model.TaskWeight.MEAL;
     this.kmpState.set(
-      Engine.addTask(this.kmpState(), trimmed, kmpWeight, Date.now(), subjectTag?.trim() || null)
+      Engine.addTask(
+        this.kmpState(),
+        trimmed,
+        kmpWeight,
+        Date.now(),
+        subjectTag?.trim() || null,
+        estimatedMinutes ?? null
+      )
     );
     this.persistToStorage();
   }
 
   completeTask(taskId: string): void {
-    this.kmpState.set(Engine.completeTask(this.kmpState(), taskId, Date.now()));
+    this.completeTaskWithTime(taskId, null);
+  }
+
+  /**
+   * Complete a task, optionally recording how long it actually took so the
+   * engine can grant the estimation-accuracy bonus. The awarded XP is
+   * slightly variable and stays hidden inside the engine until completion.
+   */
+  completeTaskWithTime(taskId: string, actualMinutes: number | null): void {
+    this.kmpState.set(
+      Engine.completeTask(this.kmpState(), taskId, Date.now(), actualMinutes, Math.random())
+    );
+    this.persistToStorage();
+  }
+
+  /** Add an exam (subject label optional) to the exam portfolio. */
+  addExam(subjectTag: string | null, dateIso: string): void {
+    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now()));
+    this.persistToStorage();
+  }
+
+  /** Remove an exam from the portfolio by id. */
+  removeExam(examId: string): void {
+    this.kmpState.set(Engine.removeExam(this.kmpState(), examId));
     this.persistToStorage();
   }
 
@@ -205,5 +251,21 @@ function toStudyTask(t: KmpAppState['tasks'][number]): StudyTask {
     completed: t.completed,
     createdAt: t.createdAt,
     completedAt: t.completedAt ?? undefined,
+    estimatedMinutes: t.estimatedMinutes ?? undefined,
+    awardedXp: t.awardedXp ?? undefined,
+  };
+}
+
+type KmpExam = {
+  id: string;
+  subjectTag?: string | null;
+  dateIso: string;
+};
+
+function toExamRef(e: KmpExam): ExamRef {
+  return {
+    id: e.id,
+    subjectTag: e.subjectTag ?? undefined,
+    dateIso: e.dateIso,
   };
 }

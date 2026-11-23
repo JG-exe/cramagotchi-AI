@@ -30,6 +30,76 @@
   font-size: var(--text-xs);
 }
 
+/* Exam portfolio: chips + add form */
+.exam-manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.exams-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.exam-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+}
+
+.exam-chip-date {
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+}
+
+.badge {
+  font-size: var(--text-xs);
+  padding: 1px var(--space-xs);
+  border-radius: var(--radius-pill);
+}
+
+.badge-subject {
+  background: hsl(var(--subject-hue, 210), 45%, 88%);
+  color: hsl(var(--subject-hue, 210), 45%, 28%);
+}
+
+.btn-delete {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  padding: 2px var(--space-2xs);
+  border-radius: var(--radius-sm);
+}
+
+.btn-delete:hover {
+  color: #E53E3E;
+}
+
+.exam-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: flex-start;
+}
+
+.field-exam-subject {
+  flex: 1;
+  min-width: 160px;
+}
+
+.btn-add-exam {
+  margin-top: var(--space-2xs);
+}
+
 /* Monster Card */
 .monster-card {
   display: flex;
