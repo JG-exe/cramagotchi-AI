@@ -2,6 +2,9 @@
 :root {
   --duration-fast: 150ms;
   --duration-normal: 300ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --lift-shadow-hover: 0 4px 10px rgba(0, 0, 0, 0.12);
+  --lift-shadow-active: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 @keyframes breathe {
@@ -23,4 +26,28 @@
 @keyframes floatZzz {
   0% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* Shared button state animation: lift on hover, press on active.
+   Applied globally so every button (custom and Material) behaves alike. */
+button {
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--lift-shadow-hover);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  box-shadow: var(--lift-shadow-active);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-accent-meal);
+  outline-offset: 2px;
 }

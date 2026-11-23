@@ -34,7 +34,21 @@ data class StudyTask(
     val weight: TaskWeight,
     val completed: Boolean = false,
     val createdAt: Double,
-    val completedAt: Double? = null
+    val completedAt: Double? = null,
+    /** Minutes the user estimated this task would take (null = no estimate). */
+    val estimatedMinutes: Double? = null,
+    /** Actual XP awarded at completion — hidden from the UI until then. */
+    val awardedXp: Int? = null
+)
+
+/** One upcoming exam, contributing its own countdown. */
+@TsExport
+@Serializable
+data class Exam(
+    val id: String,
+    val subjectTag: String? = null,
+    /** ISO date, `YYYY-MM-DD`. */
+    val dateIso: String
 )
 
 @TsExport
@@ -54,5 +68,8 @@ data class MonsterState(
 data class AppState(
     val tasks: Array<StudyTask> = emptyArray(),
     val monster: MonsterState,
-    val examDateIso: String? = null
+    /** Legacy single-exam field — kept for deserialization of old storage. */
+    val examDateIso: String? = null,
+    /** Active exams; the countdown targets the nearest upcoming one. */
+    val exams: List<Exam> = emptyList()
 )
