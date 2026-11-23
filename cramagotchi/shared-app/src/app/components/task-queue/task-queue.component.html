@@ -1,7 +1,7 @@
 <section class="task-queue-container">
   <header class="section-header">
-    <h2 class="section-title">Study Tasks</h2>
-    <span class="active-count">{{ store.activeTasks().length }} active</span>
+    <h2 class="section-title">Study Queue</h2>
+    <span class="active-count">{{ store.activeTasks().length }} remaining</span>
   </header>
 
   <!-- Task Creation Form -->
@@ -71,7 +71,7 @@
   <div class="task-list" data-testid="active-tasks-list">
     @if (store.activeTasks().length === 0) {
       <div class="empty-state">
-        <p>No study tasks queued. Add a snack or meal to keep your Cramagotchi fed!</p>
+        <p>All queued study tasks devoured! Add another small step whenever you're ready.</p>
       </div>
     }
 

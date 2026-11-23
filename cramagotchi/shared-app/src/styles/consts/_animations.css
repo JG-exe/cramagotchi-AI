@@ -41,10 +41,10 @@
 
 /* SLEEPING — two z glyphs drifting up-right, fading in staggered waves */
 @keyframes floatZzz {
-    0%   { opacity: 0;    transform: translate(0, 0) rotate(0deg); }
+    0%   { opacity: 0;    transform: translate(0, 4px) scale(0.85) rotate(0deg); }
     30%  { opacity: 0.85; }
     70%  { opacity: 0.5;  }
-    100% { opacity: 0;    transform: translate(10px, -26px) rotate(8deg); }
+    100% { opacity: 0;    transform: translate(10px, -26px) scale(1.05) rotate(8deg); }
 }
 
 /* ── Shared button state animation: lift on hover, press on active.

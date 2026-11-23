@@ -115,3 +115,30 @@ Legend: **X** = not done · **V** = done
   violated design.md's zero-blue rule — resolved by the token rewrite.
 - V Scholar's original "book-as-mouth" repositioned to a small held book so status
   expressions (eat/sleep/hungry faces) can swap freely in the mouth area, per monster.md.
+
+---
+
+# Style finalization (vs `cramagotchi_live_style_preview.ts` reference)
+
+- V **Decision:** adopt preview's task-first two-pane layout (Study Queue left 1.45fr,
+  sanctuary right 1fr, sticky monster column on desktop); keep `monster.md`-exact motion
+  timings (breathe 4.2s / chomp 360ms / rumble 180ms / sleep 5.9s), `transform-box:
+  fill-box` anchoring, Material form fields, all testids, `prefers-reduced-motion`, and
+  "≈ XP" wording — preview's 520ms chomp, stage/status switchers and swatch footer skipped.
+
+Branch: `feat/style-finalization` (from `dev`). Reference archived at
+`design/cramagotchi_live_style_preview.reference.ts`.
+- V Refined monster art symbols into sanctuary: egg with speckles + crack line, hatchling
+  with double sprout, graduated beast with bear ears + tilted mortarboard + ochre tassel.
+- V Hand-drawn stroked Zzz glyphs (path-based, font-independent for old JavaFX WebKit)
+  floating up-and-right, outside the monster-body group.
+- V Stage meta: Lv. + label + one-line description caption under the arena
+  ("Warm & speckled…" etc.).
+- V Playful status pills, enum word first ("IDLE · Calm", "EATING · Nomming…",
+  "SLEEPING · Sleeping", "HUNGRY · Peckish") — contains-checks in tests still pass.
+- V Live MM:SS sleep countdown ("pomodoro-timer" chip) in the sleep banner.
+- V "Study Nourishment" XP section label; "Calm, zero-punishment study sanctuary" tagline.
+- V Study Queue header ("Study Queue" / "N remaining") and warmer empty-state copy
+  ("All queued study tasks devoured! Add another small step whenever you're ready.").
+- V Verification: 24/24 `ng test` pass; `ng build` clean; desktop bundle rebuilt via
+  `./gradlew :desktopApp:processResources`.
