@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, ExamKind } from '../../services/monster-store.service';
 import { DateMaskDirective } from '../../shared/date-mask.directive';
+import { SlidingToggleComponent } from '../../shared/sliding-toggle.component';
 
 export function subjectTagToHue(subjectTag: string): number {
   let hash = 0;
@@ -33,7 +34,7 @@ export function isValidIsoDate(value: string): boolean {
 @Component({
   selector: 'app-exam-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, DateMaskDirective],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, DateMaskDirective, SlidingToggleComponent],
   templateUrl: './exam-portfolio.component.html',
   styleUrl: './exam-portfolio.component.css',
 })
@@ -53,6 +54,16 @@ export class ExamPortfolioComponent {
 
   /** True when the nearest upcoming dated item is the high-stakes EXAM kind. */
   readonly nearestIsExam = computed(() => this.store.nearestUpcomingExam()?.kind === 'EXAM');
+
+  /** Add form's sliding Deadline/Exam toggle. */
+  onExamKindToggle(side: 'left' | 'right'): void {
+    this.examKindInput.set(side === 'right' ? 'EXAM' : 'DEADLINE');
+  }
+
+  /** Inline edit form's sliding Deadline/Exam toggle. */
+  onEditExamKindToggle(side: 'left' | 'right'): void {
+    this.editExamKind.set(side === 'right' ? 'EXAM' : 'DEADLINE');
+  }
 
   /**
    * Opens the browser/WebView native date picker from a click gesture

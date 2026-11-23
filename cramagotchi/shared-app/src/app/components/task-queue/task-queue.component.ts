@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, TaskWeight } from '../../services/monster-store.service';
+import { SlidingToggleComponent } from '../../shared/sliding-toggle.component';
 
 /**
  * Deterministically maps a subject tag to a hue (0-359).
@@ -33,6 +34,7 @@ function subjectTagToHue(subjectTag: string): number {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    SlidingToggleComponent,
   ],
   templateUrl: './task-queue.component.html',
   styleUrl: './task-queue.component.css',
@@ -45,6 +47,16 @@ export class TaskQueueComponent {
   subjectInput = signal('');
   estimateInput = signal('');
   showDevoured = signal(false);
+
+  /** Add form's sliding Snack/Meal toggle. */
+  onWeightToggle(side: 'left' | 'right'): void {
+    this.weightInput.set(side === 'right' ? 'MEAL' : 'SNACK');
+  }
+
+  /** Inline edit form's sliding Snack/Meal toggle. */
+  onEditWeightToggle(side: 'left' | 'right'): void {
+    this.editWeight.set(side === 'right' ? 'MEAL' : 'SNACK');
+  }
 
   /** Actual minutes spent, keyed by task id — user-recorded per task. */
   actualMinutes: Record<string, string> = {};

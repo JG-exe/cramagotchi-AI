@@ -43,27 +43,18 @@
     </div>
 
     <div class="form-controls">
-      <div
-        class="weight-segmented"
+      <app-sliding-toggle
         role="radiogroup"
         aria-label="Task size"
         data-testid="task-weight-toggle"
-      >
-        <button
-          type="button"
-          class="weight-option"
-          [class.weight-option-active]="weightInput() === 'SNACK'"
-          (click)="weightInput.set('SNACK')"
-          data-testid="task-weight-snack"
-        >Snack (≈10 XP)</button>
-        <button
-          type="button"
-          class="weight-option"
-          [class.weight-option-active]="weightInput() === 'MEAL'"
-          (click)="weightInput.set('MEAL')"
-          data-testid="task-weight-meal"
-        >Meal (≈25 XP)</button>
-      </div>
+        left="Snack (≈10 XP)"
+        right="Meal (≈25 XP)"
+        leftTestId="task-weight-snack"
+        rightTestId="task-weight-meal"
+        [value]="weightInput()"
+        rightValue="MEAL"
+        (change)="onWeightToggle($event)"
+      />
 
       <mat-form-field appearance="outline" class="field-subject">
         <mat-label>Subject / Topic (optional)</mat-label>
@@ -130,27 +121,18 @@
                   data-testid="task-edit-subject"
                 />
               </mat-form-field>
-              <div
-                class="weight-segmented"
+              <app-sliding-toggle
                 role="radiogroup"
                 aria-label="Task size"
                 data-testid="task-edit-weight"
-              >
-                <button
-                  type="button"
-                  class="weight-option"
-                  [class.weight-option-active]="editWeight() === 'SNACK'"
-                  (click)="editWeight.set('SNACK')"
-                  data-testid="task-edit-weight-snack"
-                >Snack (≈10 XP)</button>
-                <button
-                  type="button"
-                  class="weight-option"
-                  [class.weight-option-active]="editWeight() === 'MEAL'"
-                  (click)="editWeight.set('MEAL')"
-                  data-testid="task-edit-weight-meal"
-                >Meal (≈25 XP)</button>
-              </div>
+                left="Snack (≈10 XP)"
+                right="Meal (≈25 XP)"
+                leftTestId="task-edit-weight-snack"
+                rightTestId="task-edit-weight-meal"
+                [value]="editWeight()"
+                rightValue="MEAL"
+                (change)="onEditWeightToggle($event)"
+              />
             </div>
             <div class="task-edit-actions">
               <button

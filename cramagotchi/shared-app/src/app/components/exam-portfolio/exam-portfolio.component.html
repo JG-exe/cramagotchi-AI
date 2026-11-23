@@ -71,27 +71,16 @@
                 aria-hidden="true"
                 (change)="onPickedEditDate(pickerEdit.value, dateEditField)"
               />
-              <div
-                class="kind-segmented"
-                role="radiogroup"
-                aria-label="Item importance"
+              <app-sliding-toggle
                 data-testid="exam-edit-kind"
-              >
-                <button
-                  type="button"
-                  class="kind-option"
-                  [class.kind-option-active]="editExamKind() === 'DEADLINE'"
-                  (click)="editExamKind.set('DEADLINE')"
-                  data-testid="exam-edit-kind-deadline"
-                >Deadline</button>
-                <button
-                  type="button"
-                  class="kind-option"
-                  [class.kind-option-active]="editExamKind() === 'EXAM'"
-                  (click)="editExamKind.set('EXAM')"
-                  data-testid="exam-edit-kind-exam"
-                >Exam</button>
-              </div>
+                left="Deadline"
+                right="Exam"
+                leftTestId="exam-edit-kind-deadline"
+                rightTestId="exam-edit-kind-exam"
+                [value]="editExamKind()"
+                rightValue="EXAM"
+                (change)="onEditExamKindToggle($event)"
+              />
               <div class="exam-edit-actions">
                 <button
                   type="submit"
@@ -193,27 +182,16 @@
         (change)="onPickedAddDate(pickerAdd.value, dateAddField)"
       />
       <div class="exam-add-actions">
-        <div
-          class="kind-segmented"
-          role="radiogroup"
-          aria-label="Item importance"
+        <app-sliding-toggle
           data-testid="exam-kind-toggle"
-        >
-          <button
-            type="button"
-            class="kind-option"
-            [class.kind-option-active]="examKindInput() === 'DEADLINE'"
-            (click)="examKindInput.set('DEADLINE')"
-            data-testid="exam-kind-deadline"
-          >Deadline</button>
-          <button
-            type="button"
-            class="kind-option"
-            [class.kind-option-active]="examKindInput() === 'EXAM'"
-            (click)="examKindInput.set('EXAM')"
-            data-testid="exam-kind-exam"
-          >Exam</button>
-        </div>
+          left="Deadline"
+          right="Exam"
+          leftTestId="exam-kind-deadline"
+          rightTestId="exam-kind-exam"
+          [value]="examKindInput()"
+          rightValue="EXAM"
+          (change)="onExamKindToggle($event)"
+        />
         <button
           type="submit"
           mat-flat-button

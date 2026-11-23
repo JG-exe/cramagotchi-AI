@@ -262,3 +262,10 @@ Metric: **V** = done
   ideal on Android/mobile; engines without it fall back to typed input).
   Separator garbage (e.g. `2026/02/10`) is never healed by the mask — the
   validity guard still rejects it. Verified: 34/34 `ng test`, build clean.
+- V **Proper sliding toggle:** the segmented buttons (which had a fake sliding
+  white background) are replaced by a shared `SlidingToggleComponent` — one
+  track, one thumb gliding between the two halves via a 220ms transform.
+  Used for Deadline/Exam (add + edit forms) and Snack/Meal (add + task edit).
+  Labels stay real buttons; testids unchanged; active-class contract updated
+  to `toggle-option-active`. Verified: 34/34 `ng test`, build clean, bundles
+  rebuilt.

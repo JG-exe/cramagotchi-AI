@@ -368,10 +368,10 @@ describe('App (root component)', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    // Deadline is the active option by default
+    // Deadline is the active option by default (sliding toggle's active side)
     expect(
       compiled.querySelector('[data-testid="exam-kind-deadline"]')?.classList
-    ).toContain('kind-option-active');
+    ).toContain('toggle-option-active');
 
     // Flip the kind to EXAM
     const examOption = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-kind-exam"]');
