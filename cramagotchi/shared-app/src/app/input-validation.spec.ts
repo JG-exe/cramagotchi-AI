@@ -1,0 +1,264 @@
+import { TestBed } from '@angular/core/testing';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { signal, computed } from '@angular/core';
+import { App } from './app';
+import { MonsterStoreService, MonsterState, StudyTask, ExamRef } from './services/monster-store.service';
+import { isValidIsoDate } from './components/monster-sanctuary/monster-sanctuary.component';
+
+/**
+ * Invalid & edge-case input guards, exercised through the real DOM event
+ * flow (set input value → dispatch events → submit) like app.spec.ts.
+ *
+ * Covers:
+ *  - Exam form: empty / malformed date strings must never reach addExam().
+ *  - Task form: empty title, garbage / negative / zero estimates must never
+ *    reach addTask() as an estimate.
+ *  - Actual-minutes input: negative / garbage values must pass null.
+ */
+
+function createMockStore() {
+  const monsterState: MonsterState = {
+    name: 'Munch',
+    xp: 0,
+    stage: 'EGG',
+    status: 'IDLE',
+    lastFedAt: Date.now(),
+  };
+
+  const monster = signal(monsterState);
+  const tasks = signal<StudyTask[]>([]);
+  const exams = signal<ExamRef[]>([]);
+
+  return {
+    monster,
+    tasks,
+    exams,
+    dayTick: signal(0),
+    nearestExamDays: computed(() => null),
+    activeTasks: computed(() => tasks().filter(t => !t.completed)),
+    devouredTasks: computed(() => tasks().filter(t => t.completed)),
+    xpProgress: computed(() => ({ current: 0, next: 50, percent: 0 })),
+    addTask: vi.fn(),
+    completeTaskWithTime: vi.fn(),
+    deleteTask: vi.fn(),
+    addExam: vi.fn(),
+    removeExam: vi.fn(),
+  };
+}
+
+type MockStore = ReturnType<typeof createMockStore>;
+
+function setInput(el: HTMLInputElement, value: string): void {
+  el.value = value;
+  el.dispatchEvent(new Event('input'));
+  el.dispatchEvent(new Event('change'));
+}
+
+function makeTask(title: string): StudyTask {
+  return {
+    id: 'task-1',
+    title,
+    weight: 'MEAL',
+    completed: false,
+    createdAt: Date.now(),
+  };
+}
+
+describe('isValidIsoDate (date-format boundary)', () => {
+  it('accepts well-formed dates including leap day', () => {
+    expect(isValidIsoDate('2026-05-10')).toBe(true);
+    expect(isValidIsoDate('2024-02-29')).toBe(true);
+    expect(isValidIsoDate('2020-01-15')).toBe(true);
+  });
+
+  it('rejects malformed strings, impossible months/days and empty input', () => {
+    expect(isValidIsoDate('2026-02-30')).toBe(false);
+    expect(isValidIsoDate('2026-13-45')).toBe(false);
+    expect(isValidIsoDate('2026-13-01')).toBe(false);
+    expect(isValidIsoDate('2026-00-10')).toBe(false);
+    expect(isValidIsoDate('2026/02/10')).toBe(false);
+    expect(isValidIsoDate('not-a-date')).toBe(false);
+    expect(isValidIsoDate('2026-5-10')).toBe(false);
+    expect(isValidIsoDate('')).toBe(false);
+  });
+});
+
+describe('Invalid & edge-case input guards (DOM-level)', () => {
+  let mockStore: MockStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    TestBed.configureTestingModule({
+      imports: [App],
+      providers: [{ provide: MonsterStoreService, useValue: mockStore }],
+    });
+  });
+
+  // ── Exam date ──────────────────────────────────────────────────────
+
+  it('rejects an exam submission with an empty date', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-subject"]')!,
+      'MATH'
+    );
+    // No date set at all.
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
+
+    expect(mockStore.addExam).not.toHaveBeenCalled();
+  });
+
+  it('rejects a malformed exam date string', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!,
+      'not-a-date'
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
+
+    // Whatever the DOM sanitizes it to, a non-ISO garbage string must never
+    // be handed to the engine (which stores dateIso verbatim).
+    expect(mockStore.addExam).not.toHaveBeenCalled();
+  });
+
+  it('rejects an impossible calendar date (month 13, day 45)', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!,
+      '2026-13-45'
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
+
+    expect(mockStore.addExam).not.toHaveBeenCalled();
+  });
+
+  it('rejects an impossible calendar date (Feb 30) and wrong separators', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const dateInput = compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!;
+    const addBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!;
+
+    setInput(dateInput, '2026-02-30');
+    addBtn.click();
+    expect(mockStore.addExam).not.toHaveBeenCalled();
+
+    setInput(dateInput, '2026/02/10');
+    addBtn.click();
+    expect(mockStore.addExam).not.toHaveBeenCalled();
+  });
+
+  it('still accepts a well-formed exam date (past dates are allowed by design)', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="exam-input-date"]')!,
+      '2020-01-15'
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
+
+    expect(mockStore.addExam).toHaveBeenCalledWith(null, '2020-01-15');
+  });
+
+  // ── Task estimate ──────────────────────────────────────────────────
+
+  it('rejects an empty / whitespace title', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="task-title-input"]')!,
+      '   '
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="task-submit-btn"]')!.click();
+
+    expect(mockStore.addTask).not.toHaveBeenCalled();
+  });
+
+  it('rejects a negative estimated-minutes value', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="task-title-input"]')!,
+      'Read chapter'
+    );
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="task-estimate-minutes"]')!,
+      '-5'
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="task-submit-btn"]')!.click();
+
+    expect(mockStore.addTask).toHaveBeenCalledWith('Read chapter', 'SNACK', undefined, undefined);
+  });
+
+  it('rejects zero and non-numeric estimated-minutes values', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const title = compiled.querySelector<HTMLInputElement>('[data-testid="task-title-input"]')!;
+    const estimate = compiled.querySelector<HTMLInputElement>('[data-testid="task-estimate-minutes"]')!;
+    const submit = compiled.querySelector<HTMLButtonElement>('[data-testid="task-submit-btn"]')!;
+
+    setInput(title, 'Read chapter');
+    setInput(estimate, '0');
+    submit.click();
+    setInput(title, 'Read chapter');
+    setInput(estimate, 'abc');
+    submit.click();
+
+    for (const call of mockStore.addTask.mock.calls) {
+      expect(call[3]).toBeUndefined();
+    }
+    expect(mockStore.addTask).toHaveBeenCalledTimes(2);
+  });
+
+  it('accepts fractional minutes as a valid positive duration', () => {
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="task-title-input"]')!,
+      'Flashcards'
+    );
+    setInput(
+      compiled.querySelector<HTMLInputElement>('[data-testid="task-estimate-minutes"]')!,
+      '2.5'
+    );
+    compiled.querySelector<HTMLButtonElement>('[data-testid="task-submit-btn"]')!.click();
+
+    expect(mockStore.addTask).toHaveBeenCalledWith('Flashcards', 'SNACK', undefined, 2.5);
+  });
+
+  // ── Actual minutes ─────────────────────────────────────────────────
+
+  it('rejects negative / garbage actual-minutes values (passes null, not the value)', () => {
+    mockStore.tasks.set([makeTask('Problem set')]);
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const actual = compiled.querySelector<HTMLInputElement>('[data-testid="task-actual-minutes"]')!;
+    const checkbox = compiled.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+
+    setInput(actual, '-3');
+    checkbox.click();
+    expect(mockStore.completeTaskWithTime.mock.calls[0][1]).toBeNull();
+  });
+});

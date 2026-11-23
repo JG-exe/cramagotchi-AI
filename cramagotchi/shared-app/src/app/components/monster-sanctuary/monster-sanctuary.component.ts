@@ -14,6 +14,15 @@ export function subjectTagToHue(subjectTag: string): number {
   return Math.abs(hash) % 360;
 }
 
+/** Strict `YYYY-MM-DD` + real-calendar-day check (no 2026-02-30 leaks). */
+export function isValidIsoDate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  if (month < 1 || month > 12 || day < 1) return false;
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return day <= daysInMonth;
+}
+
 @Component({
   selector: 'app-monster-sanctuary',
   standalone: true,
@@ -41,7 +50,9 @@ export class MonsterSanctuaryComponent {
 
   onAddExam(): void {
     const date = this.examDateInput();
-    if (!date) return;
+    // Empty submissions are ignored, and only a well-formed calendar date
+    // reaches the engine (which stores dateIso verbatim).
+    if (!date || !isValidIsoDate(date)) return;
     this.store.addExam(this.examSubjectInput().trim() || null, date);
     this.examSubjectInput.set('');
     this.examDateInput.set('');

@@ -80,7 +80,13 @@ Legend: **X** = not done · **V** = done
 
 ## Verification
 
-- V `ng test` — 12/12 Angular UI tests pass (all `data-testid` contracts preserved).
+- V `ng test` — 24/24 Angular UI tests pass (12 original contracts + 12 invalid-input
+  probes in `input-validation.spec.ts`: empty/malformed/impossible exam dates rejected,
+  negative/zero/non-numeric estimates and actual-minutes rejected, empty title rejected).
+- V Frontend boundary hardened: `isValidIsoDate()` (strict `YYYY-MM-DD` + real calendar
+  check incl. leap days) now guards `onAddExam` — the engine stores `dateIso` verbatim,
+  so garbage may never reach it; engine side already survives garbage via
+  `isoDaysFromCivil → null` (`nearestExamDays` skips it, never crashes).
 - V `ng build` — production build clean (web / desktop / android all consume this output).
 - V Desktop/web parity: desktop serves the Angular bundle copied into classpath resources
   at build time (`:desktopApp:bundleWebApp` → `/webapp/**`), so a stale desktop jar shows
