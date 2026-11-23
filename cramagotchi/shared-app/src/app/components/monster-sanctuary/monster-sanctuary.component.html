@@ -2,7 +2,7 @@
   <!-- Exam Countdown Banner -->
   <div class="exam-banner">
     @if (store.examCountdownDays() !== null) {
-      <span class="countdown-tag">
+      <span class="countdown-tag" data-testid="exam-countdown">
         ⏳ <strong>{{ store.examCountdownDays() }}</strong> days until exam
       </span>
     } @else {

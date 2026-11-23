@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { signal, computed } from '@angular/core';
 import { App } from './app';
 import { MonsterStoreService, MonsterState, StudyTask } from './services/monster-store.service';
+import { subjectHue } from './components/task-queue/task-queue.component';
 
 /**
  * TDD Test Suite for the Angular App component.
@@ -30,9 +31,16 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     monster,
     tasks,
     examDateIso,
+    dayTick: signal(0),
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
     devouredTasks: computed(() => tasks().filter(t => t.completed)),
-    examCountdownDays: computed(() => null),
+    examCountdownDays: computed(() => {
+      const iso = examDateIso();
+      if (!iso) return null;
+      const target = new Date(iso).setHours(0, 0, 0, 0);
+      const today = new Date().setHours(0, 0, 0, 0);
+      return Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+    }),
     xpProgress: computed(() => {
       const xp = monster().xp;
       if (xp < 50) return { current: xp, next: 50, percent: (xp / 50) * 100 };
@@ -142,4 +150,60 @@ describe('App (root component)', () => {
     expect(message).toBeTruthy();
     expect(message?.textContent).toContain('Digesting peacefully');
   });
+
+  // ── Test 5: Subject badge gets a deterministic per-subject colour ──
+
+  it('should render subject pills with a per-subject colour variable', () => {
+    const taggedTask = makeTask('Flashcards: Trees', 'MATH');
+    mockStore = createMockStore();
+    mockStore.tasks.set([taggedTask, makeTask('Essay draft', 'BIO')]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const badges = compiled.querySelectorAll('[data-testid="subject-badge"]');
+    expect(badges.length).toBe(2);
+
+    const hues = Array.from(badges).map(
+      b => b.getAttribute('style')?.match(/--subject-hue:\s*(-?\d+)/)?.[1]
+    );
+    expect(hues).not.toContain(undefined);
+    expect(hues).not.toContain(null);
+    // Deterministic per-subject colours: the two different subjects get
+    // different hues, and the same subject always hashes to the same hue.
+    expect(hues[0]).not.toEqual(hues[1]);
+    expect(subjectHue('MATH')).toEqual(Number(hues[0]));
+  });
+
+  // ── Test 6: Countdown reflects the set exam date ──
+
+  it('should expose the exam countdown days for the set exam date', () => {
+    const inTen = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+    const inTenDays = `${inTen.getFullYear()}-${String(inTen.getMonth() + 1).padStart(2, '0')}-${String(inTen.getDate()).padStart(2, '0')}`;
+
+    mockStore = createMockStore();
+    mockStore.examDateIso.set(inTenDays);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const countdown = compiled.querySelector('[data-testid="exam-countdown"]');
+    expect(countdown?.textContent).toContain('10');
+  });
 });
+
+/** Build a StudyTask fixture. */
+function makeTask(title: string, subjectTag?: string): StudyTask {
+  return {
+    id: `task-${Math.random()}`,
+    title,
+    subjectTag,
+    weight: 'MEAL',
+    completed: false,
+    createdAt: Date.now(),
+  };
+}
