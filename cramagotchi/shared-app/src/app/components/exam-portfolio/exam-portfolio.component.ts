@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, ExamKind } from '../../services/monster-store.service';
 import { DateMaskDirective } from '../../shared/date-mask.directive';
 import { SlidingToggleComponent } from '../../shared/sliding-toggle.component';
+import { InvalidFlashDirective } from '../../shared/invalid-flash.directive';
 
 export function subjectTagToHue(subjectTag: string): number {
   let hash = 0;
@@ -57,7 +58,7 @@ export function formatExamDateDisplay(iso: string): string {
 @Component({
   selector: 'app-exam-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, DateMaskDirective, SlidingToggleComponent],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, DateMaskDirective, SlidingToggleComponent, InvalidFlashDirective],
   templateUrl: './exam-portfolio.component.html',
   styleUrl: './exam-portfolio.component.css',
 })
@@ -83,6 +84,24 @@ export class ExamPortfolioComponent {
   examDateError = signal<string | null>(null);
   editNameError = signal<string | null>(null);
   editDateError = signal<string | null>(null);
+
+  /** Invalid-submit pulses (shake + red flash), one counter per element. */
+  readonly examNameInvalidCount = signal(0);
+  readonly examDateInvalidCount = signal(0);
+  readonly examAddInvalidCount = signal(0);
+  readonly editNameInvalidCount = signal(0);
+  readonly editDateInvalidCount = signal(0);
+  readonly editSaveInvalidCount = signal(0);
+
+  /** Add button is inactive until a name and a valid date are present. */
+  readonly canAddExam = computed(
+    () => this.examSubjectInput().trim().length > 0 && isValidIsoDate(this.examDateInput()),
+  );
+
+  /** Edit save button is inactive until a name and a valid date are present. */
+  readonly canSaveExam = computed(
+    () => this.editExamSubject().trim().length > 0 && isValidIsoDate(this.editExamDate()),
+  );
 
   /** True when the nearest upcoming dated item is the high-stakes EXAM kind. */
   readonly nearestIsExam = computed(() => this.store.nearestUpcomingExam()?.kind === 'EXAM');
@@ -226,11 +245,16 @@ export class ExamPortfolioComponent {
     const subject = this.examSubjectInput().trim();
     if (!subject) {
       this.examNameError.set('Give the item a name (e.g. MATH) first.');
+      // Shake the offending field and flash the add button red for one cycle.
+      this.examNameInvalidCount.update(c => c + 1);
+      this.examAddInvalidCount.update(c => c + 1);
       return;
     }
     const date = this.examDateInput();
     if (!date || !isValidIsoDate(date)) {
       this.examDateError.set('Enter a valid date (YYYY-MM-DD).');
+      this.examDateInvalidCount.update(c => c + 1);
+      this.examAddInvalidCount.update(c => c + 1);
       return;
     }
     this.store.addExam(subject, date, this.examKindInput());
@@ -287,11 +311,15 @@ export class ExamPortfolioComponent {
     const subject = this.editExamSubject().trim();
     if (!subject) {
       this.editNameError.set('The name cannot be empty — restore one or cancel.');
+      this.editNameInvalidCount.update(c => c + 1);
+      this.editSaveInvalidCount.update(c => c + 1);
       return;
     }
     const date = this.editExamDate();
     if (!date || !isValidIsoDate(date)) {
       this.editDateError.set('Enter a valid date (YYYY-MM-DD).');
+      this.editDateInvalidCount.update(c => c + 1);
+      this.editSaveInvalidCount.update(c => c + 1);
       return;
     }
     this.store.updateExam(examId, subject, date, this.editExamKind());

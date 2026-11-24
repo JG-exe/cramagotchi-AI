@@ -43,6 +43,7 @@ function createMockStore() {
     updateTask: vi.fn(),
     completeTaskWithTime: vi.fn(),
     deleteTask: vi.fn(),
+    isDevouredExpired: vi.fn(() => false),
     addExam: vi.fn(),
     updateExam: vi.fn(),
     removeExam: vi.fn(),
@@ -321,10 +322,10 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 
     const actual = compiled.querySelector<HTMLInputElement>('[data-testid="task-actual-minutes"]')!;
-    const checkbox = compiled.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    const completeBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-complete-btn"]')!;
 
     setInput(actual, '-3');
-    checkbox.click();
+    completeBtn.click();
     expect(mockStore.completeTaskWithTime.mock.calls[0][1]).toBeNull();
   });
 

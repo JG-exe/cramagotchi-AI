@@ -1,12 +1,12 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, TaskWeight } from '../../services/monster-store.service';
 import { SlidingToggleComponent } from '../../shared/sliding-toggle.component';
+import { InvalidFlashDirective } from '../../shared/invalid-flash.directive';
 
 /**
  * Deterministically maps a subject tag to a hue (0-359).
@@ -30,11 +30,11 @@ function subjectTagToHue(subjectTag: string): number {
   imports: [
     CommonModule,
     FormsModule,
-    MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
     SlidingToggleComponent,
+    InvalidFlashDirective,
   ],
   templateUrl: './task-queue.component.html',
   styleUrl: './task-queue.component.css',
@@ -50,6 +50,13 @@ export class TaskQueueComponent {
 
   /** Quiet inline rejection copy; null whenever nothing is being flagged. */
   taskFormError = signal<string | null>(null);
+
+  /** Invalid-submit pulses (shake + red flash) on the title field and the add button. */
+  readonly titleInvalidCount = signal(0);
+  readonly submitInvalidCount = signal(0);
+
+  /** The add button is inactive (dimmed) until a task name is present. */
+  readonly canAddTask = computed(() => this.titleInput().trim().length > 0);
 
   /** Add form's sliding Snack/Meal toggle. */
   onWeightToggle(side: 'left' | 'right'): void {
@@ -70,6 +77,9 @@ export class TaskQueueComponent {
   editSubject = signal('');
   editEstimate = signal('');
   editWeight = signal<TaskWeight>('SNACK');
+
+  /** Invalid-save pulse (shake) on the inline edit title field. */
+  readonly editTitleInvalidCount = signal(0);
 
   /** Open the inline edit form for one active task card. */
   startEditTask(taskId: string): void {
@@ -96,7 +106,10 @@ export class TaskQueueComponent {
     if (!taskId) return;
 
     const title = this.editTitle().trim();
-    if (!title) return;
+    if (!title) {
+      this.editTitleInvalidCount.update(c => c + 1);
+      return;
+    }
 
     const estimate = Number(this.editEstimate());
     const validEstimate = Number.isFinite(estimate) && estimate > 0 ? estimate : null;
@@ -115,6 +128,9 @@ export class TaskQueueComponent {
     const title = this.titleInput().trim();
     if (!title) {
       this.taskFormError.set('Name the study task first — what are you learning?');
+      // Shake the offending field and flash the submit button red for one cycle.
+      this.titleInvalidCount.update(c => c + 1);
+      this.submitInvalidCount.update(c => c + 1);
       return;
     }
 
@@ -149,6 +165,15 @@ export class TaskQueueComponent {
   subjectHue(subjectTag: string): number {
     return subjectTagToHue(subjectTag);
   }
+
+  /**
+   * Devoured tasks still inside the two-week retention window — the store
+   * purges anything older from storage, so this double-check is cheap and
+   * keeps late-ticking renders consistent with what the purge removed.
+   */
+  readonly filteredDevouredTasks = computed(() =>
+    this.store.devouredTasks().filter(task => !this.store.isDevouredExpired(task))
+  );
 
   toggleDevoured(): void {
     this.showDevoured.update(v => !v);

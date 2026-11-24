@@ -25,7 +25,12 @@
             <!-- Inline edit form for one deadline/exam chip -->
             <form class="exam-edit-form" (ngSubmit)="saveEditExam()" data-testid="exam-edit-form">
               <div class="field-exam-subject-wrap">
-                <mat-form-field appearance="outline" class="field-exam-subject">
+                <mat-form-field
+                  appearance="outline"
+                  class="field-exam-subject"
+                  [class.alert-field]="editNameError() !== null"
+                  [appInvalidFlash]="editNameInvalidCount()"
+                >
                   <mat-label>Subject</mat-label>
                   <input
                     type="text"
@@ -41,7 +46,12 @@
                 }
               </div>
               <div class="field-exam-date-wrap">
-                <mat-form-field appearance="outline" class="field-exam-date">
+                <mat-form-field
+                  appearance="outline"
+                  class="field-exam-date"
+                  [class.alert-field]="editDateError() !== null"
+                  [appInvalidFlash]="editDateInvalidCount()"
+                >
                   <mat-label>{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
                   <input
                     #dateEditField
@@ -134,6 +144,8 @@
                   type="submit"
                   mat-stroked-button
                   class="btn-save-exam"
+                  [class.btn-submit-inactive]="!canSaveExam()"
+                  [appInvalidFlash]="editSaveInvalidCount()"
                   data-testid="exam-edit-save"
                 >Save</button>
                 <button
@@ -195,7 +207,12 @@
 
     <form class="exam-add-form" (ngSubmit)="onAddExam()" data-testid="exam-form">
       <div class="field-exam-subject-wrap">
-        <mat-form-field appearance="outline" class="field-exam-subject">
+        <mat-form-field
+          appearance="outline"
+          class="field-exam-subject"
+          [class.alert-field]="examNameError() !== null"
+          [appInvalidFlash]="examNameInvalidCount()"
+        >
           <mat-label>Subject</mat-label>
           <input
             type="text"
@@ -211,7 +228,12 @@
         }
       </div>
       <div class="field-exam-date-wrap">
-        <mat-form-field appearance="outline" class="field-exam-date">
+        <mat-form-field
+          appearance="outline"
+          class="field-exam-date"
+          [class.alert-field]="examDateError() !== null"
+          [appInvalidFlash]="examDateInvalidCount()"
+        >
           <mat-label>{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
           <input
             #dateAddField
@@ -304,6 +326,8 @@
           type="submit"
           mat-flat-button
           class="btn-add-exam"
+          [class.btn-submit-inactive]="!canAddExam()"
+          [appInvalidFlash]="examAddInvalidCount()"
           data-testid="exam-add-btn"
         >
           + Add

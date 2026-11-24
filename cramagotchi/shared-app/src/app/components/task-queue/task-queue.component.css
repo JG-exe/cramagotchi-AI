@@ -21,7 +21,6 @@
   font-weight: var(--weight-semibold);
   color: var(--color-text-muted);
   background: var(--color-surface);
-  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
   box-shadow: var(--shadow-diffuse-sm);
   border-radius: var(--radius-pill);
   padding: var(--space-2xs) var(--space-sm);
@@ -35,7 +34,6 @@
   background: var(--color-surface);
   padding: var(--space-md);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
   box-shadow: var(--shadow-diffuse-sm);
 }
 
@@ -80,12 +78,45 @@
   width: 100%;
 }
 
+/* Rounded, soft-style form fields — closer to the reference soft-input look */
 .mat-mdc-form-field {
   width: 100%;
 }
 
+.mat-mdc-form-field .mdc-notched-outline {
+  border-radius: var(--radius-md);
+}
+
 .mat-mdc-text-field-wrapper {
+  background: var(--color-surface-recessed);
+  border-radius: var(--radius-md);
+}
+
+/* Soft input styling for any plain <input> used inside forms */
+.soft-input {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-primary);
+  background: var(--color-surface-recessed);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.95rem;
+  outline: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+.soft-input::placeholder {
+  color: color-mix(in srgb, var(--color-espresso-muted) 72%, transparent);
+}
+
+.soft-input:focus {
   background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-sage-base) 55%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-sage-base) 14%, transparent);
 }
 
 .btn-add {
@@ -114,7 +145,6 @@
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
-  background: #F2EEE8;
   background: var(--color-surface-recessed);
   border-radius: var(--radius-md);
 }
@@ -126,13 +156,75 @@
   padding: var(--space-sm) var(--space-md);
   background: var(--color-surface);
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
   box-shadow: var(--shadow-diffuse-sm);
-  transition: box-shadow var(--duration-fast) var(--ease-standard);
+  transition:
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
 }
 
 .task-card:hover {
+  transform: translateY(-1px);
   box-shadow: var(--shadow-diffuse-md);
+}
+
+.task-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  min-width: 0;
+  flex: 1;
+}
+
+/* Custom circular checkbox (button) — replaces mat-checkbox to match the
+   warm, rounded aesthetic from the reference design. Keeps checkbox semantics
+   via aria and keyboard, but visually looks like a rounded feed button. */
+.feed-check-btn {
+  appearance: none;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--color-espresso-dark) 28%, transparent);
+  background: var(--color-surface-recessed);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: transparent;
+  transition:
+    all var(--duration-fast) var(--ease-soft);
+  padding: 0;
+  margin: 0;
+}
+
+.feed-check-btn:hover {
+  border-color: var(--color-sage-base);
+  background: color-mix(in srgb, var(--color-sage-base) 14%, var(--color-surface));
+  color: var(--color-sage-base);
+}
+
+.feed-check-btn.is-completed {
+  border-color: var(--color-sage-base);
+  background: var(--color-sage-base);
+  color: var(--color-surface-elevated);
+}
+
+.feed-check-btn.is-completed:hover {
+  background: color-mix(in srgb, var(--color-sage-base) 88%, var(--color-espresso-dark));
+  border-color: color-mix(in srgb, var(--color-sage-base) 88%, var(--color-espresso-dark));
+  color: var(--color-surface-elevated);
+}
+
+.feed-check-btn:focus-visible {
+  outline: 2px solid var(--color-sage-base);
+  outline-offset: 2px;
+}
+
+/* Checkmark icon inside the button */
+.feed-check-btn svg {
+  width: 13px;
+  height: 13px;
+  pointer-events: none;
 }
 
 .task-info {
@@ -140,12 +232,19 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
+  min-width: 0;
 }
 
 .task-title {
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
   color: var(--color-text-primary);
+  word-break: break-word;
+}
+
+.task-title.completed-text {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
 }
 
 .task-badges {
@@ -179,15 +278,11 @@
 }
 
 .badge-snack {
-  background: #F9EEE0;
-  color: #9A6E3A;
   background: var(--tag-ochre-bg);
   color: var(--tag-ochre-fg);
 }
 
 .badge-meal {
-  background: #EAEFE6;
-  color: #5A795F;
   background: var(--tag-sage-bg);
   color: var(--tag-sage-fg);
 }
@@ -233,6 +328,16 @@
   border-radius: var(--radius-sm);
 }
 
+/* Rounded form fields inside inline edit as well */
+.task-edit-form .mat-mdc-form-field .mdc-notched-outline {
+  border-radius: var(--radius-md);
+}
+
+.task-edit-form .mat-mdc-text-field-wrapper {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+}
+
 .task-edit-row {
   display: flex;
   flex-wrap: wrap;
@@ -253,8 +358,6 @@
    gamut so cool hues read as calm neutrals, never saturated blue. */
 .badge-subject {
   --tag-tint: hsl(var(--subject-hue, 40) 42% 46%);
-  background: hsl(var(--subject-hue, 40) 42% 90%);
-  color: hsl(var(--subject-hue, 40) 42% 30%);
   background: color-mix(in srgb, var(--tag-tint) 14%, var(--color-surface-elevated));
   color: color-mix(in srgb, var(--tag-tint) 60%, var(--color-espresso-dark));
 }
@@ -267,11 +370,25 @@
   cursor: pointer;
   padding: var(--space-2xs);
   border-radius: var(--radius-sm);
-  transition: color var(--duration-fast) var(--ease-standard);
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
 }
 
 .btn-delete:hover {
   color: var(--color-status-hungry);
+  background: color-mix(in srgb, var(--color-status-hungry) 14%, transparent);
+}
+
+.btn-delete:focus-visible {
+  outline: 2px solid var(--color-status-hungry);
+  outline-offset: 2px;
+}
+
+.btn-delete svg {
+  display: block;
+  width: 16px;
+  height: 16px;
 }
 
 /* ── Devoured history ──────────────────────────────────────────────── */
@@ -304,21 +421,96 @@
 .devoured-item {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   padding: var(--space-xs) var(--space-sm);
-  background: rgba(255, 253, 249, 0.6);
   background: color-mix(in srgb, var(--color-surface-elevated) 60%, transparent);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   color: var(--color-text-muted);
+  transition:
+    box-shadow var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.devoured-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-diffuse-sm);
+}
+
+.devoured-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+/* Devoured item uses same circular checkmark for visual consistency */
+.devoured-check-wrap {
+  flex-shrink: 0;
 }
 
 .devoured-check {
-  color: var(--color-accent-meal);
-  font-weight: var(--weight-bold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-sage-base);
+  color: var(--color-surface-elevated);
+}
+
+.devoured-check svg {
+  width: 11px;
+  height: 11px;
 }
 
 .devoured-title {
   flex: 1;
   text-decoration: line-through;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Delete button for devoured items — same style as active task delete */
+.devoured-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.devoured-btn-delete {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: var(--space-2xs);
+  border-radius: var(--radius-sm);
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+  opacity: 0.45;
+}
+
+.devoured-item:hover .devoured-btn-delete,
+.devoured-btn-delete:focus-visible {
+  opacity: 1;
+}
+
+.devoured-btn-delete:hover {
+  color: var(--color-status-hungry);
+  background: color-mix(in srgb, var(--color-status-hungry) 14%, transparent);
+}
+
+.devoured-btn-delete:focus-visible {
+  outline: 2px solid var(--color-status-hungry);
+  outline-offset: 2px;
+}
+
+.devoured-btn-delete svg {
+  display: block;
+  width: 14px;
+  height: 14px;
 }

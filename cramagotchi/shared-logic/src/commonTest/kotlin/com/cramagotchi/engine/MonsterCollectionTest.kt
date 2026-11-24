@@ -7,18 +7,21 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * TDD suite for the collectible-monster roster (user story: collected
- * monsters with a random hue).
+ * TDD suite for the collected-monsters gallery (user story: only fully
+ * evolved monsters are collected, each keeping its unique hue through all
+ * evolutions).
  *
  * Contract:
- *  - `createInitialState` seeds the roster with the EGG species; its hue is
- *    rolled from the caller's `seedHueRng` (∈ [0,1) → hue ∈ [0,360)).
- *  - `unlockCollectible(state, speciesId, now, hueRng)` appends the species
- *    exactly once with a rolled hue; a second unlock is a no-op — the first
- *    hue sticks forever (part of the save, never re-rolled).
- *  - Evolution unlocks: completing a task / finishing a deadline that lifts
- *    the stage auto-collects each newly reached stage species.
- *  - The roster survives serialize → deserialize round-trips.
+ *  - `createInitialState` starts with an EMPTY gallery; the active egg's
+ *    permanent hue is rolled from the caller's `seedHueRng`
+ *    (∈ [0,1) → hue ∈ [0,360)) and lives on MonsterState.
+ *  - The hue sticks with the monster through every evolution (EGG → … →
+ *    GRADUATED_BEAST); evolving never re-rolls it.
+ *  - Only the max stage (GRADUATED_BEAST) enters the gallery: intermediate
+ *    stage crossings collect nothing.
+ *  - The gallery holds one entry per fully-raised monster — duplicates of
+ *    the stage species accrue one entry each.
+ *  - The gallery survives serialize → deserialize round-trips.
  */
 class MonsterCollectionTest {
 
@@ -27,94 +30,88 @@ class MonsterCollectionTest {
     private fun freshState(seedHueRng: Double = 0.5): AppState =
         CramagotchiEngine.createInitialState("Munch", baseTime, seedHueRng)
 
-    // ── seeding & rolling ────────────────────────────────────
+    // ── starting state ───────────────────────────────────────
 
     @Test
-    fun testInitialStateSeedsEggWithHueInRange() {
+    fun testInitialStateStartsWithEmptyGalleryAndTintedEgg() {
         val state = freshState(seedHueRng = 0.25)
-        assertEquals(1, state.collection.size)
-        assertEquals("EGG", state.collection[0].speciesId)
-        assertEquals(90, state.collection[0].hue) // floor(0.25 × 360)
-        assertTrue(state.collection[0].hue in 0..359)
+        assertEquals(0, state.collection.size)
+        assertEquals(EvolutionStage.EGG, state.monster.stage)
+        assertEquals(90, state.monster.hue) // floor(0.25 × 360)
     }
 
     @Test
     fun testRolledHueStaysInRangeForExtremeSeeds() {
-        assertEquals(0, freshState(seedHueRng = 0.0).collection[0].hue)
-        assertEquals(359, freshState(seedHueRng = 0.999999).collection[0].hue)
+        assertEquals(0, freshState(seedHueRng = 0.0).monster.hue)
+        assertEquals(359, freshState(seedHueRng = 0.999999).monster.hue)
         // out-of-range callers are coerced, never crash
-        assertEquals(0, freshState(seedHueRng = -0.5).collection[0].hue)
-        assertEquals(359, freshState(seedHueRng = 5.0).collection[0].hue)
+        assertEquals(0, freshState(seedHueRng = -0.5).monster.hue)
+        assertEquals(359, freshState(seedHueRng = 5.0).monster.hue)
     }
 
-    // ── unlockCollectible ────────────────────────────────────
+    // ── hue persistence through evolutions ───────────────────
 
     @Test
-    fun testUnlockAddsSpeciesWithRolledHue() {
-        val state = freshState()
-        val unlocked = CramagotchiEngine.unlockCollectible(state, "HATCHLING", baseTime, 0.9)
-        assertEquals(2, unlocked.collection.size)
-        assertEquals("HATCHLING", unlocked.collection[1].speciesId)
-        assertEquals(324, unlocked.collection[1].hue) // floor(0.9 × 360)
-        assertEquals(baseTime, unlocked.collection[1].collectedAt)
-    }
-
-    @Test
-    fun testUnlockNeverDuplicatesAndFirstHueSticks() {
-        val state = freshState()
-        val first = CramagotchiEngine.unlockCollectible(state, "SCHOLAR", baseTime, 0.2)
-        val second = CramagotchiEngine.unlockCollectible(first, "SCHOLAR", baseTime + 1000.0, 0.8)
-        assertEquals(first, second)
-        assertEquals(1, second.collection.count { it.speciesId == "SCHOLAR" })
-    }
-
-    // ── evolution auto-unlocks ───────────────────────────────
-
-    @Test
-    fun testCrossingEvolutionThresholdCollectsTheStage() {
-        val state = freshState()
-        // Default rng 0.5 → variation 1.0 → a plain MEAL awards 25 XP → still EGG.
-        val meal1 = CramagotchiEngine.addTask(state, "Chapter 11", TaskWeight.MEAL, baseTime)
-        val afterSmall = CramagotchiEngine.completeTask(meal1, "task-1", baseTime, null, 0.5, 0.7)
-        assertEquals(EvolutionStage.EGG, afterSmall.monster.stage)
-        assertEquals(1, afterSmall.collection.size)
-
-        // A second MEAL with the accuracy bonus: 25 × 1.0 × 1.5 = 38 → 63 total → HATCHLING.
-        val meal2 = CramagotchiEngine.addTask(afterSmall, "Problem set", TaskWeight.MEAL, baseTime)
-        val estimated = CramagotchiEngine.updateTask(meal2, "task-2", "Problem set", TaskWeight.MEAL, null, 40.0)
-        val done = CramagotchiEngine.completeTask(estimated, "task-2", baseTime, 40.0, 0.5, 0.7)
-        assertEquals(EvolutionStage.HATCHLING, done.monster.stage)
-        assertEquals(2, done.collection.size)
-        assertEquals("HATCHLING", done.collection[1].speciesId)
-        assertTrue(done.collection[1].hue in 0..359)
-    }
-
-    @Test
-    fun testTwoStageJumpCollectsBothStages() {
-        val state = freshState()
-        // Legacy-save scenario: xp already says SCHOLAR territory but the stale
-        // stage field says EGG (no HATCHLING collected). Completing a task
-        // re-evaluates the stage and must collect BOTH skipped species.
-        val staleEgg = state.copy(
-            monster = state.monster.copy(xp = 149, stage = EvolutionStage.EGG)
+    fun testHueSticksThroughIntermediateEvolutions() {
+        val state = freshState(seedHueRng = 0.5).copy(
+            monster = freshState().monster.copy(xp = 60, hue = 180)
         )
-        assertEquals(1, staleEgg.collection.size)
-        val task = CramagotchiEngine.addTask(staleEgg, "Jump", TaskWeight.MEAL, baseTime)
-        val done = CramagotchiEngine.completeTask(task, "task-1", baseTime, 40.0, 0.5, 0.7)
-        assertEquals(EvolutionStage.SCHOLAR, done.monster.stage)
-        assertEquals(3, done.collection.size)
-        assertEquals("HATCHLING", done.collection[1].speciesId)
-        assertEquals("SCHOLAR", done.collection[2].speciesId)
-        assertTrue(done.collection[1].hue != done.collection[2].hue)
+        val task = CramagotchiEngine.addTask(state, "Meal", TaskWeight.MEAL, baseTime)
+        val done = CramagotchiEngine.completeTask(task, "task-1", baseTime, null, 0.5, 0.7)
+        assertEquals(EvolutionStage.HATCHLING, done.monster.stage)
+        assertEquals(180, done.monster.hue) // never re-rolled while growing
+    }
+
+    // ── only fully evolved monsters collect ──────────────────
+
+    @Test
+    fun testIntermediateCrossingsNeverEnterTheGallery() {
+        val state = freshState().copy(monster = freshState().monster.copy(xp = 40))
+        val task = CramagotchiEngine.addTask(state, "Meal", TaskWeight.MEAL, baseTime)
+        val done = CramagotchiEngine.completeTask(task, "task-1", baseTime, null, 0.5, 0.7)
+        assertEquals(EvolutionStage.HATCHLING, done.monster.stage)
+        assertEquals(0, done.collection.size)
+    }
+
+    @Test
+    fun testStaleSaveJumpStraightToMaxCollectsOnlyTheGraduate() {
+        // Legacy-save scenario: xp already says max territory but the stale
+        // stage field says EGG. Completing a task re-evaluates the stage and
+        // must collect just the fully-evolved monster (one entry), not the
+        // intermediate stages.
+        val state = freshState().copy(
+            monster = freshState().monster.copy(xp = 295, hue = 180)
+        )
+        val task = CramagotchiEngine.addTask(state, "Capstone", TaskWeight.MEAL, baseTime)
+        val done = CramagotchiEngine.completeTask(task, "task-1", baseTime, null, 0.5, 0.7)
+        assertEquals(1, done.collection.size)
+        assertEquals("GRADUATED_BEAST", done.collection[0].speciesId)
+        assertEquals(180, done.collection[0].hue) // retired in its own colour
+    }
+
+    // ── pose roll ────────────────────────────────────────────
+
+    @Test
+    fun testRetiredPoseIsDeterministicAndValid() {
+        val state = freshState().copy(monster = freshState().monster.copy(xp = 295, hue = 180))
+        val task = CramagotchiEngine.addTask(state, "Capstone", TaskWeight.MEAL, baseTime)
+        val done = CramagotchiEngine.completeTask(task, "task-1", baseTime, null, 0.5, 0.7)
+        // pose = ((hueRng + POSE_STIR) % 1.0) < 0.5 → hueRng 0.7 → sleeping
+        assertEquals(true, done.collection[0].sleeping)
     }
 
     // ── persistence ──────────────────────────────────────────
 
     @Test
-    fun testCollectionSurvivesStorageRoundTrip() {
-        val state = CramagotchiEngine.unlockCollectible(freshState(), "SCHOLAR", baseTime, 0.42)
-        val restored = StorageRepository.deserialize(StorageRepository.serialize(state))
-        assertEquals(state.collection, restored?.collection)
+    fun testGallerySurvivesStorageRoundTrip() {
+        var state = freshState()
+        val task = CramagotchiEngine.addTask(
+            state.copy(monster = state.monster.copy(xp = 295)), "Capstone", TaskWeight.MEAL, baseTime
+        )
+        val done = CramagotchiEngine.completeTask(task, "task-1", baseTime, null, 0.5, 0.7)
+        val restored = StorageRepository.deserialize(StorageRepository.serialize(done))
+        assertEquals(done.collection, restored?.collection)
+        assertEquals(done.monster, restored?.monster)
     }
 
     @Test

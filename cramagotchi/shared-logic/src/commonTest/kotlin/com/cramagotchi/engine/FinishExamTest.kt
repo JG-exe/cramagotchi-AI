@@ -21,7 +21,8 @@ import kotlin.test.assertTrue
  *    3 s → SLEEPING 25 min; while SLEEPING the XP queues without resetting
  *    the sleep timer.
  *  - Crossing an evolution threshold while finishing ALSO unlocks the new
- *    stage species into the collection (see MonsterCollectionTest).
+ *    a fully-grown monster into the gallery on graduation (see
+ *    MonsterCollectionTest / GraduationTest).
  */
 class FinishExamTest {
 
