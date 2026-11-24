@@ -32,6 +32,7 @@ function createMockStore() {
     tasks,
     exams,
     dayTick: signal(0),
+    celebrateTick: signal(0),
     nearestExamDays: computed(() => null),
     nearestUpcomingExam: computed(() => null),
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
@@ -171,7 +172,7 @@ describe('Invalid-submit feedback animations', () => {
     fixture.detectChanges();
     expect(addBtn.classList).not.toContain('btn-submit-inactive');
     compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', '2026-02-28', 'DEADLINE');
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', '2026-02-28', 'DEADLINE', null);
   });
 
   // ── Exam edit form ─────────────────────────────────────────────────

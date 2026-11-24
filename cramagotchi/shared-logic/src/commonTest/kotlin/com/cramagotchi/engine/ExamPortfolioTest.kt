@@ -190,4 +190,43 @@ class ExamPortfolioTest {
         val allPast = CramagotchiEngine.addExam(freshState(), "OLD", "2026-11-01", baseTime, ExamKind.EXAM)
         assertNull(CramagotchiEngine.nearestUpcomingExam(allPast, dec1))
     }
+
+@Test
+fun testAddExamStoresOptionalTimeAndDefaultsToNull() {
+    val withTime = CramagotchiEngine.addExam(freshState(), "MATH", "2026-12-11", baseTime, ExamKind.EXAM, "09:30")
+    assertEquals("09:30", withTime.exams[0].timeIso)
+    assertEquals("MATH", withTime.exams[0].subjectTag)
+
+    val noTime = CramagotchiEngine.addExam(freshState(), "BIO", "2026-12-20", baseTime)
+    assertNull(noTime.exams[0].timeIso)
+
+    // blank strings normalise to null (all-day item)
+    val blank = CramagotchiEngine.addExam(freshState(), "CHEM", "2026-12-15", baseTime, ExamKind.DEADLINE, "   ")
+    assertNull(blank.exams[0].timeIso)
+}
+
+@Test
+fun testUpdateExamSetsAndClearsOptionalTime() {
+    var state = CramagotchiEngine.addExam(freshState(), "MATH", "2026-12-11", baseTime)
+    assertNull(state.exams[0].timeIso)
+
+    val timed = CramagotchiEngine.updateExam(
+        state, state.exams[0].id, "MATH", "2026-12-11", ExamKind.DEADLINE, "14:00"
+    )
+    assertEquals("14:00", timed.exams[0].timeIso)
+
+    // clearing: blank time removes the time-of-day
+    val cleared = CramagotchiEngine.updateExam(
+        timed, timed.exams[0].id, "MATH", "2026-12-11", ExamKind.DEADLINE, ""
+    )
+    assertNull(cleared.exams[0].timeIso)
+}
+
+@Test
+fun testExamTimeRoundTripsThroughStorage() {
+    var state = CramagotchiEngine.addExam(freshState(), "MATH", "2026-12-11", baseTime, ExamKind.EXAM, "09:30")
+    val json = StorageRepository.serialize(state)
+    val restored = StorageRepository.deserialize(json)!!
+    assertEquals("09:30", restored.exams[0].timeIso)
+}
 }

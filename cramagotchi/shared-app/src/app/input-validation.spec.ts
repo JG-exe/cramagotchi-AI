@@ -34,6 +34,7 @@ function createMockStore() {
     tasks,
     exams,
     dayTick: signal(0),
+    celebrateTick: signal(0),
     nearestExamDays: computed(() => null),
     nearestUpcomingExam: computed(() => null),
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
@@ -179,7 +180,7 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     );
     compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
 
-    expect(mockStore.addExam).toHaveBeenCalledWith('HISTORY', '2020-01-15', 'DEADLINE');
+    expect(mockStore.addExam).toHaveBeenCalledWith('HISTORY', '2020-01-15', 'DEADLINE', null);
   });
 
   it('rejects an empty / whitespace exam name and flags it inline', () => {
@@ -400,7 +401,7 @@ describe('Invalid & edge-case input guards (DOM-level)', () => {
     expect(dateInput!.value).toBe('2026-11-28');
 
     addBtn!.click();
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', '2026-11-28', 'DEADLINE');
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', '2026-11-28', 'DEADLINE', null);
   });
 
   it('offers a native date-picker companion on the masked inputs', () => {

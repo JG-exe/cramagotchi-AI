@@ -62,6 +62,7 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     examDateIso,
     exams,
     dayTick: signal(0),
+    celebrateTick: signal(0),
     nearestExamDays: nearest,
     nearestUpcomingExam: nearestExam,
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
@@ -289,7 +290,7 @@ describe('App (root component)', () => {
     addBtn!.click();
 
     // Deadline is the default kind — a plain add never creates an EXAM
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'DEADLINE');
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'DEADLINE', null);
   });
 
   // ── Test 10: Completing passes the recorded actual minutes ──
@@ -394,7 +395,7 @@ describe('App (root component)', () => {
     const addBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]');
     addBtn!.click();
 
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'EXAM');
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'EXAM', null);
   });
 
   // ── Test 14: Chips show the kind; "Due" vs the escalated "Exam" ──
@@ -536,7 +537,7 @@ describe('App (root component)', () => {
     expect(saveBtn).toBeTruthy();
     saveBtn!.click();
 
-    expect(mockStore.updateExam).toHaveBeenCalledWith('exam-1', 'BIO 201', isoDaysFromNow(12), 'EXAM');
+    expect(mockStore.updateExam).toHaveBeenCalledWith('exam-1', 'BIO 201', isoDaysFromNow(12), 'EXAM', null);
   });
 
   // ── Desktop fallback calendar (engines without native showPicker) ──
@@ -653,6 +654,40 @@ describe('App (root component)', () => {
 
     expect(compiled.querySelectorAll('[data-testid="exam-chip"]').length).toBe(2);
     expect(compiled.querySelectorAll('[data-testid="exam-chip-finish"]').length).toBe(1);
+  });
+
+  // ── Optional time of day on dated items ───────────────────
+
+  it('should show the optional HH:mm time on a chip that has one, and omit it otherwise', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([
+      { id: 'exam-1', subjectTag: 'HISTORY', dateIso: isoDaysFromNow(9), kind: 'DEADLINE', timeIso: '09:30' },
+      { id: 'exam-2', subjectTag: 'MATH', dateIso: isoDaysFromNow(5), kind: 'EXAM' },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const chips = compiled.querySelectorAll('[data-testid="exam-chip"]');
+    expect(chips[0]!.textContent).toContain('09:30');
+    expect(chips[1]!.textContent).not.toContain('09:30');
+    expect(chips[1]!.querySelector('.exam-chip-time')).toBeNull();
+  });
+
+  it('should jump the monster when a deadline is finished in advance', () => {
+    mockStore = createMockStore();
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.monster-stage-display')!.classList.contains('is-celebrating')).toBe(false);
+
+    (mockStore.celebrateTick as unknown as { set(v: number): void }).set(1);
+    fixture.detectChanges();
+    expect(compiled.querySelector('.monster-stage-display')!.classList.contains('is-celebrating')).toBe(true);
   });
 
   // ── Collectible monster roster gallery ───────────────────

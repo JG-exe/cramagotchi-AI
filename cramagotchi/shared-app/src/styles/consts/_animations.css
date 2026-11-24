@@ -135,6 +135,22 @@ button.btn-submit-inactive:active {
     box-shadow: none !important;
 }
 
+/* ── Celebration jump — plays once when a deadline is finished in advance.
+   Two bouncy hops with a squash on each landing; overrides the ambient
+   loop for the duration of the single play. */
+@keyframes victoryJump {
+    0%   { transform: translateY(0) scale(1, 1); }
+    15%  { transform: translateY(0) scale(1.08, 0.88); }   /* crouch */
+    45%  { transform: translateY(-34px) scale(0.96, 1.06); } /* hop 1 apex */
+    70%  { transform: translateY(0) scale(1.08, 0.9); }     /* land + squash */
+    85%  { transform: translateY(-16px) scale(1, 1); }     /* hop 2 */
+    100% { transform: translateY(0) scale(1, 1); }
+}
+
+.is-celebrating .monster-body {
+    animation: victoryJump 0.9s var(--ease-bouncy) 1;
+}
+
 /* ── Accessibility: calm everything to near-stillness when the user prefers
    reduced motion (peripheral, non-essential loops must not run). */
 @media (prefers-reduced-motion: reduce) {

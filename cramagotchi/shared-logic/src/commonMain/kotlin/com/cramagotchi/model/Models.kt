@@ -64,6 +64,8 @@ data class Exam(
     val subjectTag: String? = null,
     /** ISO date, `YYYY-MM-DD`. */
     val dateIso: String,
+    /** Optional time of day, `HH:mm` (24h). Null = all-day item. */
+    val timeIso: String? = null,
     val kind: ExamKind = ExamKind.DEADLINE
 )
 
