@@ -28,13 +28,19 @@ body {
 }
 
 /* Native controls don't inherit the document font — force the theme font
-   everywhere (placeholders, toggle/accordion buttons, chips, etc.) */
+   everywhere (placeholders, toggle/accordion buttons, chips, etc.).
+   Longhand inherits, not the `font:` shorthand: the JavaFX WebView's
+   older WebKit doesn't reliably apply `font: inherit` on form controls,
+   so buttons would fall back to the platform control font there. */
 button,
 input,
 select,
 textarea,
 optgroup {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
   letter-spacing: inherit;
 }
 
@@ -91,14 +97,33 @@ optgroup {
   border: 0;
   outline: none;
   color: var(--color-text-primary);
-  font: inherit;
-  font-size: var(--text-base);
+  font-family: inherit;
+  /* inherit the field's font size — narrow fields (date/time) set text-sm
+     so fixed placeholders like YYYY-MM-DD still fit; single-line height so
+     long line-heights can never clip the placeholder vertically */
+  font-size: inherit;
+  line-height: 1;
   font-weight: var(--weight-medium);
 }
 
 /* Fields carrying an inline suffix (date-picker button) reserve its width */
 .soft-field.with-suffix .soft-field-input {
-  padding-right: 3.2rem;
+  padding-right: 2.7rem;
+}
+
+/* Number fields: hide the native step spinner — it renders mis-centred
+   inside the tall soft-field input (it tracks the content box, not the
+   control) and OS chrome clashes with the soft look. Keyboard ↑/↓ still
+   increments, so the input keeps its number behaviour. */
+.soft-field-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.soft-field-input[type='number']::-webkit-outer-spin-button,
+.soft-field-input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 /* Empty + unfocused: the resting label IS the placeholder — so the real
@@ -118,7 +143,7 @@ optgroup {
   left: 1.1rem;
   top: 50%;
   transform: translateY(-50%);
-  max-width: calc(100% - 4.4rem);
+  max-width: calc(100% - 2.4rem);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -127,6 +152,12 @@ optgroup {
   pointer-events: none;
   transition:
     all var(--duration-fast) var(--ease-standard);
+}
+
+/* Suffix buttons inside a field (date picker chip) claim real width —
+   keep the label clear of them */
+.soft-field.with-suffix .soft-field-label {
+  max-width: calc(100% - 3.6rem);
 }
 
 /* floated: focused, or holding any text (placeholder-shown trick) */
@@ -166,8 +197,11 @@ optgroup {
   min-height: 2.6rem;
   padding: 0.45rem 1.5rem;
   border-radius: var(--radius-pill);
-  font: inherit;
+  /* explicit family, not `font:` shorthand — see the control reset above */
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   font-weight: var(--weight-semibold);
+  line-height: 1.2;
   cursor: pointer;
   transition:
     background-color var(--duration-fast) var(--ease-standard),
