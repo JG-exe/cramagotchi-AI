@@ -187,10 +187,28 @@ optgroup {
   line-height: 1;
 }
 
+.btn-primary {
+  border: none;
+  /* only the sage base — no color-mix, no darkening */
+  background: var(--color-sage-base);
+  color: var(--color-surface-elevated);
+}
+
 .btn-primary:hover {
-  background: color-mix(in srgb, var(--color-sage-base) 88%, var(--color-espresso-dark));
   transform: translateY(-1px);
   box-shadow: var(--shadow-diffuse-sm);
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1.5px solid color-mix(in srgb, var(--color-espresso-dark) 18%, transparent);
+  color: var(--color-text-primary);
+}
+
+.btn-ghost:hover {
+  border-color: color-mix(in srgb, var(--color-sage-base) 55%, transparent);
+  background: color-mix(in srgb, var(--color-sage-base) 10%, transparent);
+  color: color-mix(in srgb, var(--color-sage-base) 55%, var(--color-espresso-dark));
 }
 
 .btn-primary:active {
