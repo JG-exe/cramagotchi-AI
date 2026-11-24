@@ -27,6 +27,27 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Native controls don't inherit the document font — force the theme font
+   everywhere (placeholders, toggle/accordion buttons, chips, etc.) */
+button,
+input,
+select,
+textarea,
+optgroup {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+/* Angular Material ships Roboto-suffixed typography on its own classes —
+   redirect form fields and buttons back to the theme font */
+.mat-mdc-form-field,
+.mat-mdc-input-element,
+.mat-mdc-floating-label,
+.mat-mdc-text-field-wrapper input::placeholder,
+.mat-mdc-button-base {
+  font-family: var(--font-sans);
+}
+
 /* Inline SVG button icons (pencil, close, check) — used instead of glyphs
    so the JavaFX WebView (no symbol font) renders them identically */
 .btn-icon {

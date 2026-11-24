@@ -241,8 +241,7 @@
          roaming pose (sleeping / idling) frozen at retirement -->
     <div class="monster-collection" data-testid="monster-collection">
       <div class="stage-label-row">
-        <span class="xp-section-label">Collected Monsters</span>
-        <span class="milestone-label">{{ store.collection().length }} retired</span>
+        <span class="xp-section-label">Graduated monsters: {{ store.collection().length }}</span>
       </div>
       <div class="collection-grid">
         @for (creature of store.collection(); track $index) {
