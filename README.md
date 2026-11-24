@@ -7,7 +7,7 @@ little randomness — and never take anything away from the player.
 
 This project explores agentic development.
 
-Latest release: **v2.1.0** (`main`). Development happens on `dev` and reaches
+Latest release: **v2.2.0** (`main`). Development happens on `dev` and reaches
 `main` through review-gated pull requests.
 
 In case the repo isn't updated, try: [personal github(jg-exe)](https://github.com/JG-exe/cramagotchi-AI)
