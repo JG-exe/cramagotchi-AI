@@ -1,9 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, TaskWeight } from '../../services/monster-store.service';
 import { SlidingToggleComponent } from '../../shared/sliding-toggle.component';
 import { InvalidFlashDirective } from '../../shared/invalid-flash.directive';
@@ -30,9 +27,6 @@ function subjectTagToHue(subjectTag: string): number {
   imports: [
     CommonModule,
     FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
     SlidingToggleComponent,
     InvalidFlashDirective,
   ],
