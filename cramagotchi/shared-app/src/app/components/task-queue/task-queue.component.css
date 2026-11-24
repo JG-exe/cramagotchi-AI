@@ -72,6 +72,9 @@
 .field-estimate {
   flex: 1;
   min-width: 130px;
+  /* same text-sm as the exam date/time fields — "Estimate (min)" fits
+     without ellipsis at the 130px floor, and the input inherits the size */
+  font-size: var(--text-sm);
 }
 
 .field-subject {

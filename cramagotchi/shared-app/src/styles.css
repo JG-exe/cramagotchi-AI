@@ -105,6 +105,21 @@ optgroup {
   padding-right: 2.7rem;
 }
 
+/* Number fields: hide the native step spinner — it renders mis-centred
+   inside the tall soft-field input (it tracks the content box, not the
+   control) and OS chrome clashes with the soft look. Keyboard ↑/↓ still
+   increments, so the input keeps its number behaviour. */
+.soft-field-input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.soft-field-input[type='number']::-webkit-outer-spin-button,
+.soft-field-input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Empty + unfocused: the resting label IS the placeholder — so the real
    placeholder is only revealed once the label floats away (focused). */
 .soft-field-input::placeholder {
@@ -122,7 +137,7 @@ optgroup {
   left: 1.1rem;
   top: 50%;
   transform: translateY(-50%);
-  max-width: calc(100% - 4.4rem);
+  max-width: calc(100% - 2.4rem);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -131,6 +146,12 @@ optgroup {
   pointer-events: none;
   transition:
     all var(--duration-fast) var(--ease-standard);
+}
+
+/* Suffix buttons inside a field (date picker chip) claim real width —
+   keep the label clear of them */
+.soft-field.with-suffix .soft-field-label {
+  max-width: calc(100% - 3.6rem);
 }
 
 /* floated: focused, or holding any text (placeholder-shown trick) */
