@@ -37,9 +37,9 @@
     /* Recessed field depth: inset warm shadows that sink inputs below the
        card level (soft-input reference) */
     --shadow-inset-recessed:
-      inset 0 2px 5px color-mix(in srgb, var(--color-espresso-dark) 7%, transparent),
-      inset 0 1px 2px color-mix(in srgb, var(--color-espresso-dark) 5%, transparent),
-      inset 0 -1px 0 color-mix(in srgb, var(--color-surface-elevated) 70%, transparent);
+      inset 0 4px 10px color-mix(in srgb, var(--color-espresso-dark) 8%, transparent),
+      inset 0 2px 4px color-mix(in srgb, var(--color-espresso-dark) 5%, transparent),
+      inset 0 -1px 1px color-mix(in srgb, var(--color-surface-elevated) 65%, transparent);
 
     /* Computed Subject Tag Pill Tokens (14% tint, text darkened with espresso) */
     --tag-sage-bg: color-mix(in srgb, var(--color-sage-base) 14%, var(--color-surface-elevated));

@@ -59,14 +59,25 @@ optgroup {
   border-color: transparent;
 }
 
+/* Kill the M3 outlined-field border at the token level — it renders from
+   --mdc-outlined-text-field-outline-* and ignores child border rules */
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-outline-color: transparent;
+  --mdc-outlined-text-field-hover-outline-color: transparent;
+  --mdc-outlined-text-field-focus-outline-color: transparent;
+  --mdc-outlined-text-field-outline-width: 0;
+  --mdc-outlined-text-field-hover-outline-width: 0;
+  --mdc-outlined-text-field-focus-outline-width: 0;
+}
+
 .mat-mdc-form-field .mdc-notched-outline {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-field);
 }
 
 .mat-mdc-text-field-wrapper {
   background: var(--color-surface-recessed);
   border: 1.5px solid transparent;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-field);
   /* resting, no hover: neumorphic — no chrome, depth from the inset shadow */
   box-shadow: var(--shadow-inset-recessed);
   transition:

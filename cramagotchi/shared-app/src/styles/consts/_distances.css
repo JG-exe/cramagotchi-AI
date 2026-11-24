@@ -12,6 +12,8 @@
     --radius-sm: 8px;
     --radius-md: 16px;
     --radius-lg: 24px;
+    /* Soft-input fields need an extra-plump pill-corner to read as molded */
+    --radius-field: 1.75rem;
     --radius-pill: 9999px;
 
     --layout-max-width: 1080px;
