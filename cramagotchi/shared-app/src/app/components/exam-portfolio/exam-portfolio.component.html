@@ -19,41 +19,39 @@
             <!-- Inline edit form for one deadline/exam chip -->
             <form class="exam-edit-form" (ngSubmit)="saveEditExam()" data-testid="exam-edit-form">
               <div class="field-exam-subject-wrap">
-                <mat-form-field
-                  appearance="outline"
-                  class="field-exam-subject"
+                <label
+                  class="soft-field field-exam-subject"
                   [class.alert-field]="editNameError() !== null"
                   [appInvalidFlash]="editNameInvalidCount()"
                 >
-                  <mat-label>Subject</mat-label>
                   <input
+                    class="soft-field-input"
                     type="text"
                     name="editExamSubject"
-                    matInput
+                    placeholder=" "
                     [value]="editExamSubject()"
                     (input)="onEditExamSubjectInput($any($event.target).value)"
                     data-testid="exam-edit-subject"
                   />
-                </mat-form-field>
+                  <span class="soft-field-label">Subject</span>
+                </label>
                 @if (editNameError()) {
                   <p class="form-error" data-testid="exam-edit-error">{{ editNameError() }}</p>
                 }
               </div>
               <div class="field-exam-date-wrap">
-                <mat-form-field
-                  appearance="outline"
-                  class="field-exam-date"
+                <label
+                  class="soft-field with-suffix field-exam-date"
                   [class.alert-field]="editDateError() !== null"
                   [appInvalidFlash]="editDateInvalidCount()"
                 >
-                  <mat-label>{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
                   <input
                     #dateEditField
+                    class="soft-field-input"
                     type="text"
                     inputmode="numeric"
                     placeholder="YYYY-MM-DD"
                     name="editExamDate"
-                    matInput
                     appDateMask
                     [value]="editExamDate()"
                     (input)="onEditExamDateInput($any($event.target).value)"
@@ -61,7 +59,8 @@
                     (click)="openDatePicker(pickerEdit, editExamDate(), 'edit')"
                     data-testid="exam-edit-date"
                   />
-                  <span matTextSuffix class="date-pick-suffix">
+                  <span class="soft-field-label">{{ editExamKind() === 'EXAM' ? 'Exam date' : 'Due date' }}</span>
+                  <span class="soft-field-suffix">
                     <button
                       type="button"
                       class="date-pick-btn"
@@ -72,7 +71,7 @@
                       <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </button>
                   </span>
-                </mat-form-field>
+                </label>
                 @if (editDateError()) {
                   <p class="form-error" data-testid="exam-edit-date-error">{{ editDateError() }}</p>
                 }
@@ -124,24 +123,23 @@
                 }
               </div>
               <div class="field-exam-time-wrap">
-                <mat-form-field
-                  appearance="outline"
-                  class="field-exam-time"
+                <label
+                  class="soft-field field-exam-time"
                   [class.alert-field]="editTimeError() !== null"
                   [appInvalidFlash]="editTimeInvalidCount()"
                 >
-                  <mat-label>Time (opt.)</mat-label>
                   <input
+                    class="soft-field-input"
                     type="text"
                     inputmode="numeric"
                     placeholder="HH:mm"
                     name="editExamTime"
-                    matInput
                     [value]="editExamTime()"
                     (input)="onEditExamTimeInput($any($event.target).value)"
                     data-testid="exam-edit-time"
                   />
-                </mat-form-field>
+                  <span class="soft-field-label">Time (opt.)</span>
+                </label>
                 @if (editTimeError()) {
                   <p class="form-error" data-testid="exam-edit-time-error">{{ editTimeError() }}</p>
                 }
@@ -159,16 +157,14 @@
               <div class="exam-edit-actions">
                 <button
                   type="submit"
-                  mat-stroked-button
-                  class="btn-save-exam"
+                  class="btn-ghost btn-save-exam"
                   [class.btn-submit-inactive]="!canSaveExam()"
                   [appInvalidFlash]="editSaveInvalidCount()"
                   data-testid="exam-edit-save"
                 >Save</button>
                 <button
                   type="button"
-                  mat-stroked-button
-                  class="btn-cancel-exam"
+                  class="btn-ghost btn-cancel-exam"
                   (click)="cancelEditExam()"
                   data-testid="exam-edit-cancel"
                 >Cancel</button>
@@ -224,41 +220,39 @@
 
     <form class="exam-add-form" (ngSubmit)="onAddExam()" data-testid="exam-form">
       <div class="field-exam-subject-wrap">
-        <mat-form-field
-          appearance="outline"
-          class="field-exam-subject"
+        <label
+          class="soft-field field-exam-subject"
           [class.alert-field]="examNameError() !== null"
           [appInvalidFlash]="examNameInvalidCount()"
         >
-          <mat-label>Subject</mat-label>
           <input
+            class="soft-field-input"
             type="text"
             name="examSubject"
-            matInput
+            placeholder=" "
             [value]="examSubjectInput()"
             (input)="onExamSubjectInput($any($event.target).value)"
             data-testid="exam-input-subject"
           />
-        </mat-form-field>
+          <span class="soft-field-label">Subject</span>
+        </label>
         @if (examNameError()) {
           <p class="form-error" data-testid="exam-form-error">{{ examNameError() }}</p>
         }
       </div>
       <div class="field-exam-date-wrap">
-        <mat-form-field
-          appearance="outline"
-          class="field-exam-date"
+        <label
+          class="soft-field with-suffix field-exam-date"
           [class.alert-field]="examDateError() !== null"
           [appInvalidFlash]="examDateInvalidCount()"
         >
-          <mat-label>{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</mat-label>
           <input
             #dateAddField
+            class="soft-field-input"
             type="text"
             inputmode="numeric"
             placeholder="YYYY-MM-DD"
             name="examDate"
-            matInput
             appDateMask
             [value]="examDateInput()"
             (input)="onExamDateInput($any($event.target).value)"
@@ -266,7 +260,8 @@
             (click)="openDatePicker(pickerAdd, examDateInput(), 'add')"
             data-testid="exam-input-date"
           />
-          <span matTextSuffix class="date-pick-suffix">
+          <span class="soft-field-label">{{ examKindInput() === 'EXAM' ? 'Exam date' : 'Due date' }}</span>
+          <span class="soft-field-suffix">
             <button
               type="button"
               class="date-pick-btn"
@@ -277,7 +272,7 @@
               <svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5 H13.5 V13.5 H2.5 Z M2.5 7.5 H13.5 M5 2.5 V5.5 M11 2.5 V5.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
           </span>
-        </mat-form-field>
+        </label>
         @if (examDateError()) {
           <p class="form-error" data-testid="exam-date-error">{{ examDateError() }}</p>
         }
@@ -329,24 +324,23 @@
         />
       </div>
       <div class="field-exam-time-wrap">
-        <mat-form-field
-          appearance="outline"
-          class="field-exam-time"
+        <label
+          class="soft-field field-exam-time"
           [class.alert-field]="examTimeError() !== null"
           [appInvalidFlash]="examTimeInvalidCount()"
         >
-          <mat-label>Time (opt.)</mat-label>
           <input
+            class="soft-field-input"
             type="text"
             inputmode="numeric"
             placeholder="HH:mm"
             name="examTime"
-            matInput
             [value]="examTimeInput()"
             (input)="onExamTimeInput($any($event.target).value)"
             data-testid="exam-input-time"
           />
-        </mat-form-field>
+          <span class="soft-field-label">Time (opt.)</span>
+        </label>
         @if (examTimeError()) {
           <p class="form-error" data-testid="exam-time-error">{{ examTimeError() }}</p>
         }
@@ -364,8 +358,7 @@
         />
         <button
           type="submit"
-          mat-flat-button
-          class="btn-add-exam"
+          class="btn-primary btn-add-exam"
           [class.btn-submit-inactive]="!canAddExam()"
           [appInvalidFlash]="examAddInvalidCount()"
           data-testid="exam-add-btn"

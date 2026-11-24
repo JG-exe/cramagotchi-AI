@@ -34,12 +34,13 @@
     --shadow-diffuse-sm: 0 4px 14px -2px color-mix(in srgb, var(--color-espresso-dark) 6%, transparent);
     --shadow-diffuse-md: 0 12px 32px -6px color-mix(in srgb, var(--color-espresso-dark) 9%, transparent);
 
-    /* Recessed field depth: inset warm shadows that sink inputs below the
-       card level (soft-input reference) */
+    /* Recessed field depth: wide-blur inset shadows that sink inputs below
+       the card level (soft-field reference) — the long fall-off makes the
+       sink feel rounded rather than a hard flat dent */
     --shadow-inset-recessed:
-      inset 0 4px 10px color-mix(in srgb, var(--color-espresso-dark) 8%, transparent),
-      inset 0 2px 4px color-mix(in srgb, var(--color-espresso-dark) 5%, transparent),
-      inset 0 -1px 1px color-mix(in srgb, var(--color-surface-elevated) 65%, transparent);
+      inset 0 6px 16px color-mix(in srgb, var(--color-espresso-dark) 8%, transparent),
+      inset 0 3px 8px color-mix(in srgb, var(--color-espresso-dark) 5%, transparent),
+      inset 0 -2px 4px color-mix(in srgb, var(--color-surface-elevated) 65%, transparent);
 
     /* Computed Subject Tag Pill Tokens (14% tint, text darkened with espresso) */
     --tag-sage-bg: color-mix(in srgb, var(--color-sage-base) 14%, var(--color-surface-elevated));
@@ -60,27 +61,4 @@
     --monster-fill-scholar: color-mix(in srgb, var(--color-sage-base) 18%, var(--color-surface-elevated));
     --monster-fill-graduated: color-mix(in srgb, var(--color-ochre-base) 18%, var(--color-surface-elevated));
     --monster-blush: color-mix(in srgb, var(--color-terracotta-base) 28%, transparent);
-
-    /* Angular Material M3 Token Overrides — warm rebrand of the prebuilt
-       azure theme; every Material primitive reads these. */
-    --mat-sys-primary: var(--color-sage-base);
-    --mat-sys-on-primary: var(--color-surface-elevated);
-    --mat-sys-primary-container: color-mix(in srgb, var(--color-sage-base) 18%, var(--color-surface-elevated));
-    --mat-sys-on-primary-container: color-mix(in srgb, var(--color-sage-base) 55%, var(--color-espresso-dark));
-    --mat-sys-secondary: var(--color-ochre-base);
-    --mat-sys-on-secondary: var(--color-surface-elevated);
-    --mat-sys-secondary-container: color-mix(in srgb, var(--color-ochre-base) 16%, var(--color-surface-elevated));
-    --mat-sys-on-secondary-container: color-mix(in srgb, var(--color-ochre-base) 55%, var(--color-espresso-dark));
-    --mat-sys-surface: var(--color-surface-elevated);
-    --mat-sys-on-surface: var(--color-espresso-dark);
-    --mat-sys-on-surface-variant: var(--color-espresso-muted);
-    --mat-sys-surface-container: color-mix(in srgb, var(--color-espresso-dark) 3%, var(--color-cream-base));
-    --mat-sys-surface-container-high: color-mix(in srgb, var(--color-espresso-dark) 5%, var(--color-cream-base));
-    --mat-sys-background: var(--color-bg-primary);
-    --mat-sys-on-background: var(--color-espresso-dark);
-    --mat-sys-outline: color-mix(in srgb, var(--color-espresso-dark) 18%, transparent);
-    --mat-sys-outline-variant: var(--color-border-subtle);
-    --mdc-filled-text-field-container-color: var(--color-surface-recessed);
-    --mdc-linear-progress-active-indicator-color: var(--color-sage-base);
-    --mdc-linear-progress-track-color: color-mix(in srgb, var(--color-sage-base) 18%, transparent);
 }

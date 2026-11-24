@@ -221,11 +221,8 @@
   max-width: 100%;
 }
 
-.mat-mdc-form-field {
-  width: 100%;
-}
-
-/* (field chrome comes from the global soft-input treatment in styles.css) */
+/* (field chrome comes from the global soft-field treatment in styles.css;
+   .soft-field already sizes to its wrapper) */
 
 /* Segmented Deadline/Exam importance toggle now lives in the shared
    SlidingToggleComponent — one track, one thumb gliding between options. */
@@ -247,13 +244,16 @@
 .btn-add-exam {
   margin-top: 0;
   /* Flat sage like the task maker's add button — readable at rest and,
-     when disabled, still legible instead of M3's washed-out default. */
-  --mdc-filled-button-container-color: var(--color-sage-base);
-  --mdc-filled-button-label-text-color: var(--color-surface-elevated, #FFFDF9);
-  --mdc-filled-button-disabled-container-color: color-mix(
-    in srgb, var(--color-sage-base) 28%, var(--color-cream-base));
-  --mdc-filled-button-disabled-label-text-color: color-mix(
-    in srgb, var(--color-espresso-dark) 62%, var(--color-sage-base));
+     when inactive, still legible instead of a washed-out default. */
+}
+
+/* The calendar suffix button inside a soft field */
+.soft-field-suffix {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
 }
 
 /* ── Native date picker companion ──────────────────────────────────── */
@@ -263,12 +263,6 @@
   height: 1px;
   opacity: 0;
   pointer-events: none;
-}
-
-.date-pick-suffix {
-  display: inline-flex;
-  align-items: center;
-  height: 100%;
 }
 
 .date-pick-btn {

@@ -92,28 +92,11 @@ button:focus-visible {
     animation: invalid-shake var(--duration-shake) var(--ease-standard);
 }
 
-/* Warning outline on a Material outlined form field (flash + persistent).
-   Both the M3 token route and the raw notch-border fallback are covered so
-   the highlight holds across Material theme versions. */
-.mat-mdc-form-field.invalid-flash,
-.mat-mdc-form-field.alert-field {
-    --mdc-outlined-text-field-outline-color: var(--color-status-hungry);
-    --mdc-outlined-text-field-hover-outline-color: var(--color-status-hungry);
-    --mdc-outlined-text-field-focus-outline-color: var(--color-status-hungry);
-}
-
-.mat-mdc-form-field.invalid-flash .mdc-notched-outline__leading,
-.mat-mdc-form-field.invalid-flash .mdc-notched-outline__notch,
-.mat-mdc-form-field.invalid-flash .mdc-notched-outline__trailing,
-.mat-mdc-form-field.alert-field .mdc-notched-outline__leading,
-.mat-mdc-form-field.alert-field .mdc-notched-outline__notch,
-.mat-mdc-form-field.alert-field .mdc-notched-outline__trailing {
-    border-color: var(--color-status-hungry) !important;
-}
+/* Warning outline on a failing soft field (flash + persistent): defined
+   together with the rest of the .soft-field chrome in styles.css. */
 
 /* The submit button shows red for the shake cycle, then returns to base. */
-button.invalid-flash,
-.mat-mdc-button-base.invalid-flash {
+button.invalid-flash {
     background-color: var(--color-status-hungry) !important;
     border-color: var(--color-status-hungry) !important;
     color: var(--color-surface-elevated) !important;

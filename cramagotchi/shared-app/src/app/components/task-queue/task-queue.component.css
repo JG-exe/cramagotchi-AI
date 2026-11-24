@@ -78,11 +78,8 @@
   width: 100%;
 }
 
-/* Form fields are styled globally (styles.css): soft-input recessed look
-   with inset depth shadows — one source of truth for web/desktop/android. */
-.mat-mdc-form-field {
-  width: 100%;
-}
+/* Form fields: the custom soft-field (styles.css) — label.soft-field wraps
+   input + floating label; one source of truth for web/desktop/android. */
 
 /* Soft input styling for any plain <input> used inside forms */
 .soft-input {
@@ -323,7 +320,7 @@
 /* Inline edit fields keep the global neumorphic treatment; only the
    surface lifts slightly so the editor reads as "active" rather than a
    hole. Same radius, outline-off, whisper of an inset. */
-.task-edit-form .mat-mdc-text-field-wrapper {
+.task-edit-form .soft-field {
   background: var(--color-surface);
   box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-espresso-dark, #2C221E) 4%, transparent);
 }

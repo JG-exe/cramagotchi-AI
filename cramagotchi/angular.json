@@ -30,7 +30,6 @@
               }
             ],
             "styles": [
-              "node_modules/@angular/material/prebuilt-themes/azure-blue.css",
               "shared-app/src/styles.css"
             ]
           },
@@ -44,7 +43,7 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "8kB",
+                  "maximumWarning": "14kB",
                   "maximumError": "16kB"
                 }
               ],

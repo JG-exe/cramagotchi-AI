@@ -1,9 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, ExamKind } from '../../services/monster-store.service';
 import { DateMaskDirective } from '../../shared/date-mask.directive';
 import { SlidingToggleComponent } from '../../shared/sliding-toggle.component';
@@ -80,7 +77,7 @@ export function formatExamDateDisplay(iso: string): string {
 @Component({
   selector: 'app-exam-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, DateMaskDirective, SlidingToggleComponent, InvalidFlashDirective],
+  imports: [CommonModule, FormsModule, DateMaskDirective, SlidingToggleComponent, InvalidFlashDirective],
   templateUrl: './exam-portfolio.component.html',
   styleUrl: './exam-portfolio.component.css',
 })

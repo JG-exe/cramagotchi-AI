@@ -83,7 +83,7 @@ describe('Invalid-submit feedback animations', () => {
 
     expect(mockStore.addTask.mock.calls.length).toBe(before);
 
-    const titleField = compiled.querySelector('.field-title-wrap mat-form-field')!;
+    const titleField = compiled.querySelector('.field-title-wrap .soft-field')!;
     expect(titleField).toBeTruthy();
     expect(titleField.classList).toContain('invalid-flash'); // shakes
     expect(titleField.classList).toContain('alert-field');  // warning outline while error shows
@@ -99,13 +99,13 @@ describe('Invalid-submit feedback animations', () => {
 
     compiled.querySelector<HTMLButtonElement>('[data-testid="task-submit-btn"]')!.click();
     fixture.detectChanges();
-    expect(compiled.querySelector('.field-title-wrap mat-form-field')!.classList).toContain('alert-field');
+    expect(compiled.querySelector('.field-title-wrap .soft-field')!.classList).toContain('alert-field');
     expect(compiled.querySelector('[data-testid="task-form-error"]')).toBeTruthy();
 
     // Typing a name clears the rejection and the warning highlight
     setInput(compiled.querySelector<HTMLInputElement>('[data-testid="task-title-input"]')!, 'Read chapter');
     fixture.detectChanges();
-    expect(compiled.querySelector('.field-title-wrap mat-form-field')!.classList).not.toContain('alert-field');
+    expect(compiled.querySelector('.field-title-wrap .soft-field')!.classList).not.toContain('alert-field');
     expect(compiled.querySelector('[data-testid="task-form-error"]')).toBeNull();
   });
 
@@ -136,14 +136,14 @@ describe('Invalid-submit feedback animations', () => {
     compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!.click();
     fixture.detectChanges();
 
-    const dateField = compiled.querySelector('.field-exam-date-wrap mat-form-field')!;
+    const dateField = compiled.querySelector('.field-exam-date-wrap .soft-field')!;
     expect(dateField.classList).toContain('invalid-flash');
     expect(dateField.classList).toContain('alert-field');
 
     const addBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]')!;
     expect(addBtn.classList).toContain('invalid-flash');
     // Only the offending field shakes — the name field stays calm
-    expect(compiled.querySelector('.field-exam-subject-wrap mat-form-field')!.classList)
+    expect(compiled.querySelector('.field-exam-subject-wrap .soft-field')!.classList)
       .not.toContain('invalid-flash');
     expect(mockStore.addExam).not.toHaveBeenCalled();
   });
@@ -190,7 +190,7 @@ describe('Invalid-submit feedback animations', () => {
     compiled.querySelector<HTMLButtonElement>('[data-testid="exam-edit-save"]')!.click();
     fixture.detectChanges();
 
-    expect(compiled.querySelector('.field-exam-subject-wrap mat-form-field')!.classList)
+    expect(compiled.querySelector('.field-exam-subject-wrap .soft-field')!.classList)
       .toContain('invalid-flash');
     expect(compiled.querySelector('[data-testid="exam-edit-save"]')!.classList)
       .toContain('invalid-flash');
