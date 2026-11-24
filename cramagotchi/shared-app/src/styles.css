@@ -28,13 +28,19 @@ body {
 }
 
 /* Native controls don't inherit the document font — force the theme font
-   everywhere (placeholders, toggle/accordion buttons, chips, etc.) */
+   everywhere (placeholders, toggle/accordion buttons, chips, etc.).
+   Longhand inherits, not the `font:` shorthand: the JavaFX WebView's
+   older WebKit doesn't reliably apply `font: inherit` on form controls,
+   so buttons would fall back to the platform control font there. */
 button,
 input,
 select,
 textarea,
 optgroup {
-  font: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
   letter-spacing: inherit;
 }
 
@@ -91,7 +97,7 @@ optgroup {
   border: 0;
   outline: none;
   color: var(--color-text-primary);
-  font: inherit;
+  font-family: inherit;
   /* inherit the field's font size — narrow fields (date/time) set text-sm
      so fixed placeholders like YYYY-MM-DD still fit; single-line height so
      long line-heights can never clip the placeholder vertically */
@@ -191,8 +197,11 @@ optgroup {
   min-height: 2.6rem;
   padding: 0.45rem 1.5rem;
   border-radius: var(--radius-pill);
-  font: inherit;
+  /* explicit family, not `font:` shorthand — see the control reset above */
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
   font-weight: var(--weight-semibold);
+  line-height: 1.2;
   cursor: pointer;
   transition:
     background-color var(--duration-fast) var(--ease-standard),
