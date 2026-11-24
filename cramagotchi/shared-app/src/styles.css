@@ -48,6 +48,25 @@ optgroup {
   font-family: var(--font-sans);
 }
 
+/* The theme's typography reaches the label/input through M3 tokens with
+   (0,2,0) selectors that out-cascade the class rules above — set the
+   tokens themselves so every variant (filled/outlined, label, input,
+   subscript/hint text) resolves to the theme font */
+.mat-mdc-form-field {
+  --mat-form-field-filled-label-text-font: var(--font-sans);
+  --mat-form-field-outlined-label-text-font: var(--font-sans);
+  --mat-form-field-container-text-font: var(--font-sans);
+  --mat-form-field-subscript-text-font: var(--font-sans);
+}
+
+.mat-mdc-button-base {
+  --mat-button-text-label-text-font: var(--font-sans);
+  --mat-button-filled-label-text-font: var(--font-sans);
+  --mat-button-protected-label-text-font: var(--font-sans);
+  --mat-button-outlined-label-text-font: var(--font-sans);
+  --mat-button-tonal-label-text-font: var(--font-sans);
+}
+
 /* ── Soft-input form fields (reference: design/cramagotchi_live_style_preview)
    Every Material field reads as the reference .soft-input: recessed warm
    surface, no visible chrome border, md radius — plus inset shadows that
