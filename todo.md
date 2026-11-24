@@ -16,6 +16,11 @@ Legend: **X** = not done · **V** = done
   (eb6f4a4, human-approved) via PR #4 (2d42f47) — Gradescope/backup repo current.
 - V **v2.0.0** tagged on `main` and published:
   https://github.com/JG-exe/cramagotchi-AI/releases/tag/v2.0.0
+- V **v2.1.0** — minor bump via PR #5 (2401244, human-merged): Android release
+  build runs R8 minify + resource shrinking (release APK 6.23 MB → 1.44 MB);
+  version alignment (Android 2.1.0/code 2, package.json 2.1.0). Tagged and
+  published: https://github.com/JG-exe/cramagotchi-AI/releases/tag/v2.1.0.
+  Release APK still unsigned (keystore deferred by decision).
 - V Stray PR on `origin` (EHB-MCT) closed; note: a leftover `dev` branch remains
   pushed on `origin` and can be deleted there via the GitHub UI.
 
@@ -112,6 +117,13 @@ Legend: **X** = not done · **V** = done
 
 ## Decisions log
 
+- V **No shrinking on desktop** (v2.1.0 era): investigated R8/desktop analogs —
+  measured `installDist` 44 MB of which 32 MB is the JavaFX WebKit bridge and
+  only 228 KB is our bytecode (nothing to shrink); a jlink self-contained
+  image measures 87 MB on disk (70 MB compressed) — *larger* than the jar
+  folder, only paying off for targets with no JDK. Desktop stays a plain
+  fat distribution; revisit jlink/jpackage only if "no-JDK installers"
+  become a goal.
 - V monster.svg only contains the SCHOLAR stage → user chose to **derive 3 sibling
   variants** (EGG, HATCHLING, GRADUATED_BEAST) in the same art style (satisfies US-3.3).
 - V Noted & fixed: old scholar (blue) / graduate (violet) SVGs and subject-pill fallback
@@ -356,3 +368,21 @@ Metric: **V** = done
   Verified: 77 engine tests (10 new in `GraduationTest.kt`), 48/48 `ng test`
   (restore-reconciliation spec `monster-store-restore.spec.ts`), build clean,
   bundles synced, desktop resources + android debug compile clean.
+- V **Gallery rework — only fully evolved monsters collect:** in the collected
+  monsters tab, intermediate species cards are gone. Every monster is minted
+  a hue at creation that sticks through all its evolutions (`MonsterState.hue`,
+  persisted → reloading returns the same coloured growing monster). When the
+  XP bar fills completely (max stage), the creature retires into the gallery
+  permanently — keeping its unique hue and a randomly frozen ambient pose
+  (sleeping or idling, `CollectedMonster.sleeping`, rolled per capture with a
+  √2−1 stir) — and a brand-new monster spawns with its own forever-fixed new
+  hue (golden-ratio stir). Legacy saves migrate on load
+  (`reconcileCollection(state, now, hueRng)`): pre-2.2 species cards drop, a
+  hue-less monster is minted a hue, and a save stuck at max graduates
+  immediately. Roster seeds empty; `unlockCollectible`/
+  `unlockSpeciesForEvolution` removed.
+
+  Verified: 81 engine tests (rewritten `MonsterCollectionTest`,
+  `GraduationTest`; migration incl. duplicate-guard), 60/60 `ng test`
+  (gallery tile pose assertions, restore-reconciliation specs), `ng build`,
+  desktop resources + android debug compile clean.

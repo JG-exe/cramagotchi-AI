@@ -8,39 +8,46 @@
   <form class="task-form" (ngSubmit)="onSubmit()" data-testid="task-form">
     <div class="form-row">
       <div class="field-title-wrap">
-        <mat-form-field appearance="outline" class="field-title">
-          <mat-label>What are you studying?</mat-label>
+        <label
+          class="soft-field field-title"
+          [class.alert-field]="taskFormError() !== null"
+          [appInvalidFlash]="titleInvalidCount()"
+        >
           <input
+            class="soft-field-input"
             type="text"
             name="title"
-            matInput
+            placeholder=" "
             [value]="titleInput()"
             (input)="onTitleInput($any($event.target).value)"
             required
             data-testid="task-title-input"
           />
-        </mat-form-field>
+          <span class="soft-field-label">What are you studying?</span>
+        </label>
         @if (taskFormError()) {
           <p class="form-error" data-testid="task-form-error">{{ taskFormError() }}</p>
         }
       </div>
-      <mat-form-field appearance="outline" class="field-estimate">
-        <mat-label>Estimate (min)</mat-label>
+      <label class="soft-field field-estimate">
         <input
+          class="soft-field-input"
           type="number"
           name="estimate"
-          matInput
+          placeholder=" "
           min="1"
           step="1"
           [value]="estimateInput()"
           (input)="estimateInput.set($any($event.target).value)"
           data-testid="task-estimate-minutes"
         />
-      </mat-form-field>
+        <span class="soft-field-label">Estimate (min)</span>
+      </label>
       <button
         type="submit"
-        mat-flat-button
-        class="btn-add"
+        class="btn-primary btn-submit btn-add"
+        [class.btn-submit-inactive]="!canAddTask()"
+        [appInvalidFlash]="submitInvalidCount()"
         data-testid="task-submit-btn"
       >
         + Add
@@ -61,16 +68,17 @@
         (change)="onWeightToggle($event)"
       />
 
-      <mat-form-field appearance="outline" class="field-subject">
-        <mat-label>Subject / Topic (optional)</mat-label>
+      <label class="soft-field field-subject">
         <input
+          class="soft-field-input"
           type="text"
           name="subject"
-          matInput
+          placeholder=" "
           [value]="subjectInput()"
           (input)="subjectInput.set($any($event.target).value)"
         />
-      </mat-form-field>
+        <span class="soft-field-label">Subject / Topic (optional)</span>
+      </label>
     </div>
   </form>
 
@@ -88,44 +96,50 @@
           <!-- Inline edit form for one active task -->
           <form class="task-edit-form" (ngSubmit)="saveEditTask()" data-testid="task-edit-form">
             <div class="task-edit-row">
-              <mat-form-field appearance="outline" class="field-title">
-                <mat-label>What are you studying?</mat-label>
+              <label
+                class="soft-field field-title"
+                [appInvalidFlash]="editTitleInvalidCount()"
+              >
                 <input
+                  class="soft-field-input"
                   type="text"
                   name="editTitle"
-                  matInput
+                  placeholder=" "
                   [value]="editTitle()"
                   (input)="editTitle.set($any($event.target).value)"
                   required
                   data-testid="task-edit-title"
                 />
-              </mat-form-field>
-              <mat-form-field appearance="outline" class="field-estimate">
-                <mat-label>Estimate (min)</mat-label>
+                <span class="soft-field-label">What are you studying?</span>
+              </label>
+              <label class="soft-field field-estimate">
                 <input
+                  class="soft-field-input"
                   type="number"
                   name="editEstimate"
-                  matInput
+                  placeholder=" "
                   min="1"
                   step="1"
                   [value]="editEstimate()"
                   (input)="editEstimate.set($any($event.target).value)"
                   data-testid="task-edit-estimate"
                 />
-              </mat-form-field>
+                <span class="soft-field-label">Estimate (min)</span>
+              </label>
             </div>
             <div class="task-edit-row">
-              <mat-form-field appearance="outline" class="field-subject">
-                <mat-label>Subject / Topic (optional)</mat-label>
+              <label class="soft-field field-subject">
                 <input
+                  class="soft-field-input"
                   type="text"
                   name="editSubject"
-                  matInput
+                  placeholder=" "
                   [value]="editSubject()"
                   (input)="editSubject.set($any($event.target).value)"
                   data-testid="task-edit-subject"
                 />
-              </mat-form-field>
+                <span class="soft-field-label">Subject / Topic (optional)</span>
+              </label>
               <app-sliding-toggle
                 role="radiogroup"
                 aria-label="Task size"
@@ -142,55 +156,69 @@
             <div class="task-edit-actions">
               <button
                 type="submit"
-                mat-stroked-button
-                class="btn-save-task"
+                class="btn-ghost btn-save-task"
                 [disabled]="!editTitle().trim()"
                 data-testid="task-edit-save"
               >Save</button>
               <button
                 type="button"
-                mat-stroked-button
-                class="btn-cancel-task"
+                class="btn-ghost btn-cancel-task"
                 (click)="cancelEditTask()"
                 data-testid="task-edit-cancel"
               >Cancel</button>
             </div>
           </form>
         } @else {
-          <mat-checkbox
-            class="task-checkbox"
-            (change)="complete(task.id)"
-            [checked]="task.completed"
-            aria-label="Complete and feed to Cramagotchi"
-          />
+          <div class="task-left">
+            <!-- Custom circular feed button replaces mat-checkbox -->
+            <button
+              type="button"
+              class="feed-check-btn"
+              [class.is-completed]="task.completed"
+              (click)="complete(task.id)"
+              [attr.aria-label]="'Complete and feed: ' + task.title"
+              [attr.title]="'Feed Munch: ' + task.title"
+              data-testid="task-complete-btn"
+            >
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d="M3.5 8.5 L6.5 11.5 L12.5 4.5"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
 
-          <div class="task-info">
-            <span class="task-title">{{ task.title }}</span>
-            <div class="task-badges">
-              <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
-                {{ task.weight === 'SNACK' ? 'Snack (≈10 XP)' : 'Meal (≈25 XP)' }}
-              </span>
-              @if (task.estimatedMinutes != null && task.estimatedMinutes > 0) {
-                <span class="badge badge-estimate">≈ {{ task.estimatedMinutes }} min</span>
-              }
-              <input
-                type="number"
-                class="actual-minutes-input"
-                min="0"
-                step="1"
-                placeholder="min used"
-                [value]="actualMinutes[task.id] ?? ''"
-                (input)="actualMinutes[task.id] = $any($event.target).value"
-                aria-label="Minutes actually spent"
-                data-testid="task-actual-minutes"
-              />
-              @if (task.subjectTag) {
-                <span
-                  class="badge badge-subject"
-                  data-testid="subject-badge"
-                  [style.--subject-hue]="subjectHue(task.subjectTag)"
-                >{{ task.subjectTag }}</span>
-              }
+            <div class="task-info">
+              <span class="task-title" [class.completed-text]="task.completed">{{ task.title }}</span>
+              <div class="task-badges">
+                <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
+                  {{ task.weight === 'SNACK' ? 'Snack (≈10 XP)' : 'Meal (≈25 XP)' }}
+                </span>
+                @if (task.estimatedMinutes != null && task.estimatedMinutes > 0) {
+                  <span class="badge badge-estimate">≈ {{ task.estimatedMinutes }} min</span>
+                }
+                <input
+                  type="number"
+                  class="actual-minutes-input"
+                  min="0"
+                  step="1"
+                  placeholder="min used"
+                  [value]="actualMinutes[task.id] ?? ''"
+                  (input)="actualMinutes[task.id] = $any($event.target).value"
+                  aria-label="Minutes actually spent"
+                  data-testid="task-actual-minutes"
+                />
+                @if (task.subjectTag) {
+                  <span
+                    class="badge badge-subject"
+                    data-testid="subject-badge"
+                    [style.--subject-hue]="subjectHue(task.subjectTag)"
+                  >{{ task.subjectTag }}</span>
+                }
+              </div>
             </div>
           </div>
 
@@ -219,26 +247,48 @@
   </div>
 
   <!-- Devoured History Accordion -->
-  @if (store.devouredTasks().length > 0) {
+  @if (filteredDevouredTasks().length > 0) {
     <div class="devoured-section">
       <button
         type="button"
         class="btn-toggle-devoured"
         (click)="toggleDevoured()"
       >
-        <span>Devoured Tasks ({{ store.devouredTasks().length }})</span>
+        <span>Devoured Tasks ({{ filteredDevouredTasks().length }})</span>
         <span>{{ showDevoured() ? '▲' : '▼' }}</span>
       </button>
 
       @if (showDevoured()) {
         <div class="devoured-list">
-          @for (task of store.devouredTasks(); track task.id) {
+          @for (task of filteredDevouredTasks(); track task.id) {
             <div class="devoured-item">
-              <span class="devoured-check"><svg class="btn-icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 L6.5 11.5 L12.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-              <span class="devoured-title">{{ task.title }}</span>
-              <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
-                +{{ task.awardedXp ?? (task.weight === 'SNACK' ? 10 : 25) }} XP
-              </span>
+              <div class="devoured-left">
+                <span class="devoured-check-wrap">
+                  <span class="devoured-check" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                      <path d="M3.5 8.5 L6.5 11.5 L12.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                </span>
+                <span class="devoured-title">{{ task.title }}</span>
+              </div>
+              <div class="devoured-actions">
+                <span class="badge" [class.badge-snack]="task.weight === 'SNACK'" [class.badge-meal]="task.weight === 'MEAL'">
+                  +{{ task.awardedXp ?? (task.weight === 'SNACK' ? 10 : 25) }} XP
+                </span>
+                <button
+                  type="button"
+                  class="devoured-btn-delete"
+                  (click)="store.deleteTask(task.id)"
+                  aria-label="Delete devoured task"
+                  title="Delete"
+                  data-testid="devoured-task-delete"
+                >
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M4 4 L12 12 M12 4 L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
             </div>
           }
         </div>

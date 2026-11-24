@@ -64,6 +64,8 @@ data class Exam(
     val subjectTag: String? = null,
     /** ISO date, `YYYY-MM-DD`. */
     val dateIso: String,
+    /** Optional time of day, `HH:mm` (24h). Null = all-day item. */
+    val timeIso: String? = null,
     val kind: ExamKind = ExamKind.DEADLINE
 )
 
@@ -87,17 +89,24 @@ data class MonsterState(
 )
 
 /**
- * One entry in the collectible monster roster. `speciesId` names the visual
- * variant (an [EvolutionStage] name); `hue` (∈ 0..359) is the randomly rolled
- * tint assigned exactly once at acquisition and persisted with the save —
- * the same creature never re-rolls.
+ * One retired monster in the collected gallery. Only fully-evolved
+ * (GRADUATED_BEAST) monsters enter the roster — each cycle adds one entry —
+ * and the entry freezes the state the creature retired in: its unique hue
+ * (the same colour it wore through every evolution) and a randomly chosen
+ * ambient pose (sleeping or idling), persisted with the save.
+ *
+ * `speciesId` names the visual variant (an [EvolutionStage] name — currently
+ * always GRADUATED_BEAST); kept as a string so old saves deserialise and the
+ * art-symbol lookup stays generic.
  */
 @TsExport
 @Serializable
 data class CollectedMonster(
     val speciesId: String,
     val hue: Int,
-    val collectedAt: Double
+    val collectedAt: Double,
+    /** Roaming pose of the retired monster in the gallery (otherwise idle). */
+    val sleeping: Boolean = false
 )
 
 @TsExport

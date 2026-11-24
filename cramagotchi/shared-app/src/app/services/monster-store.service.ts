@@ -5,6 +5,9 @@ const Engine = com.cramagotchi.engine.CramagotchiEngine;
 const Model = com.cramagotchi.model;
 const Storage = com.cramagotchi.storage.StorageRepository;
 
+/** How long a devoured task is kept before it is purged from storage. */
+export const DEVOURED_RETENTION_MS = 14 * 24 * 60 * 60 * 1000; // two weeks
+
 /** KMP-side types (structurally compatible with the public TS unions below). */
 type KmpAppState = import('../../assets/kmp/cramagotchi-shared-logic.js').com.cramagotchi.model.AppState;
 
@@ -33,6 +36,8 @@ export interface ExamRef {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  /** Optional time of day, `HH:mm` (24h). Null/absent = all-day item. */
+  timeIso?: string | null;
   kind?: ExamKind;
 }
 
@@ -48,12 +53,14 @@ export interface MonsterState {
   hue?: number;
 }
 
-/** One entry in the collectible monster roster (species + its rolled hue). */
+/** One retired monster in the collected gallery (fully evolved only). */
 export interface CollectedMonster {
   speciesId: string;
-  /** Random tint rolled once at acquisition, persisted forever. */
+  /** The unique tint the creature wore through all its evolutions. */
   hue: number;
   collectedAt: number;
+  /** Roaming pose frozen at retirement: true = sleeping, false = idling. */
+  sleeping: boolean;
 }
 
 export interface AppState {
@@ -105,7 +112,7 @@ export class MonsterStoreService {
     return nearest ? toExamRef(nearest) : null;
   });
 
-  /** Collectible roster — every species variant the user has reached. */
+  /** Collected gallery — one entry per fully-raised (retired) monster. */
   readonly collection = computed<CollectedMonster[]>(() =>
     this.kmpState().collection.asJsReadonlyArrayView().map(toCollectedMonster)
   );
@@ -128,10 +135,16 @@ export class MonsterStoreService {
   constructor() {
     this.restoreFromStorage();
 
+    // Two-week retention: sweep out expired devoured tasks on boot so a save
+    // never carries more history than the window, then keep sweeping in the
+    // background while the app runs (tasks crossing the cutoff mid-session).
+    this.purgeExpiredDevouredTasks();
+
     // Evaluate time every second for active timers
     if (typeof window !== 'undefined') {
       window.setInterval(() => {
         this.evaluateTime(Date.now());
+        this.purgeExpiredDevouredTasks();
         this.dayTick.update(t => t + 1);
       }, 1000);
     }
@@ -214,20 +227,25 @@ export class MonsterStoreService {
       Engine.finishExam(this.kmpState(), examId, Date.now(), Math.random())
     );
     this.persistToStorage();
+    // celebrate: the monster jumps when a deadline is finished in advance
+    this.celebrateTick.update(t => t + 1);
   }
 
+  /** Ticks whenever a dated item is finished early — the sanctuary plays the jump. */
+  readonly celebrateTick = signal(0);
+
   /** Add an exam or deadline (subject label optional); deadline is the default kind. */
-  addExam(subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+  addExam(subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE', timeIso?: string | null): void {
     const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
-    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now(), kmpKind));
+    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now(), kmpKind, timeIso ?? undefined));
     this.persistToStorage();
   }
 
-  /** Edit an exam/deadline in place: subject, date and kind. */
-  updateExam(examId: string, subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+  /** Edit an exam/deadline in place: subject, date, optional time and kind. */
+  updateExam(examId: string, subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE', timeIso?: string | null): void {
     if (!dateIso) return;
     const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
-    this.kmpState.set(Engine.updateExam(this.kmpState(), examId, subjectTag, dateIso, kmpKind));
+    this.kmpState.set(Engine.updateExam(this.kmpState(), examId, subjectTag, dateIso, kmpKind, timeIso ?? undefined));
     this.persistToStorage();
   }
 
@@ -240,6 +258,31 @@ export class MonsterStoreService {
   deleteTask(taskId: string): void {
     this.kmpState.set(Engine.deleteTask(this.kmpState(), taskId));
     this.persistToStorage();
+  }
+
+  /**
+   * Two-week retention for devoured tasks: true once the task has aged out
+   * of the retention window. Single source of truth shared by the UI filter
+   * (don't show it) and the purge (delete it from storage).
+   */
+  isDevouredExpired(task: StudyTask, now = Date.now()): boolean {
+    if (!task.completed) return false;
+    const endedAt = task.completedAt ?? task.createdAt;
+    return now - endedAt > DEVOURED_RETENTION_MS;
+  }
+
+  /**
+   * Storage purge behind the two-week retention rule: calls the normal
+   * delete (engine `deleteTask` + persist — the exact path the delete
+   * button uses) on every devoured task past its retention. Granted XP is
+   * never clawed back — it was earned when the task was completed.
+   */
+  purgeExpiredDevouredTasks(now = Date.now()): number {
+    const expired = this.tasks().filter(t => this.isDevouredExpired(t, now));
+    for (const task of expired) {
+      this.deleteTask(task.id);
+    }
+    return expired.length;
   }
 
   evaluateTime(now: number): void {
@@ -283,7 +326,7 @@ export class MonsterStoreService {
         // Legacy saves: backfill the roster (species at/below the monster's
         // stage) and the active monster's hue, then persist the backfill so
         // it sticks across reloads.
-        this.kmpState.set(Engine.reconcileCollection(restored, Math.random()));
+        this.kmpState.set(Engine.reconcileCollection(restored, Date.now(), Math.random()));
         this.persistToStorage();
         // Immediately evaluate offline elapsed time
         this.evaluateTime(Date.now());
@@ -326,6 +369,7 @@ type KmpExam = {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  timeIso?: string | null;
   kind?: { name: string } | string;
 };
 
@@ -335,6 +379,7 @@ function toExamRef(e: KmpExam): ExamRef {
     id: e.id,
     subjectTag: e.subjectTag ?? undefined,
     dateIso: e.dateIso,
+    timeIso: e.timeIso ?? null,
     kind: (kindName === 'EXAM' ? 'EXAM' : 'DEADLINE') as ExamKind,
   };
 }
@@ -343,6 +388,8 @@ type KmpCollectedMonster = {
   speciesId: string;
   hue: number;
   collectedAt: number;
+  /** Roaming pose of the retired monster in the gallery (otherwise idling). */
+  sleeping: boolean;
 };
 
 function toCollectedMonster(c: KmpCollectedMonster): CollectedMonster {
@@ -350,5 +397,6 @@ function toCollectedMonster(c: KmpCollectedMonster): CollectedMonster {
     speciesId: c.speciesId,
     hue: c.hue,
     collectedAt: c.collectedAt,
+    sleeping: c.sleeping,
   };
 }

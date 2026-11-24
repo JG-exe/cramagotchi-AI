@@ -67,7 +67,12 @@ val bundleWebApp by tasks.creating(Sync::class) {
     into(layout.buildDirectory.dir("generated/webappAssets/webapp"))
 }
 
-tasks.matching { it.name.contains("MergeDebugAssets") || it.name.contains("MergeReleaseAssets") }
+tasks.matching { it.name.contains("MergeDebugAssets", ignoreCase = true) || it.name.contains("MergeReleaseAssets", ignoreCase = true) }
+    .configureEach { dependsOn(bundleWebApp) }
+
+// The lint-vital task also reads the generated webapp assets — Gradle's
+// implicit-dependency validation requires the declared edge.
+tasks.matching { it.name.contains("LintVital", ignoreCase = true) }
     .configureEach { dependsOn(bundleWebApp) }
 
 dependencies {

@@ -175,6 +175,7 @@
       [class.stage-hatchling]="store.monster().stage === 'HATCHLING'"
       [class.stage-scholar]="store.monster().stage === 'SCHOLAR'"
       [class.stage-graduated_beast]="store.monster().stage === 'GRADUATED_BEAST'"
+      [class.is-celebrating]="celebrating()"
     >
       <svg
         class="monster-svg"
@@ -235,16 +236,16 @@
       </div>
     </div>
 
-    <!-- Collectible roster: every species variant reached so far, each with
-         its own randomly rolled hue (persisted — never re-rolled) applied as
-         a --stage-fill override on the shared stage symbols -->
+    <!-- Collected gallery: one card per fully-raised monster, frozen at the
+         moment the XP bar filled — its unique hue (persisted, worn through
+         every evolution) as a --stage-fill override, and a randomly rolled
+         roaming pose (sleeping / idling) frozen at retirement -->
     <div class="monster-collection" data-testid="monster-collection">
       <div class="stage-label-row">
-        <span class="xp-section-label">Collected Monsters</span>
-        <span class="milestone-label">{{ store.collection().length }} of 4</span>
+        <span class="xp-section-label">Graduated monsters: {{ store.collection().length }}</span>
       </div>
       <div class="collection-grid">
-        @for (creature of store.collection(); track creature.speciesId) {
+        @for (creature of store.collection(); track $index) {
           <span
             class="collected-card"
             [style.--stage-fill]="collectedFill(creature.hue)"
@@ -254,7 +255,7 @@
           >
             <svg class="collected-svg" viewBox="0 0 220 220" aria-hidden="true">
               <use [attr.href]="'#cram-body-' + speciesKey(creature.speciesId)" />
-              <use href="#cram-face-idle" />
+              <use [attr.href]="creature.sleeping ? '#cram-face-sleeping' : '#cram-face-idle'" />
             </svg>
             <span class="collected-name">{{ speciesLabel(creature.speciesId) }}</span>
           </span>

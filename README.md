@@ -5,12 +5,14 @@ tasks, powered by a Kotlin Multiplatform engine shared across web, desktop and
 Android. Rewards are gamified with time estimates, accuracy bonuses and a
 little randomness — and never take anything away from the player.
 
+This project explores agentic development.
+
 Latest release: **v2.1.0** (`main`). Development happens on `dev` and reaches
 `main` through review-gated pull requests.
 
-In case the repo isn't updated, try: [personal github copy](https://github.com/JG-exe/cramagotchi-AI)
+In case the repo isn't updated, try: [personal github(jg-exe)](https://github.com/JG-exe/cramagotchi-AI)
 
-If you want to add more sections, please do so after the existing ones (avoid burying your sources under a lot of text!).
+To try out the web version of the app: [Cramagotchi web view](https://cramagotchi-pages.arch-box.net/)
 
 ## Up & running (optional) 🏃‍➡️
 

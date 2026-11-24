@@ -21,30 +21,27 @@
   color: var(--color-text-primary);
 }
 
-/* Count-down pill in the header — neutral while empty, warm once it matters */
+/* Count-down pill in the header — plain readable text, no decorative icon */
 .countdown-pill {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-2xs);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   color: var(--color-text-primary);
   background: var(--color-surface);
   box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
   box-shadow: var(--shadow-diffuse-sm);
   border-radius: var(--radius-pill);
-  padding: var(--space-2xs) var(--space-sm);
-}
-
-.countdown-icon {
-  width: 0.85rem;
-  height: 0.85rem;
+  padding: var(--space-xs) var(--space-md);
+  letter-spacing: 0.01em;
 }
 
 .countdown-pill strong {
   color: var(--color-accent-snack);
   font-weight: var(--weight-bold);
   font-family: var(--font-mono);
+  font-size: var(--text-base);
 }
 
 .countdown-prompt {
@@ -66,26 +63,40 @@
 .exams-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
+  gap: var(--space-xs);
 }
 
+/* Deadlines & exams are the important items of the board — roomy cards
+   (buttons live on the card itself, so the width hugs its content).
+   Exams pop a bit more: warm-tinted surface + stronger ring. */
 .exam-chip {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2xs);
-  padding: var(--space-2xs) var(--space-xs);
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
   background: var(--color-surface-recessed,
     color-mix(in srgb, var(--color-espresso-dark, #2C221E) 4%, var(--color-cream-base, #FAF6F0)));
-  border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
   font-weight: var(--weight-semibold);
   width: fit-content;
   max-width: 100%;
+  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.08);
+  box-shadow: var(--shadow-diffuse-sm);
 }
 
 .exam-chip-date {
   color: var(--color-text-primary);
   font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.exam-chip-time {
+  margin-left: var(--space-2xs);
+  color: var(--color-text-muted);
+  font-weight: var(--weight-semibold);
 }
 
 /* Kind tag: the plain "Due" deadline vs the escalated high-stakes Exam. */
@@ -105,12 +116,12 @@
   color: var(--color-surface-elevated, #FFFDF9);
 }
 
-/* High-stakes exams get a slightly stronger presence on the chip itself. */
+/* High-stakes exams pop without breaking the palette: warm-tinted surface,
+   a bolder espresso ring and a slightly stronger shadow than deadlines. */
 .exam-chip-high {
-  box-shadow: 0 4px 14px -2px rgba(44, 34, 30, 0.14),
-    inset 0 0 0 1.25px color-mix(in srgb, var(--color-espresso-dark, #2C221E) 22%, transparent);
-  box-shadow: var(--shadow-diffuse-sm),
-    inset 0 0 0 1.25px color-mix(in srgb, var(--color-espresso-dark, #2C221E) 22%, transparent);
+  background: color-mix(in srgb, var(--color-ochre-base, #D69749) 10%, var(--color-surface-elevated, #FFFDF9));
+  box-shadow: 0 6px 16px -2px rgba(44, 34, 30, 0.16),
+    inset 0 0 0 1.5px color-mix(in srgb, var(--color-espresso-dark, #2C221E) 22%, transparent);
 }
 
 .btn-edit {
@@ -174,6 +185,25 @@
   gap: 2px;
 }
 
+/* Optional HH:mm field — narrower than the date field, same family. */
+.field-exam-time-wrap {
+  width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.field-exam-time {
+  width: 100%;
+  font-size: var(--text-sm);
+}
+
+.field-exam-time-wrap .form-error {
+  margin: 0;
+  padding-left: var(--space-2xs, 4px);
+  max-width: 100%;
+}
+
 .field-exam-subject {
   width: 100%;
 }
@@ -191,13 +221,8 @@
   max-width: 100%;
 }
 
-.mat-mdc-form-field {
-  width: 100%;
-}
-
-.mat-mdc-text-field-wrapper {
-  background: var(--color-surface);
-}
+/* (field chrome comes from the global soft-field treatment in styles.css;
+   .soft-field already sizes to its wrapper) */
 
 /* Segmented Deadline/Exam importance toggle now lives in the shared
    SlidingToggleComponent — one track, one thumb gliding between options. */
@@ -219,13 +244,16 @@
 .btn-add-exam {
   margin-top: 0;
   /* Flat sage like the task maker's add button — readable at rest and,
-     when disabled, still legible instead of M3's washed-out default. */
-  --mdc-filled-button-container-color: var(--color-sage-base);
-  --mdc-filled-button-label-text-color: var(--color-surface-elevated, #FFFDF9);
-  --mdc-filled-button-disabled-container-color: color-mix(
-    in srgb, var(--color-sage-base) 28%, var(--color-cream-base));
-  --mdc-filled-button-disabled-label-text-color: color-mix(
-    in srgb, var(--color-espresso-dark) 62%, var(--color-sage-base));
+     when inactive, still legible instead of a washed-out default. */
+}
+
+/* The calendar suffix button inside a soft field */
+.soft-field-suffix {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
 }
 
 /* ── Native date picker companion ──────────────────────────────────── */
@@ -235,12 +263,6 @@
   height: 1px;
   opacity: 0;
   pointer-events: none;
-}
-
-.date-pick-suffix {
-  display: inline-flex;
-  align-items: center;
-  height: 100%;
 }
 
 .date-pick-btn {
@@ -294,24 +316,26 @@
   color: var(--color-status-hungry);
 }
 
-/* "I'm done with this" — deadline-only chip action, a small sage pill so the
-   option is unmistakable (EXAM chips don't render it; the exam day is their
-   own milestone). */
+/* "I'm done with this" — the most important action on a deadline card:
+   solid sage pill, confident weight. EXAM chips don't render it (the exam
+   day is their own milestone). */
 .btn-finish {
-  background: color-mix(in srgb, var(--color-sage-base, #6E9E7B) 14%, var(--color-surface-elevated, #FFFDF9));
+  background: var(--color-sage-base, #6E9E7B);
   border: none;
-  color: color-mix(in srgb, var(--color-sage-base, #6E9E7B) 70%, var(--color-espresso-dark, #2C221E));
+  color: #FFFDF9;
   font-size: var(--text-xs);
-  font-weight: 600;
+  font-weight: var(--weight-bold, 700);
+  letter-spacing: 0.03em;
   cursor: pointer;
-  padding: 2px var(--space-xs, 8px);
+  padding: 4px var(--space-sm, 12px);
   border-radius: 999px;
   white-space: nowrap;
+  box-shadow: 0 2px 6px -1px rgba(44, 34, 30, 0.25);
 }
 
 .btn-finish:hover {
-  background: var(--color-sage-base, #6E9E7B);
-  color: #FFFDF9;
+  background: color-mix(in srgb, var(--color-sage-base, #6E9E7B) 85%, var(--color-espresso-dark, #2C221E));
+  box-shadow: 0 3px 9px -1px rgba(44, 34, 30, 0.3);
 }
 
 /* ── Fallback calendar (engines without native showPicker, e.g.

@@ -4,6 +4,8 @@
     --duration-fast: 150ms;
     --duration-normal: 360ms;
     --duration-slow: 600ms;
+    /* One invalid-form-feedback cycle: field/button shake + warning flash */
+    --duration-shake: 420ms;
 
     --ease-standard: cubic-bezier(0.2, 0, 0, 1);
     --ease-soft: cubic-bezier(0.33, 0, 0.2, 1);
@@ -69,6 +71,67 @@ button:active:not(:disabled) {
 button:focus-visible {
     outline: 2px solid var(--color-accent-meal);
     outline-offset: 2px;
+}
+
+/* ── Invalid-submit feedback: shake + warning highlight ──────────────
+   Rejected submit: the offending field(s) and the add/submit button all
+   shake together; the failing field keeps the warning outline until the
+   user fixes the input, the button flashes red for one cycle only.
+   Driven by the shared InvalidFlashDirective (class .invalid-flash). */
+
+@keyframes invalid-shake {
+    0%, 100% { transform: translateX(0); }
+    15%      { transform: translateX(-7px) rotate(-0.5deg); }
+    30%      { transform: translateX(6px) rotate(0.4deg); }
+    45%      { transform: translateX(-5px) rotate(-0.3deg); }
+    60%      { transform: translateX(4px) rotate(0.2deg); }
+    80%      { transform: translateX(-2px); }
+}
+
+.invalid-flash {
+    animation: invalid-shake var(--duration-shake) var(--ease-standard);
+}
+
+/* Warning outline on a failing soft field (flash + persistent): defined
+   together with the rest of the .soft-field chrome in styles.css. */
+
+/* The submit button shows red for the shake cycle, then returns to base. */
+button.invalid-flash {
+    background-color: var(--color-status-hungry) !important;
+    border-color: var(--color-status-hungry) !important;
+    color: var(--color-surface-elevated) !important;
+}
+
+/* Required input still empty: the submit is inactive — dimmed, no lift —
+   but stays clickable so pressing it can explain what is missing (inline
+   note + shake). */
+button.btn-submit-inactive {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none !important;
+    filter: saturate(0.35);
+}
+
+button.btn-submit-inactive:hover,
+button.btn-submit-inactive:active {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* ── Celebration jump — plays once when a deadline is finished in advance.
+   Two bouncy hops with a squash on each landing; overrides the ambient
+   loop for the duration of the single play. */
+@keyframes victoryJump {
+    0%   { transform: translateY(0) scale(1, 1); }
+    15%  { transform: translateY(0) scale(1.08, 0.88); }   /* crouch */
+    45%  { transform: translateY(-34px) scale(0.96, 1.06); } /* hop 1 apex */
+    70%  { transform: translateY(0) scale(1.08, 0.9); }     /* land + squash */
+    85%  { transform: translateY(-16px) scale(1, 1); }     /* hop 2 */
+    100% { transform: translateY(0) scale(1, 1); }
+}
+
+.is-celebrating .monster-body {
+    animation: victoryJump 0.9s var(--ease-bouncy) 1;
 }
 
 /* ── Accessibility: calm everything to near-stillness when the user prefers

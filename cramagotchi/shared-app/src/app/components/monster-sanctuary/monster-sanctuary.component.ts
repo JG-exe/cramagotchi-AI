@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MonsterStoreService, EvolutionStage, MonsterStatus } from '../../services/monster-store.service';
 
@@ -43,6 +43,21 @@ const STATUS_TONE: Record<MonsterStatus, string> = {
 })
 export class MonsterSanctuaryComponent {
   readonly store = inject(MonsterStoreService);
+
+  /** One-shot celebration jump when a deadline is finished in advance. */
+  readonly celebrating = signal(false);
+  private celebrateTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    effect(() => {
+      if (this.store.celebrateTick() > 0) {
+        // one-shot play; rapid consecutive finishes just extend the hop
+        this.celebrating.set(true);
+        if (this.celebrateTimer) clearTimeout(this.celebrateTimer);
+        this.celebrateTimer = setTimeout(() => this.celebrating.set(false), 950);
+      }
+    });
+  }
 
   /** Lowercased evolution stage, used to pick the body symbol: #cram-body-… */
   readonly stageKey = computed(() => this.store.monster().stage.toLowerCase());

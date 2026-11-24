@@ -17,6 +17,9 @@ object CramagotchiEngine {
     /** Golden-ratio stir for the graduation hue roll — decorrelated from the roster rolls. */
     private const val GOLDEN_STIR = 0.618034
 
+    /** √2−1 stir for the retired monster's pose roll — decorrelated from both hue rolls. */
+    private const val POSE_STIR = 0.414213
+
     /**
      * Derive the next task ID from the highest existing numeric suffix.
      * Keeps IDs collision-free even after a state restore from storage,
@@ -37,7 +40,11 @@ object CramagotchiEngine {
         return EXAM_ID_PREFIX + (highest + 1)
     }
 
-    /** Create a fresh AppState: seed roster, egg hue rolled from `seedHueRng`. */
+    /**
+     * Create a fresh AppState: empty gallery, active egg with its permanent
+     * hue rolled from `seedHueRng` (sticks with the monster through every
+     * evolution).
+     */
     fun createInitialState(monsterName: String, now: Double, seedHueRng: Double = 0.5): AppState {
         return AppState(
             tasks = emptyArray(),
@@ -49,9 +56,7 @@ object CramagotchiEngine {
                 lastFedAt = now,
                 hue = hueFrom(seedHueRng)
             ),
-            collection = listOf(
-                CollectedMonster(EvolutionStage.EGG.name, hueFrom(seedHueRng), now)
-            )
+            collection = emptyList()
         )
     }
 
@@ -168,10 +173,7 @@ object CramagotchiEngine {
             tasks = updatedTasks,
             monster = feedMonster(state.monster, newXp, newStage, now)
         )
-        return graduateIfNeeded(
-            unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng),
-            now, hueRng
-        )
+        return graduateIfNeeded(next, now, hueRng)
     }
 
     /**
@@ -199,10 +201,10 @@ object CramagotchiEngine {
         }
     }
 
-    /** Delete a task by ID (only uncompleted tasks). */
+    /** Delete a task by ID (any task — active or devoured). */
     fun deleteTask(state: AppState, taskId: String): AppState {
         return state.copy(
-            tasks = state.tasks.filter { it.id != taskId || it.completed }.toTypedArray()
+            tasks = state.tasks.filter { it.id != taskId }.toTypedArray()
         )
     }
 
@@ -319,12 +321,14 @@ object CramagotchiEngine {
         subjectTag: String?,
         dateIso: String,
         now: Double,
-        kind: ExamKind = ExamKind.DEADLINE
+        kind: ExamKind = ExamKind.DEADLINE,
+        timeIso: String? = null
     ): AppState {
         val exam = Exam(
             id = nextExamId(state),
             subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
             dateIso = dateIso,
+            timeIso = timeIso?.trim()?.takeIf { it.isNotEmpty() },
             kind = kind
         )
         return state.copy(exams = state.exams + exam)
@@ -336,17 +340,19 @@ object CramagotchiEngine {
     }
 
     /**
-     * Edit an existing exam/deadline in place: subject tag, date and kind.
-     * Unknown ids are a no-op. A blank subject clears it; the date is
-     * stored verbatim (the UI validates the `YYYY-MM-DD` shape, and the
-     * countdown already tolerates an unparseable date by skipping it).
+     * Edit an existing exam/deadline in place: subject tag, date, optional
+     * time and kind. Unknown ids are a no-op. A blank subject clears it; the
+     * date is stored verbatim (the UI validates the `YYYY-MM-DD` shape, and
+     * the countdown already tolerates an unparseable date by skipping it);
+     * a blank time clears the optional time-of-day.
      */
     fun updateExam(
         state: AppState,
         examId: String,
         subjectTag: String?,
         dateIso: String,
-        kind: ExamKind = ExamKind.DEADLINE
+        kind: ExamKind = ExamKind.DEADLINE,
+        timeIso: String? = null
     ): AppState {
         val index = state.exams.indexOfFirst { it.id == examId }
         if (index == -1) return state
@@ -354,6 +360,7 @@ object CramagotchiEngine {
         updated[index] = updated[index].copy(
             subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
             dateIso = dateIso,
+            timeIso = timeIso?.trim()?.takeIf { it.isNotEmpty() },
             kind = kind
         )
         return state.copy(exams = updated)
@@ -410,29 +417,7 @@ object CramagotchiEngine {
             exams = state.exams.filter { it.id != examId },
             monster = feedMonster(state.monster, newXp, newStage, now)
         )
-        return graduateIfNeeded(
-            unlockSpeciesForEvolution(next, state.monster.stage, newStage, now, hueRng),
-            now, hueRng
-        )
-    }
-
-    /**
-     * Collect a species variant with a random hue rolled from the caller's
-     * `hueRng` (∈ [0,1) → hue ∈ [0,360)). The roster holds a species at most
-     * once — the first hue sticks and is persisted with the save, so a
-     * creature never re-rolls. Unknown species ids are accepted (the engine
-     * does not police the catalog).
-     */
-    fun unlockCollectible(
-        state: AppState,
-        speciesId: String,
-        now: Double,
-        hueRng: Double = 0.5
-    ): AppState {
-        if (state.collection.any { it.speciesId == speciesId }) return state
-        return state.copy(
-            collection = state.collection + CollectedMonster(speciesId, hueFrom(hueRng), now)
-        )
+        return graduateIfNeeded(next, now, hueRng)
     }
 
     /** Map an rng double to a hue, coerced into [0, 359] (overflow callers can't crash it). */
@@ -442,17 +427,30 @@ object CramagotchiEngine {
     }
 
     /**
-     * Graduation: the moment the active monster reaches the max stage the
-     * species is already collected (the roster unlock ran first), so the
-     * creature "moves on" and a brand-new one is instantiated — fresh EGG,
-     * xp reset to 0, IDLE with cleared timers, and a new hue rolled with a
-     * golden-ratio stir of the caller's rng so the next creature is visibly
-     * different. Sub-max stages return the state unchanged.
+     * Graduation: when the XP bar fills completely (max stage reached), two
+     * things happen at once. The fully-evolved monster retires into the
+     * gallery — keeping the unique hue it wore through every evolution and
+     * freezing an ambient pose (sleeping or idling, rolled from the caller's
+     * rng at collection) — and a brand-new monster is instantiated: fresh
+     * EGG, xp reset to 0, IDLE with cleared timers, and a NEW random hue
+     * (golden-ratio stir) that will stick with it through its own
+     * evolutions. Sub-max stages return the state unchanged — intermediate
+     * stages never enter the gallery.
      */
     private fun graduateIfNeeded(state: AppState, now: Double, hueRng: Double): AppState {
         if (state.monster.stage != EvolutionStage.GRADUATED_BEAST) return state
-        val newHue = hueFrom((hueRng + GOLDEN_STIR) % 1.0)
+        val retiredHue = state.monster.hue ?: hueFrom((hueRng + 0.375) % 1.0)
+        val entry = CollectedMonster(
+            speciesId = EvolutionStage.GRADUATED_BEAST.name,
+            hue = retiredHue,
+            collectedAt = now,
+            sleeping = ((hueRng + POSE_STIR) % 1.0) < 0.5
+        )
+        // Defensive dedupe: a legacy roster may already hold the same creature.
+        val alreadyRetired =
+            state.collection.any { it.speciesId == entry.speciesId && it.hue == retiredHue }
         return state.copy(
+            collection = if (alreadyRetired) state.collection else state.collection + entry,
             monster = state.monster.copy(
                 xp = 0,
                 stage = EvolutionStage.EGG,
@@ -460,59 +458,32 @@ object CramagotchiEngine {
                 lastFedAt = now,
                 eatingUntil = null,
                 sleepUntil = null,
-                hue = newHue
+                hue = hueFrom((hueRng + GOLDEN_STIR) % 1.0)
             )
         )
     }
 
     /**
-     * Legacy-save reconciliation: older saves carried no roster (or a roster
-     * seeded only with EGG) while the monster's stage kept advancing. This
-     * backfills every species at or below the monster's current stage —
-     * first hue wins, so existing entries and their hues are never touched —
-     * and tints a hue-less active monster from its stage's roster entry so
-     * the main card matches the collection. Call once right after loading a
-     * save; a fully-populated save passes through unchanged.
+     * Legacy-save reconciliation. Call once right after loading a save;
+     * an already-migrated save passes through unchanged.
+     * 1. Only fully-evolved monsters stay in the gallery — species cards
+     *    written by the pre-2.2 roster model are dropped.
+     * 2. A hue-less active monster (pre-hue save) is minted a permanent hue
+     *    from the caller's rng, so its colour is consistent from then on.
+     * 3. A save stuck at the max stage (XP filled before graduation
+     *    existed) graduates on load: the creature retires into the gallery
+     *    and a fresh egg spawns.
      */
-    fun reconcileCollection(state: AppState, hueRng: Double = 0.5): AppState {
-        var next = state
-        for (stage in EvolutionStage.values()) {
-            if (stage.level <= state.monster.stage.level) {
-                next = unlockCollectible(
-                    next, stage.name, state.monster.lastFedAt,
-                    (hueRng + stage.level * 0.13) % 1.0
-                )
+    fun reconcileCollection(state: AppState, now: Double, hueRng: Double = 0.5): AppState {
+        val filtered = state.copy(
+            collection = state.collection.filter {
+                it.speciesId == EvolutionStage.GRADUATED_BEAST.name
             }
-        }
-        if (next.monster.hue == null) {
-            val entry = next.collection.firstOrNull { it.speciesId == next.monster.stage.name }
-            if (entry != null) next = next.copy(monster = next.monster.copy(hue = entry.hue))
-        }
-        return next
-    }
-
-    /**
-     * Collect every stage species newly reached between the old and new
-     * stage (handles multi-stage jumps from stale legacy saves). Each
-     * simultaneously-unlocked species gets its own hue by stirring the
-     * caller's rng with the stage level.
-     */
-    private fun unlockSpeciesForEvolution(
-        state: AppState,
-        oldStage: EvolutionStage,
-        newStage: EvolutionStage,
-        now: Double,
-        hueRng: Double
-    ): AppState {
-        var next = state
-        // values() not entries: .entries is buggy at runtime on Kotlin/JS 2.0.21
-        for (stage in EvolutionStage.values()) {
-            if (stage.level > oldStage.level && stage.level <= newStage.level) {
-                val stirred = (hueRng + stage.level * 0.13) % 1.0
-                next = unlockCollectible(next, stage.name, now, stirred)
-            }
-        }
-        return next
+        )
+        val tinted = if (filtered.monster.hue == null)
+            filtered.copy(monster = filtered.monster.copy(hue = hueFrom(hueRng)))
+        else filtered
+        return graduateIfNeeded(tinted, now, hueRng)
     }
 
     private const val MILLIS_PER_DAY = 86_400_000.0

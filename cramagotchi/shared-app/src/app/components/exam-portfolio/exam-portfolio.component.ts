@@ -1,12 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
 import { MonsterStoreService, ExamKind } from '../../services/monster-store.service';
 import { DateMaskDirective } from '../../shared/date-mask.directive';
 import { SlidingToggleComponent } from '../../shared/sliding-toggle.component';
+import { InvalidFlashDirective } from '../../shared/invalid-flash.directive';
 
 export function subjectTagToHue(subjectTag: string): number {
   let hash = 0;
@@ -23,6 +21,28 @@ export function isValidIsoDate(value: string): boolean {
   if (month < 1 || month > 12 || day < 1) return false;
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
   return day <= daysInMonth;
+}
+
+/** Optional time of day, strict 24h `HH:mm` (00:00–23:59). */
+export function isValidIsoTime(value: string): boolean {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(value)) return false;
+  return true;
+}
+
+/**
+ * Light time mask as you type: digits only, max 5 chars, colon inserted
+ * after the second digit (`143` → `14:3`). Partial strings stay editable.
+ */
+export function maskIsoTime(value: string): string {
+  const digits = value.replace(/\D/g, '').slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+}
+
+/** Chip display: `HH:mm` verbatim; anything unparsable renders blank. */
+export function formatExamTimeDisplay(timeIso: string | null | undefined): string {
+  if (!timeIso || !isValidIsoTime(timeIso)) return '';
+  return timeIso;
 }
 
 /** One day in the fallback calendar grid; `iso` is null for leading/trailing filler. */
@@ -57,7 +77,7 @@ export function formatExamDateDisplay(iso: string): string {
 @Component({
   selector: 'app-exam-portfolio',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatButtonModule, DateMaskDirective, SlidingToggleComponent],
+  imports: [CommonModule, FormsModule, DateMaskDirective, SlidingToggleComponent, InvalidFlashDirective],
   templateUrl: './exam-portfolio.component.html',
   styleUrl: './exam-portfolio.component.css',
 })
@@ -66,9 +86,13 @@ export class ExamPortfolioComponent {
 
   /** Template-exposed date formatter (`DD Mon YYYY` for chip pills). */
   readonly formatExamDateDisplay = formatExamDateDisplay;
+  /** Template-exposed time formatter (`HH:mm` for chip cards). */
+  readonly formatExamTimeDisplay = formatExamTimeDisplay;
 
   examSubjectInput = signal('');
   examDateInput = signal('');
+  /** Optional time of day (`HH:mm`, masked as typed; '' = all-day). */
+  examTimeInput = signal('');
   /** Every dated item starts as a plain deadline; escalate to EXAM explicitly. */
   examKindInput = signal<ExamKind>('DEADLINE');
 
@@ -76,13 +100,36 @@ export class ExamPortfolioComponent {
   editingExamId = signal<string | null>(null);
   editExamSubject = signal('');
   editExamDate = signal('');
+  editExamTime = signal('');
   editExamKind = signal<ExamKind>('DEADLINE');
 
   /** Quiet inline rejection copy, shown directly under the related field. */
   examNameError = signal<string | null>(null);
   examDateError = signal<string | null>(null);
+  examTimeError = signal<string | null>(null);
   editNameError = signal<string | null>(null);
   editDateError = signal<string | null>(null);
+  editTimeError = signal<string | null>(null);
+
+  /** Invalid-submit pulses (shake + red flash), one counter per element. */
+  readonly examNameInvalidCount = signal(0);
+  readonly examDateInvalidCount = signal(0);
+  readonly examTimeInvalidCount = signal(0);
+  readonly examAddInvalidCount = signal(0);
+  readonly editNameInvalidCount = signal(0);
+  readonly editDateInvalidCount = signal(0);
+  readonly editTimeInvalidCount = signal(0);
+  readonly editSaveInvalidCount = signal(0);
+
+  /** Add button is inactive until a name and a valid date are present. */
+  readonly canAddExam = computed(
+    () => this.examSubjectInput().trim().length > 0 && isValidIsoDate(this.examDateInput()),
+  );
+
+  /** Edit save button is inactive until a name and a valid date are present. */
+  readonly canSaveExam = computed(
+    () => this.editExamSubject().trim().length > 0 && isValidIsoDate(this.editExamDate()),
+  );
 
   /** True when the nearest upcoming dated item is the high-stakes EXAM kind. */
   readonly nearestIsExam = computed(() => this.store.nearestUpcomingExam()?.kind === 'EXAM');
@@ -226,19 +273,34 @@ export class ExamPortfolioComponent {
     const subject = this.examSubjectInput().trim();
     if (!subject) {
       this.examNameError.set('Give the item a name (e.g. MATH) first.');
+      // Shake the offending field and flash the add button red for one cycle.
+      this.examNameInvalidCount.update(c => c + 1);
+      this.examAddInvalidCount.update(c => c + 1);
       return;
     }
     const date = this.examDateInput();
     if (!date || !isValidIsoDate(date)) {
       this.examDateError.set('Enter a valid date (YYYY-MM-DD).');
+      this.examDateInvalidCount.update(c => c + 1);
+      this.examAddInvalidCount.update(c => c + 1);
       return;
     }
-    this.store.addExam(subject, date, this.examKindInput());
+    // optional time — only a non-blank entry is validated
+    const time = this.examTimeInput().trim();
+    if (time && !isValidIsoTime(time)) {
+      this.examTimeError.set('Time is optional, but must be HH:mm (24h).');
+      this.examTimeInvalidCount.update(c => c + 1);
+      this.examAddInvalidCount.update(c => c + 1);
+      return;
+    }
+    this.store.addExam(subject, date, this.examKindInput(), time || null);
     this.examSubjectInput.set('');
     this.examDateInput.set('');
+    this.examTimeInput.set('');
     this.examKindInput.set('DEADLINE');
     this.examNameError.set(null);
     this.examDateError.set(null);
+    this.examTimeError.set(null);
   }
 
   /** Name typed in the add form — typing clears a stale rejection. */
@@ -251,6 +313,12 @@ export class ExamPortfolioComponent {
   onExamDateInput(value: string): void {
     this.examDateInput.set(value);
     this.examDateError.set(null);
+  }
+
+  /** Optional time typed in the add form — masked as `HH:mm` on the fly. */
+  onExamTimeInput(value: string): void {
+    this.examTimeInput.set(maskIsoTime(value));
+    this.examTimeError.set(null);
   }
 
   removeExam(examId: string): void {
@@ -271,9 +339,11 @@ export class ExamPortfolioComponent {
     this.editingExamId.set(examId);
     this.editExamSubject.set(exam.subjectTag ?? '');
     this.editExamDate.set(exam.dateIso);
+    this.editExamTime.set(exam.timeIso ?? '');
     this.editExamKind.set(exam.kind ?? 'DEADLINE');
     this.editNameError.set(null);
     this.editDateError.set(null);
+    this.editTimeError.set(null);
   }
 
   cancelEditExam(): void {
@@ -287,17 +357,29 @@ export class ExamPortfolioComponent {
     const subject = this.editExamSubject().trim();
     if (!subject) {
       this.editNameError.set('The name cannot be empty — restore one or cancel.');
+      this.editNameInvalidCount.update(c => c + 1);
+      this.editSaveInvalidCount.update(c => c + 1);
       return;
     }
     const date = this.editExamDate();
     if (!date || !isValidIsoDate(date)) {
       this.editDateError.set('Enter a valid date (YYYY-MM-DD).');
+      this.editDateInvalidCount.update(c => c + 1);
+      this.editSaveInvalidCount.update(c => c + 1);
       return;
     }
-    this.store.updateExam(examId, subject, date, this.editExamKind());
+    const time = this.editExamTime().trim();
+    if (time && !isValidIsoTime(time)) {
+      this.editTimeError.set('Time is optional, but must be HH:mm (24h).');
+      this.editTimeInvalidCount.update(c => c + 1);
+      this.editSaveInvalidCount.update(c => c + 1);
+      return;
+    }
+    this.store.updateExam(examId, subject, date, this.editExamKind(), time || null);
     this.editingExamId.set(null);
     this.editNameError.set(null);
     this.editDateError.set(null);
+    this.editTimeError.set(null);
   }
 
   /** Name typed in the edit form — typing clears a stale rejection. */
@@ -310,6 +392,12 @@ export class ExamPortfolioComponent {
   onEditExamDateInput(value: string): void {
     this.editExamDate.set(value);
     this.editDateError.set(null);
+  }
+
+  /** Optional time typed in the edit form — masked as `HH:mm` on the fly. */
+  onEditExamTimeInput(value: string): void {
+    this.editExamTime.set(maskIsoTime(value));
+    this.editTimeError.set(null);
   }
 
   subjectHue(subjectTag: string): number {

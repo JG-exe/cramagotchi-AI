@@ -62,6 +62,7 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     examDateIso,
     exams,
     dayTick: signal(0),
+    celebrateTick: signal(0),
     nearestExamDays: nearest,
     nearestUpcomingExam: nearestExam,
     activeTasks: computed(() => tasks().filter(t => !t.completed)),
@@ -78,13 +79,14 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     updateTask: vi.fn(),
     completeTaskWithTime: vi.fn(),
     deleteTask: vi.fn(),
+    isDevouredExpired: vi.fn(() => false),
     setExamDate: vi.fn(),
     addExam: vi.fn(),
     updateExam: vi.fn(),
     removeExam: vi.fn(),
     finishExam: vi.fn(),
     collection: signal<CollectedMonster[]>([
-      { speciesId: 'EGG', hue: 204, collectedAt: 0 },
+      { speciesId: 'GRADUATED_BEAST', hue: 204, collectedAt: 0, sleeping: false },
     ]),
   };
 }
@@ -288,7 +290,7 @@ describe('App (root component)', () => {
     addBtn!.click();
 
     // Deadline is the default kind — a plain add never creates an EXAM
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'DEADLINE');
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'DEADLINE', null);
   });
 
   // ── Test 10: Completing passes the recorded actual minutes ──
@@ -307,8 +309,8 @@ describe('App (root component)', () => {
     actualInput!.value = '36';
     actualInput!.dispatchEvent(new Event('input'));
 
-    const checkbox = compiled.querySelector<HTMLInputElement>('input[type="checkbox"]');
-    checkbox?.click();
+    const completeBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-complete-btn"]');
+    completeBtn?.click();
 
     expect(mockStore.completeTaskWithTime).toHaveBeenCalled();
     const [taskId, minutes] = mockStore.completeTaskWithTime.mock.calls[0];
@@ -341,6 +343,30 @@ describe('App (root component)', () => {
     fixture.detectChanges();
     const devouredTitle = compiled.querySelector('.devoured-item');
     expect(devouredTitle?.textContent).toContain('29 XP');
+  });
+
+  it('should list devoured tasks most recently devoured first', () => {
+    const now = Date.now();
+    const older = makeTask('Old snack', 'MATH', { completed: true, completedAt: now - 3_600_000 });
+    const newer = makeTask('Fresh snack', 'BIO', { completed: true, completedAt: now });
+    mockStore = createMockStore();
+    // stored oldest first — the archive still must read newest first
+    mockStore.tasks.set([older, newer]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const toggle = compiled.querySelector<HTMLButtonElement>('.btn-toggle-devoured');
+    toggle?.click();
+    fixture.detectChanges();
+
+    const titles = Array.from(
+      compiled.querySelectorAll('.devoured-item .devoured-title'),
+    ).map(el => el.textContent?.trim());
+    // newest first: "Fresh snack" won back to front
+    expect(titles).toEqual(['Fresh snack', 'Old snack']);
   });
 
   // ── Test 12: Task form forwards the time estimate ─────────
@@ -393,7 +419,7 @@ describe('App (root component)', () => {
     const addBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="exam-add-btn"]');
     addBtn!.click();
 
-    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'EXAM');
+    expect(mockStore.addExam).toHaveBeenCalledWith('MATH', isoDaysFromNow(5), 'EXAM', null);
   });
 
   // ── Test 14: Chips show the kind; "Due" vs the escalated "Exam" ──
@@ -535,7 +561,7 @@ describe('App (root component)', () => {
     expect(saveBtn).toBeTruthy();
     saveBtn!.click();
 
-    expect(mockStore.updateExam).toHaveBeenCalledWith('exam-1', 'BIO 201', isoDaysFromNow(12), 'EXAM');
+    expect(mockStore.updateExam).toHaveBeenCalledWith('exam-1', 'BIO 201', isoDaysFromNow(12), 'EXAM', null);
   });
 
   // ── Desktop fallback calendar (engines without native showPicker) ──
@@ -654,13 +680,47 @@ describe('App (root component)', () => {
     expect(compiled.querySelectorAll('[data-testid="exam-chip-finish"]').length).toBe(1);
   });
 
+  // ── Optional time of day on dated items ───────────────────
+
+  it('should show the optional HH:mm time on a chip that has one, and omit it otherwise', () => {
+    mockStore = createMockStore();
+    mockStore.exams.set([
+      { id: 'exam-1', subjectTag: 'HISTORY', dateIso: isoDaysFromNow(9), kind: 'DEADLINE', timeIso: '09:30' },
+      { id: 'exam-2', subjectTag: 'MATH', dateIso: isoDaysFromNow(5), kind: 'EXAM' },
+    ]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const chips = compiled.querySelectorAll('[data-testid="exam-chip"]');
+    expect(chips[0]!.textContent).toContain('09:30');
+    expect(chips[1]!.textContent).not.toContain('09:30');
+    expect(chips[1]!.querySelector('.exam-chip-time')).toBeNull();
+  });
+
+  it('should jump the monster when a deadline is finished in advance', () => {
+    mockStore = createMockStore();
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.monster-stage-display')!.classList.contains('is-celebrating')).toBe(false);
+
+    (mockStore.celebrateTick as unknown as { set(v: number): void }).set(1);
+    fixture.detectChanges();
+    expect(compiled.querySelector('.monster-stage-display')!.classList.contains('is-celebrating')).toBe(true);
+  });
+
   // ── Collectible monster roster gallery ───────────────────
 
-  it('should render one gallery tile per collected monster with its rolled hue', () => {
+  it('should render one gallery tile per retired monster with its hue and frozen pose', () => {
     mockStore = createMockStore();
     mockStore.collection.set([
-      { speciesId: 'EGG', hue: 204, collectedAt: 1 },
-      { speciesId: 'HATCHLING', hue: 12, collectedAt: 2 },
+      { speciesId: 'GRADUATED_BEAST', hue: 204, collectedAt: 1, sleeping: false },
+      { speciesId: 'GRADUATED_BEAST', hue: 12, collectedAt: 2, sleeping: true },
     ]);
     TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
 
@@ -672,13 +732,20 @@ describe('App (root component)', () => {
     expect(items.length).toBe(2);
 
     const first = items[0]!;
-    expect(first.getAttribute('data-species')).toBe('EGG');
     // hue lands as a per-instance --stage-fill override on the shared symbols
     expect(first.getAttribute('style')).toContain('hsl(204');
-    expect(first.textContent).toContain('Egg');
+    expect(first.textContent).toContain('Graduated Beast');
+    const faces = first.querySelectorAll('use');
+    // idle pose from the frozen retirement roll
+    expect(Array.from(faces).some(u => u.getAttribute('href')?.includes('cram-face-idle'))).toBe(true);
 
     expect(items[1]!.getAttribute('style')).toContain('hsl(12');
-    expect(items[1]!.textContent).toContain('Hatchling');
+    const sleepingUses = items[1]!.querySelectorAll('use');
+    // sleeping pose from the frozen retirement roll
+    expect(Array.from(sleepingUses).some(u => u.getAttribute('href')?.includes('cram-face-sleeping'))).toBe(true);
+
+    // single fused header label: "Graduated monsters: N"
+    expect(compiled.querySelector('.monster-collection')!.textContent).toContain('Graduated monsters: 2');
   });
 });
 
