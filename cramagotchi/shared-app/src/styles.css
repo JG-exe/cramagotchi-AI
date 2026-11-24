@@ -177,6 +177,16 @@ optgroup {
     transform var(--duration-fast) var(--ease-standard);
 }
 
+/* Submit pills (+ Add): ONE fixed-metrics class shared by every form's
+   submit button so they are pixel-identical wherever they appear. */
+.btn-submit {
+  height: 2.6rem;
+  min-height: 2.6rem;
+  padding: 0 1.6rem;
+  font-size: var(--text-base);
+  line-height: 1;
+}
+
 .btn-primary:hover {
   background: color-mix(in srgb, var(--color-sage-base) 88%, var(--color-espresso-dark));
   transform: translateY(-1px);
