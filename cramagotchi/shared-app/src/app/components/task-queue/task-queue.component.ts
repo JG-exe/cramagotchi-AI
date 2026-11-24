@@ -172,7 +172,13 @@ export class TaskQueueComponent {
    * keeps late-ticking renders consistent with what the purge removed.
    */
   readonly filteredDevouredTasks = computed(() =>
-    this.store.devouredTasks().filter(task => !this.store.isDevouredExpired(task))
+    this.store
+      .devouredTasks()
+      .filter(task => !this.store.isDevouredExpired(task))
+      // most recently devoured first (falls back to creation order for
+      // anything missing a completion stamp)
+      .slice()
+      .sort((a, b) => (b.completedAt ?? b.createdAt) - (a.completedAt ?? a.createdAt))
   );
 
   toggleDevoured(): void {

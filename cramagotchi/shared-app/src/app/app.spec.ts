@@ -345,6 +345,30 @@ describe('App (root component)', () => {
     expect(devouredTitle?.textContent).toContain('29 XP');
   });
 
+  it('should list devoured tasks most recently devoured first', () => {
+    const now = Date.now();
+    const older = makeTask('Old snack', 'MATH', { completed: true, completedAt: now - 3_600_000 });
+    const newer = makeTask('Fresh snack', 'BIO', { completed: true, completedAt: now });
+    mockStore = createMockStore();
+    // stored oldest first — the archive still must read newest first
+    mockStore.tasks.set([older, newer]);
+    TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
+
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const toggle = compiled.querySelector<HTMLButtonElement>('.btn-toggle-devoured');
+    toggle?.click();
+    fixture.detectChanges();
+
+    const titles = Array.from(
+      compiled.querySelectorAll('.devoured-item .devoured-title'),
+    ).map(el => el.textContent?.trim());
+    // newest first: "Fresh snack" won back to front
+    expect(titles).toEqual(['Fresh snack', 'Old snack']);
+  });
+
   // ── Test 12: Task form forwards the time estimate ─────────
 
   it('should pass the estimated minutes to store.addTask() on submit', () => {
