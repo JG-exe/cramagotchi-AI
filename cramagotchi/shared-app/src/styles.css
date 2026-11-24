@@ -92,13 +92,17 @@ optgroup {
   outline: none;
   color: var(--color-text-primary);
   font: inherit;
-  font-size: var(--text-base);
+  /* inherit the field's font size — narrow fields (date/time) set text-sm
+     so fixed placeholders like YYYY-MM-DD still fit; single-line height so
+     long line-heights can never clip the placeholder vertically */
+  font-size: inherit;
+  line-height: 1;
   font-weight: var(--weight-medium);
 }
 
 /* Fields carrying an inline suffix (date-picker button) reserve its width */
 .soft-field.with-suffix .soft-field-input {
-  padding-right: 3.2rem;
+  padding-right: 2.7rem;
 }
 
 /* Empty + unfocused: the resting label IS the placeholder — so the real
