@@ -3,13 +3,7 @@
     <h2 class="section-title">Deadlines &amp; Exams</h2>
     <span class="countdown-pill" data-testid="exam-countdown">
       @if (store.nearestExamDays() !== null) {
-        <svg class="countdown-icon" viewBox="0 0 220 220" aria-hidden="true">
-          <!-- Hourglass, same line-art family as the monster -->
-          <path d="M78 42 H142 M78 178 H142 M88 42 V78 Q88 96 110 110 Q132 124 132 142 V178 M132 42 V78 Q132 96 110 110 Q88 124 88 142 V178"
-                fill="none" stroke="var(--color-espresso-dark, #2C221E)"
-                stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        <strong>{{ store.nearestExamDays() }}</strong>&nbsp;days → next {{ nearestIsExam() ? 'exam' : 'deadline' }}
+        <strong>{{ store.nearestExamDays() }}</strong>&nbsp;{{ store.nearestExamDays() === 1 ? 'day' : 'days' }} → next {{ nearestIsExam() ? 'exam' : 'deadline' }}
       } @else {
         <span class="countdown-prompt">No upcoming deadlines — add one below</span>
       }

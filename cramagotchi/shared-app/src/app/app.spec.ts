@@ -685,8 +685,8 @@ describe('App (root component)', () => {
     // sleeping pose from the frozen retirement roll
     expect(Array.from(sleepingUses).some(u => u.getAttribute('href')?.includes('cram-face-sleeping'))).toBe(true);
 
-    // the label counts retired captures, not a 4-species cap
-    expect(compiled.querySelector('.monster-collection')!.textContent).toContain('retired');
+    // single fused header label: "Graduated monsters: N"
+    expect(compiled.querySelector('.monster-collection')!.textContent).toContain('Graduated monsters: 2');
   });
 });
 
