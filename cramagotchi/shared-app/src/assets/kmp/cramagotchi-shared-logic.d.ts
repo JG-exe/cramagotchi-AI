@@ -28,8 +28,7 @@ export declare namespace com.cramagotchi.engine {
         get BASE_FINISH_XP(): number;
         earlyFinishXp(daysRemaining: number): number;
         finishExam(state: com.cramagotchi.model.AppState, examId: string, now: number, hueRng?: number): com.cramagotchi.model.AppState;
-        unlockCollectible(state: com.cramagotchi.model.AppState, speciesId: string, now: number, hueRng?: number): com.cramagotchi.model.AppState;
-        reconcileCollection(state: com.cramagotchi.model.AppState, hueRng?: number): com.cramagotchi.model.AppState;
+        reconcileCollection(state: com.cramagotchi.model.AppState, now: number, hueRng?: number): com.cramagotchi.model.AppState;
     };
 }
 export declare namespace com.cramagotchi.model {
@@ -161,11 +160,12 @@ export declare namespace com.cramagotchi.model {
         };
     }
     class CollectedMonster {
-        constructor(speciesId: string, hue: number, collectedAt: number);
+        constructor(speciesId: string, hue: number, collectedAt: number, sleeping?: boolean);
         get speciesId(): string;
         get hue(): number;
         get collectedAt(): number;
-        copy(speciesId?: string, hue?: number, collectedAt?: number): com.cramagotchi.model.CollectedMonster;
+        get sleeping(): boolean;
+        copy(speciesId?: string, hue?: number, collectedAt?: number, sleeping?: boolean): com.cramagotchi.model.CollectedMonster;
         toString(): string;
         hashCode(): number;
         equals(other: Nullable<any>): boolean;

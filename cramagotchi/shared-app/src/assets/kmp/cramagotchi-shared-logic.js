@@ -27,10 +27,13 @@
   var VOID = kotlin_kotlin.$_$.c;
   var coerceIn = kotlin_kotlin.$_$.g4;
   var numberToInt = kotlin_kotlin.$_$.w3;
+  var Collection = kotlin_kotlin.$_$.c1;
+  var isInterface = kotlin_kotlin.$_$.s3;
+  var plus = kotlin_kotlin.$_$.g2;
   var _Char___init__impl__6a9atx = kotlin_kotlin.$_$.v;
   var charArrayOf = kotlin_kotlin.$_$.w2;
   var split = kotlin_kotlin.$_$.s4;
-  var listOf = kotlin_kotlin.$_$.b2;
+  var emptyList = kotlin_kotlin.$_$.o1;
   var protoOf = kotlin_kotlin.$_$.z3;
   var THROW_CCE = kotlin_kotlin.$_$.f5;
   var isCharSequence = kotlin_kotlin.$_$.r3;
@@ -42,14 +45,11 @@
   var collectionSizeOrDefault = kotlin_kotlin.$_$.h1;
   var ArrayList_init_$Create$_0 = kotlin_kotlin.$_$.e;
   var listOfNotNull = kotlin_kotlin.$_$.a2;
-  var plus = kotlin_kotlin.$_$.f2;
+  var plus_0 = kotlin_kotlin.$_$.f2;
   var minOrNull = kotlin_kotlin.$_$.d2;
   var to = kotlin_kotlin.$_$.r5;
   var compareTo = kotlin_kotlin.$_$.b3;
-  var plus_0 = kotlin_kotlin.$_$.g2;
   var toMutableList = kotlin_kotlin.$_$.o2;
-  var Collection = kotlin_kotlin.$_$.c1;
-  var isInterface = kotlin_kotlin.$_$.s3;
   var initMetadataForObject = kotlin_kotlin.$_$.p3;
   var defineProp = kotlin_kotlin.$_$.c3;
   var THROW_IAE = kotlin_kotlin.$_$.g5;
@@ -75,10 +75,10 @@
   var getKClass = kotlin_kotlin.$_$.b;
   var ReferenceArraySerializer = kotlin_org_jetbrains_kotlinx_kotlinx_serialization_core.$_$.j1;
   var ArrayListSerializer = kotlin_org_jetbrains_kotlinx_kotlinx_serialization_core.$_$.c1;
-  var emptyList = kotlin_kotlin.$_$.o1;
   var hashCode = kotlin_kotlin.$_$.j3;
   var Json = kotlin_org_jetbrains_kotlinx_kotlinx_serialization_json.$_$.a;
   var Exception = kotlin_kotlin.$_$.c5;
+  var listOf = kotlin_kotlin.$_$.b2;
   //endregion
   //region block: pre-declaration
   initMetadataForObject(CramagotchiEngine, 'CramagotchiEngine');
@@ -169,23 +169,38 @@
   function graduateIfNeeded($this, state, now, hueRng) {
     if (!state.monster.stage.equals(EvolutionStage_GRADUATED_BEAST_getInstance()))
       return state;
-    var newHue = hueFrom($this, (hueRng + 0.618034) % 1.0);
-    return state.copy(VOID, state.monster.copy(VOID, 0, EvolutionStage_EGG_getInstance(), MonsterStatus_IDLE_getInstance(), now, null, null, newHue));
-  }
-  function unlockSpeciesForEvolution($this, state, oldStage, newStage, now, hueRng) {
-    var next = state;
-    var indexedObject = values_1();
-    var inductionVariable = 0;
-    var last = indexedObject.length;
-    while (inductionVariable < last) {
-      var stage = indexedObject[inductionVariable];
-      inductionVariable = inductionVariable + 1 | 0;
-      if (stage.level > oldStage.level && stage.level <= newStage.level) {
-        var stirred = (hueRng + stage.level * 0.13) % 1.0;
-        next = $this.unlockCollectible(next, stage.k1_1, now, stirred);
+    var tmp0_elvis_lhs = state.monster.hue;
+    var retiredHue = tmp0_elvis_lhs == null ? hueFrom($this, (hueRng + 0.375) % 1.0) : tmp0_elvis_lhs;
+    var entry = new CollectedMonster('GRADUATED_BEAST', retiredHue, now, (hueRng + 0.414213) % 1.0 < 0.5);
+    var tmp$ret$0;
+    $l$block_0: {
+      // Inline function 'kotlin.collections.any' call
+      var this_0 = state.collection;
+      var tmp;
+      if (isInterface(this_0, Collection)) {
+        tmp = this_0.o();
+      } else {
+        tmp = false;
       }
+      if (tmp) {
+        tmp$ret$0 = false;
+        break $l$block_0;
+      }
+      var tmp0_iterator = this_0.e();
+      while (tmp0_iterator.f()) {
+        var element = tmp0_iterator.g();
+        // Inline function 'com.cramagotchi.engine.CramagotchiEngine.graduateIfNeeded.<anonymous>' call
+        if (element.speciesId === entry.speciesId && element.hue === retiredHue) {
+          tmp$ret$0 = true;
+          break $l$block_0;
+        }
+      }
+      tmp$ret$0 = false;
     }
-    return next;
+    var alreadyRetired = tmp$ret$0;
+    var tmp1_collection = alreadyRetired ? state.collection : plus(state.collection, entry);
+    var tmp2_monster = state.monster.copy(VOID, 0, EvolutionStage_EGG_getInstance(), MonsterStatus_IDLE_getInstance(), now, null, null, hueFrom($this, (hueRng + 0.618034) % 1.0));
+    return state.copy(VOID, tmp2_monster, VOID, VOID, tmp1_collection);
   }
   function isoDaysFromCivil($this, iso) {
     var parts = split(iso, charArrayOf([_Char___init__impl__6a9atx(45)]));
@@ -236,22 +251,23 @@
     return era * 146097 + doe - 719468;
   }
   function CramagotchiEngine() {
-    this.ju_1 = 'task-';
-    this.ku_1 = 'exam-';
-    this.lu_1 = 0.618034;
+    this.hu_1 = 'task-';
+    this.iu_1 = 'exam-';
+    this.ju_1 = 0.618034;
+    this.ku_1 = 0.414213;
     this.BASE_FINISH_XP = 25;
-    this.mu_1 = 8.64E7;
+    this.lu_1 = 8.64E7;
   }
-  protoOf(CramagotchiEngine).nu = function (monsterName, now, seedHueRng) {
+  protoOf(CramagotchiEngine).mu = function (monsterName, now, seedHueRng) {
     // Inline function 'kotlin.emptyArray' call
     var tmp$ret$0 = [];
-    return new AppState(tmp$ret$0, new MonsterState(monsterName, 0, EvolutionStage_EGG_getInstance(), MonsterStatus_IDLE_getInstance(), now, VOID, VOID, hueFrom(this, seedHueRng)), VOID, VOID, listOf(new CollectedMonster('EGG', hueFrom(this, seedHueRng), now)));
+    return new AppState(tmp$ret$0, new MonsterState(monsterName, 0, EvolutionStage_EGG_getInstance(), MonsterStatus_IDLE_getInstance(), now, VOID, VOID, hueFrom(this, seedHueRng)), VOID, VOID, emptyList());
   };
   protoOf(CramagotchiEngine).createInitialState = function (monsterName, now, seedHueRng, $super) {
     seedHueRng = seedHueRng === VOID ? 0.5 : seedHueRng;
-    return this.nu(monsterName, now, seedHueRng);
+    return this.mu(monsterName, now, seedHueRng);
   };
-  protoOf(CramagotchiEngine).ou = function (state, title, weight, now, subjectTag, estimatedMinutes) {
+  protoOf(CramagotchiEngine).nu = function (state, title, weight, now, subjectTag, estimatedMinutes) {
     var newTask = new StudyTask(nextId(this, state), title, subjectTag, weight, false, now, null, estimatedMinutes);
     // Inline function 'kotlin.collections.plus' call
     // Inline function 'kotlin.js.asDynamic' call
@@ -266,9 +282,9 @@
   protoOf(CramagotchiEngine).addTask = function (state, title, weight, now, subjectTag, estimatedMinutes, $super) {
     subjectTag = subjectTag === VOID ? null : subjectTag;
     estimatedMinutes = estimatedMinutes === VOID ? null : estimatedMinutes;
-    return this.ou(state, title, weight, now, subjectTag, estimatedMinutes);
+    return this.nu(state, title, weight, now, subjectTag, estimatedMinutes);
   };
-  protoOf(CramagotchiEngine).pu = function (state, taskId, title, weight, subjectTag, estimatedMinutes) {
+  protoOf(CramagotchiEngine).ou = function (state, taskId, title, weight, subjectTag, estimatedMinutes) {
     var tmp$ret$1;
     $l$block: {
       // Inline function 'kotlin.collections.indexOfFirst' call
@@ -358,9 +374,9 @@
   protoOf(CramagotchiEngine).updateTask = function (state, taskId, title, weight, subjectTag, estimatedMinutes, $super) {
     subjectTag = subjectTag === VOID ? null : subjectTag;
     estimatedMinutes = estimatedMinutes === VOID ? null : estimatedMinutes;
-    return this.pu(state, taskId, title, weight, subjectTag, estimatedMinutes);
+    return this.ou(state, taskId, title, weight, subjectTag, estimatedMinutes);
   };
-  protoOf(CramagotchiEngine).qu = function (state, taskId, now, actualMinutes, rng, hueRng) {
+  protoOf(CramagotchiEngine).pu = function (state, taskId, now, actualMinutes, rng, hueRng) {
     var tmp$ret$1;
     $l$block: {
       // Inline function 'kotlin.collections.indexOfFirst' call
@@ -411,13 +427,13 @@
     var newXp = state.monster.xp + awardedXp | 0;
     var newStage = this.calculateEvolution(newXp);
     var next = state.copy(updatedTasks, feedMonster(this, state.monster, newXp, newStage, now));
-    return graduateIfNeeded(this, unlockSpeciesForEvolution(this, next, state.monster.stage, newStage, now, hueRng), now, hueRng);
+    return graduateIfNeeded(this, next, now, hueRng);
   };
   protoOf(CramagotchiEngine).completeTask = function (state, taskId, now, actualMinutes, rng, hueRng, $super) {
     actualMinutes = actualMinutes === VOID ? null : actualMinutes;
     rng = rng === VOID ? 0.5 : rng;
     hueRng = hueRng === VOID ? 0.5 : hueRng;
-    return this.qu(state, taskId, now, actualMinutes, rng, hueRng);
+    return this.pu(state, taskId, now, actualMinutes, rng, hueRng);
   };
   protoOf(CramagotchiEngine).deleteTask = function (state, taskId) {
     // Inline function 'kotlin.collections.toTypedArray' call
@@ -431,7 +447,7 @@
       var element = this_0[inductionVariable];
       inductionVariable = inductionVariable + 1 | 0;
       // Inline function 'com.cramagotchi.engine.CramagotchiEngine.deleteTask.<anonymous>' call
-      if (!(element.id === taskId) || element.completed) {
+      if (!(element.id === taskId)) {
         destination.m(element);
       }
     }
@@ -504,7 +520,7 @@
       var tmp$ret$1 = item.dateIso;
       destination.m(tmp$ret$1);
     }
-    var dates = plus(destination, listOfNotNull(state.examDateIso));
+    var dates = plus_0(destination, listOfNotNull(state.examDateIso));
     // Inline function 'kotlin.collections.filter' call
     // Inline function 'kotlin.collections.mapNotNull' call
     // Inline function 'kotlin.collections.mapNotNullTo' call
@@ -637,7 +653,7 @@
     var tmp0_safe_receiver_1 = tmp$ret$11;
     return tmp0_safe_receiver_1 == null ? null : tmp0_safe_receiver_1.x9_1;
   };
-  protoOf(CramagotchiEngine).tu = function (state, subjectTag, dateIso, now, kind) {
+  protoOf(CramagotchiEngine).su = function (state, subjectTag, dateIso, now, kind) {
     var tmp = nextExamId(this, state);
     var tmp_0;
     if (subjectTag == null) {
@@ -664,11 +680,11 @@
       tmp_1 = tmp_2;
     }
     var exam = new Exam(tmp, tmp_1, dateIso, kind);
-    return state.copy(VOID, VOID, VOID, plus_0(state.exams, exam));
+    return state.copy(VOID, VOID, VOID, plus(state.exams, exam));
   };
   protoOf(CramagotchiEngine).addExam = function (state, subjectTag, dateIso, now, kind, $super) {
     kind = kind === VOID ? ExamKind_DEADLINE_getInstance() : kind;
-    return this.tu(state, subjectTag, dateIso, now, kind);
+    return this.su(state, subjectTag, dateIso, now, kind);
   };
   protoOf(CramagotchiEngine).removeExam = function (state, examId) {
     // Inline function 'kotlin.collections.filter' call
@@ -685,7 +701,7 @@
     }
     return state.copy(VOID, VOID, VOID, destination);
   };
-  protoOf(CramagotchiEngine).uu = function (state, examId, subjectTag, dateIso, kind) {
+  protoOf(CramagotchiEngine).tu = function (state, examId, subjectTag, dateIso, kind) {
     var tmp$ret$1;
     $l$block: {
       // Inline function 'kotlin.collections.indexOfFirst' call
@@ -736,16 +752,16 @@
   };
   protoOf(CramagotchiEngine).updateExam = function (state, examId, subjectTag, dateIso, kind, $super) {
     kind = kind === VOID ? ExamKind_DEADLINE_getInstance() : kind;
-    return this.uu(state, examId, subjectTag, dateIso, kind);
+    return this.tu(state, examId, subjectTag, dateIso, kind);
   };
-  protoOf(CramagotchiEngine).vu = function () {
+  protoOf(CramagotchiEngine).uu = function () {
     return this.BASE_FINISH_XP;
   };
   protoOf(CramagotchiEngine).earlyFinishXp = function (daysRemaining) {
     var bonus = daysRemaining <= 0 ? 0 : daysRemaining <= 2 ? 10 : daysRemaining <= 6 ? 20 : 35;
     return 25 + bonus | 0;
   };
-  protoOf(CramagotchiEngine).wu = function (state, examId, now, hueRng) {
+  protoOf(CramagotchiEngine).vu = function (state, examId, now, hueRng) {
     var tmp$ret$1;
     $l$block: {
       // Inline function 'kotlin.collections.firstOrNull' call
@@ -801,82 +817,32 @@
     }
     var tmp4_monster = feedMonster(this, state.monster, newXp, newStage, now);
     var next = state.copy(VOID, tmp4_monster, VOID, destination);
-    return graduateIfNeeded(this, unlockSpeciesForEvolution(this, next, state.monster.stage, newStage, now, hueRng), now, hueRng);
+    return graduateIfNeeded(this, next, now, hueRng);
   };
   protoOf(CramagotchiEngine).finishExam = function (state, examId, now, hueRng, $super) {
     hueRng = hueRng === VOID ? 0.5 : hueRng;
-    return this.wu(state, examId, now, hueRng);
+    return this.vu(state, examId, now, hueRng);
   };
-  protoOf(CramagotchiEngine).xu = function (state, speciesId, now, hueRng) {
-    var tmp$ret$0;
-    $l$block_0: {
-      // Inline function 'kotlin.collections.any' call
-      var this_0 = state.collection;
-      var tmp;
-      if (isInterface(this_0, Collection)) {
-        tmp = this_0.o();
-      } else {
-        tmp = false;
+  protoOf(CramagotchiEngine).wu = function (state, now, hueRng) {
+    // Inline function 'kotlin.collections.filter' call
+    // Inline function 'kotlin.collections.filterTo' call
+    var this_0 = state.collection;
+    var destination = ArrayList_init_$Create$();
+    var tmp0_iterator = this_0.e();
+    while (tmp0_iterator.f()) {
+      var element = tmp0_iterator.g();
+      // Inline function 'com.cramagotchi.engine.CramagotchiEngine.reconcileCollection.<anonymous>' call
+      if (element.speciesId === 'GRADUATED_BEAST') {
+        destination.m(element);
       }
-      if (tmp) {
-        tmp$ret$0 = false;
-        break $l$block_0;
-      }
-      var tmp0_iterator = this_0.e();
-      while (tmp0_iterator.f()) {
-        var element = tmp0_iterator.g();
-        // Inline function 'com.cramagotchi.engine.CramagotchiEngine.unlockCollectible.<anonymous>' call
-        if (element.speciesId === speciesId) {
-          tmp$ret$0 = true;
-          break $l$block_0;
-        }
-      }
-      tmp$ret$0 = false;
     }
-    if (tmp$ret$0)
-      return state;
-    return state.copy(VOID, VOID, VOID, VOID, plus_0(state.collection, new CollectedMonster(speciesId, hueFrom(this, hueRng), now)));
+    var filtered = state.copy(VOID, VOID, VOID, VOID, destination);
+    var tinted = filtered.monster.hue == null ? filtered.copy(VOID, filtered.monster.copy(VOID, VOID, VOID, VOID, VOID, VOID, VOID, hueFrom(this, hueRng))) : filtered;
+    return graduateIfNeeded(this, tinted, now, hueRng);
   };
-  protoOf(CramagotchiEngine).unlockCollectible = function (state, speciesId, now, hueRng, $super) {
+  protoOf(CramagotchiEngine).reconcileCollection = function (state, now, hueRng, $super) {
     hueRng = hueRng === VOID ? 0.5 : hueRng;
-    return this.xu(state, speciesId, now, hueRng);
-  };
-  protoOf(CramagotchiEngine).yu = function (state, hueRng) {
-    var next = state;
-    var indexedObject = values_1();
-    var inductionVariable = 0;
-    var last = indexedObject.length;
-    while (inductionVariable < last) {
-      var stage = indexedObject[inductionVariable];
-      inductionVariable = inductionVariable + 1 | 0;
-      if (stage.level <= state.monster.stage.level) {
-        next = this.unlockCollectible(next, stage.k1_1, state.monster.lastFedAt, (hueRng + stage.level * 0.13) % 1.0);
-      }
-    }
-    if (next.monster.hue == null) {
-      var tmp$ret$1;
-      $l$block: {
-        // Inline function 'kotlin.collections.firstOrNull' call
-        var tmp0_iterator = next.collection.e();
-        while (tmp0_iterator.f()) {
-          var element = tmp0_iterator.g();
-          // Inline function 'com.cramagotchi.engine.CramagotchiEngine.reconcileCollection.<anonymous>' call
-          if (element.speciesId === next.monster.stage.k1_1) {
-            tmp$ret$1 = element;
-            break $l$block;
-          }
-        }
-        tmp$ret$1 = null;
-      }
-      var entry = tmp$ret$1;
-      if (!(entry == null))
-        next = next.copy(VOID, next.monster.copy(VOID, VOID, VOID, VOID, VOID, VOID, VOID, entry.hue));
-    }
-    return next;
-  };
-  protoOf(CramagotchiEngine).reconcileCollection = function (state, hueRng, $super) {
-    hueRng = hueRng === VOID ? 0.5 : hueRng;
-    return this.yu(state, hueRng);
+    return this.wu(state, now, hueRng);
   };
   var CramagotchiEngine_instance;
   function CramagotchiEngine_getInstance() {
@@ -911,7 +877,7 @@
     Enum.call(this, name, ordinal);
     this.xpValue = xpValue;
   }
-  protoOf(TaskWeight).zu = function () {
+  protoOf(TaskWeight).xu = function () {
     return this.xpValue;
   };
   var MonsterStatus_IDLE_instance;
@@ -1861,10 +1827,11 @@
   }
   function $serializer_2() {
     $serializer_instance_2 = this;
-    var tmp0_serialDesc = new PluginGeneratedSerialDescriptor('com.cramagotchi.model.CollectedMonster', this, 3);
+    var tmp0_serialDesc = new PluginGeneratedSerialDescriptor('com.cramagotchi.model.CollectedMonster', this, 4);
     tmp0_serialDesc.ki('speciesId', false);
     tmp0_serialDesc.ki('hue', false);
     tmp0_serialDesc.ki('collectedAt', false);
+    tmp0_serialDesc.ki('sleeping', true);
     this.rw_1 = tmp0_serialDesc;
   }
   protoOf($serializer_2).sw = function (encoder, value) {
@@ -1873,6 +1840,9 @@
     tmp1_output.ze(tmp0_desc, 0, value.speciesId);
     tmp1_output.xe(tmp0_desc, 1, value.hue);
     tmp1_output.ye(tmp0_desc, 2, value.collectedAt);
+    if (tmp1_output.gf(tmp0_desc, 3) ? true : !(value.sleeping === false)) {
+      tmp1_output.we(tmp0_desc, 3, value.sleeping);
+    }
     tmp1_output.ce(tmp0_desc);
   };
   protoOf($serializer_2).ub = function (encoder, value) {
@@ -1886,39 +1856,46 @@
     var tmp4_local0 = null;
     var tmp5_local1 = 0;
     var tmp6_local2 = 0.0;
-    var tmp7_input = decoder.be(tmp0_desc);
-    if (tmp7_input.le()) {
-      tmp4_local0 = tmp7_input.ge(tmp0_desc, 0);
+    var tmp7_local3 = false;
+    var tmp8_input = decoder.be(tmp0_desc);
+    if (tmp8_input.le()) {
+      tmp4_local0 = tmp8_input.ge(tmp0_desc, 0);
       tmp3_bitMask0 = tmp3_bitMask0 | 1;
-      tmp5_local1 = tmp7_input.ee(tmp0_desc, 1);
+      tmp5_local1 = tmp8_input.ee(tmp0_desc, 1);
       tmp3_bitMask0 = tmp3_bitMask0 | 2;
-      tmp6_local2 = tmp7_input.fe(tmp0_desc, 2);
+      tmp6_local2 = tmp8_input.fe(tmp0_desc, 2);
       tmp3_bitMask0 = tmp3_bitMask0 | 4;
+      tmp7_local3 = tmp8_input.de(tmp0_desc, 3);
+      tmp3_bitMask0 = tmp3_bitMask0 | 8;
     } else
       while (tmp1_flag) {
-        tmp2_index = tmp7_input.me(tmp0_desc);
+        tmp2_index = tmp8_input.me(tmp0_desc);
         switch (tmp2_index) {
           case -1:
             tmp1_flag = false;
             break;
           case 0:
-            tmp4_local0 = tmp7_input.ge(tmp0_desc, 0);
+            tmp4_local0 = tmp8_input.ge(tmp0_desc, 0);
             tmp3_bitMask0 = tmp3_bitMask0 | 1;
             break;
           case 1:
-            tmp5_local1 = tmp7_input.ee(tmp0_desc, 1);
+            tmp5_local1 = tmp8_input.ee(tmp0_desc, 1);
             tmp3_bitMask0 = tmp3_bitMask0 | 2;
             break;
           case 2:
-            tmp6_local2 = tmp7_input.fe(tmp0_desc, 2);
+            tmp6_local2 = tmp8_input.fe(tmp0_desc, 2);
             tmp3_bitMask0 = tmp3_bitMask0 | 4;
+            break;
+          case 3:
+            tmp7_local3 = tmp8_input.de(tmp0_desc, 3);
+            tmp3_bitMask0 = tmp3_bitMask0 | 8;
             break;
           default:
             throw UnknownFieldException_init_$Create$(tmp2_index);
         }
       }
-    tmp7_input.ce(tmp0_desc);
-    return CollectedMonster_init_$Create$(tmp3_bitMask0, tmp4_local0, tmp5_local1, tmp6_local2, null);
+    tmp8_input.ce(tmp0_desc);
+    return CollectedMonster_init_$Create$(tmp3_bitMask0, tmp4_local0, tmp5_local1, tmp6_local2, tmp7_local3, null);
   };
   protoOf($serializer_2).tb = function () {
     return this.rw_1;
@@ -1927,7 +1904,7 @@
     // Inline function 'kotlin.arrayOf' call
     // Inline function 'kotlin.js.unsafeCast' call
     // Inline function 'kotlin.js.asDynamic' call
-    return [StringSerializer_getInstance(), IntSerializer_getInstance(), DoubleSerializer_getInstance()];
+    return [StringSerializer_getInstance(), IntSerializer_getInstance(), DoubleSerializer_getInstance(), BooleanSerializer_getInstance()];
   };
   var $serializer_instance_2;
   function $serializer_getInstance_2() {
@@ -1935,22 +1912,28 @@
       new $serializer_2();
     return $serializer_instance_2;
   }
-  function CollectedMonster_init_$Init$(seen0, speciesId, hue, collectedAt, serializationConstructorMarker, $this) {
+  function CollectedMonster_init_$Init$(seen0, speciesId, hue, collectedAt, sleeping, serializationConstructorMarker, $this) {
     if (!(7 === (7 & seen0))) {
       throwMissingFieldException(seen0, 7, $serializer_getInstance_2().rw_1);
     }
     $this.speciesId = speciesId;
     $this.hue = hue;
     $this.collectedAt = collectedAt;
+    if (0 === (seen0 & 8))
+      $this.sleeping = false;
+    else
+      $this.sleeping = sleeping;
     return $this;
   }
-  function CollectedMonster_init_$Create$(seen0, speciesId, hue, collectedAt, serializationConstructorMarker) {
-    return CollectedMonster_init_$Init$(seen0, speciesId, hue, collectedAt, serializationConstructorMarker, objectCreate(protoOf(CollectedMonster)));
+  function CollectedMonster_init_$Create$(seen0, speciesId, hue, collectedAt, sleeping, serializationConstructorMarker) {
+    return CollectedMonster_init_$Init$(seen0, speciesId, hue, collectedAt, sleeping, serializationConstructorMarker, objectCreate(protoOf(CollectedMonster)));
   }
-  function CollectedMonster(speciesId, hue, collectedAt) {
+  function CollectedMonster(speciesId, hue, collectedAt, sleeping) {
+    sleeping = sleeping === VOID ? false : sleeping;
     this.speciesId = speciesId;
     this.hue = hue;
     this.collectedAt = collectedAt;
+    this.sleeping = sleeping;
   }
   protoOf(CollectedMonster).tw = function () {
     return this.speciesId;
@@ -1961,6 +1944,9 @@
   protoOf(CollectedMonster).uw = function () {
     return this.collectedAt;
   };
+  protoOf(CollectedMonster).vw = function () {
+    return this.sleeping;
+  };
   protoOf(CollectedMonster).z9 = function () {
     return this.speciesId;
   };
@@ -1970,22 +1956,27 @@
   protoOf(CollectedMonster).tv = function () {
     return this.collectedAt;
   };
-  protoOf(CollectedMonster).vw = function (speciesId, hue, collectedAt) {
-    return new CollectedMonster(speciesId, hue, collectedAt);
+  protoOf(CollectedMonster).uv = function () {
+    return this.sleeping;
   };
-  protoOf(CollectedMonster).copy = function (speciesId, hue, collectedAt, $super) {
+  protoOf(CollectedMonster).ww = function (speciesId, hue, collectedAt, sleeping) {
+    return new CollectedMonster(speciesId, hue, collectedAt, sleeping);
+  };
+  protoOf(CollectedMonster).copy = function (speciesId, hue, collectedAt, sleeping, $super) {
     speciesId = speciesId === VOID ? this.speciesId : speciesId;
     hue = hue === VOID ? this.hue : hue;
     collectedAt = collectedAt === VOID ? this.collectedAt : collectedAt;
-    return this.vw(speciesId, hue, collectedAt);
+    sleeping = sleeping === VOID ? this.sleeping : sleeping;
+    return this.ww(speciesId, hue, collectedAt, sleeping);
   };
   protoOf(CollectedMonster).toString = function () {
-    return 'CollectedMonster(speciesId=' + this.speciesId + ', hue=' + this.hue + ', collectedAt=' + this.collectedAt + ')';
+    return 'CollectedMonster(speciesId=' + this.speciesId + ', hue=' + this.hue + ', collectedAt=' + this.collectedAt + ', sleeping=' + this.sleeping + ')';
   };
   protoOf(CollectedMonster).hashCode = function () {
     var result = getStringHashCode(this.speciesId);
     result = imul(result, 31) + this.hue | 0;
     result = imul(result, 31) + getNumberHashCode(this.collectedAt) | 0;
+    result = imul(result, 31) + getBooleanHashCode(this.sleeping) | 0;
     return result;
   };
   protoOf(CollectedMonster).equals = function (other) {
@@ -2000,6 +1991,8 @@
       return false;
     if (!equals(this.collectedAt, tmp0_other_with_cast.collectedAt))
       return false;
+    if (!(this.sleeping === tmp0_other_with_cast.sleeping))
+      return false;
     return true;
   };
   function Companion_3() {
@@ -2008,7 +2001,7 @@
     // Inline function 'kotlin.arrayOf' call
     // Inline function 'kotlin.js.unsafeCast' call
     // Inline function 'kotlin.js.asDynamic' call
-    tmp.ww_1 = [new ReferenceArraySerializer(getKClass(StudyTask), $serializer_getInstance()), null, null, new ArrayListSerializer($serializer_getInstance_0()), new ArrayListSerializer($serializer_getInstance_2())];
+    tmp.xw_1 = [new ReferenceArraySerializer(getKClass(StudyTask), $serializer_getInstance()), null, null, new ArrayListSerializer($serializer_getInstance_0()), new ArrayListSerializer($serializer_getInstance_2())];
   }
   protoOf(Companion_3).hv = function () {
     return $serializer_getInstance_3();
@@ -2027,12 +2020,12 @@
     tmp0_serialDesc.ki('examDateIso', true);
     tmp0_serialDesc.ki('exams', true);
     tmp0_serialDesc.ki('collection', true);
-    this.xw_1 = tmp0_serialDesc;
+    this.yw_1 = tmp0_serialDesc;
   }
-  protoOf($serializer_3).yw = function (encoder, value) {
-    var tmp0_desc = this.xw_1;
+  protoOf($serializer_3).zw = function (encoder, value) {
+    var tmp0_desc = this.yw_1;
     var tmp1_output = encoder.be(tmp0_desc);
-    var tmp2_cached = Companion_getInstance_3().ww_1;
+    var tmp2_cached = Companion_getInstance_3().xw_1;
     var tmp;
     if (tmp1_output.gf(tmp0_desc, 0)) {
       tmp = true;
@@ -2057,10 +2050,10 @@
     tmp1_output.ce(tmp0_desc);
   };
   protoOf($serializer_3).ub = function (encoder, value) {
-    return this.yw(encoder, value instanceof AppState ? value : THROW_CCE());
+    return this.zw(encoder, value instanceof AppState ? value : THROW_CCE());
   };
   protoOf($serializer_3).vb = function (decoder) {
-    var tmp0_desc = this.xw_1;
+    var tmp0_desc = this.yw_1;
     var tmp1_flag = true;
     var tmp2_index = 0;
     var tmp3_bitMask0 = 0;
@@ -2070,7 +2063,7 @@
     var tmp7_local3 = null;
     var tmp8_local4 = null;
     var tmp9_input = decoder.be(tmp0_desc);
-    var tmp10_cached = Companion_getInstance_3().ww_1;
+    var tmp10_cached = Companion_getInstance_3().xw_1;
     if (tmp9_input.le()) {
       tmp4_local0 = tmp9_input.he(tmp0_desc, 0, tmp10_cached[0], tmp4_local0);
       tmp3_bitMask0 = tmp3_bitMask0 | 1;
@@ -2117,10 +2110,10 @@
     return AppState_init_$Create$(tmp3_bitMask0, tmp4_local0, tmp5_local1, tmp6_local2, tmp7_local3, tmp8_local4, null);
   };
   protoOf($serializer_3).tb = function () {
-    return this.xw_1;
+    return this.yw_1;
   };
   protoOf($serializer_3).zi = function () {
-    var tmp0_cached = Companion_getInstance_3().ww_1;
+    var tmp0_cached = Companion_getInstance_3().xw_1;
     // Inline function 'kotlin.arrayOf' call
     // Inline function 'kotlin.js.unsafeCast' call
     // Inline function 'kotlin.js.asDynamic' call
@@ -2134,7 +2127,7 @@
   }
   function AppState_init_$Init$(seen0, tasks, monster, examDateIso, exams, collection, serializationConstructorMarker, $this) {
     if (!(2 === (2 & seen0))) {
-      throwMissingFieldException(seen0, 2, $serializer_getInstance_3().xw_1);
+      throwMissingFieldException(seen0, 2, $serializer_getInstance_3().yw_1);
     }
     if (0 === (seen0 & 1)) {
       var tmp = $this;
@@ -2179,19 +2172,19 @@
     this.exams = exams;
     this.collection = collection;
   }
-  protoOf(AppState).zw = function () {
+  protoOf(AppState).ax = function () {
     return this.tasks;
   };
-  protoOf(AppState).ax = function () {
+  protoOf(AppState).bx = function () {
     return this.monster;
   };
-  protoOf(AppState).bx = function () {
+  protoOf(AppState).cx = function () {
     return this.examDateIso;
   };
-  protoOf(AppState).cx = function () {
+  protoOf(AppState).dx = function () {
     return this.exams;
   };
-  protoOf(AppState).dx = function () {
+  protoOf(AppState).ex = function () {
     return this.collection;
   };
   protoOf(AppState).z9 = function () {
@@ -2209,7 +2202,7 @@
   protoOf(AppState).vv = function () {
     return this.collection;
   };
-  protoOf(AppState).ex = function (tasks, monster, examDateIso, exams, collection) {
+  protoOf(AppState).fx = function (tasks, monster, examDateIso, exams, collection) {
     return new AppState(tasks, monster, examDateIso, exams, collection);
   };
   protoOf(AppState).copy = function (tasks, monster, examDateIso, exams, collection, $super) {
@@ -2218,7 +2211,7 @@
     examDateIso = examDateIso === VOID ? this.examDateIso : examDateIso;
     exams = exams === VOID ? this.exams : exams;
     collection = collection === VOID ? this.collection : collection;
-    return this.ex(tasks, monster, examDateIso, exams, collection);
+    return this.fx(tasks, monster, examDateIso, exams, collection);
   };
   protoOf(AppState).toString = function () {
     return 'AppState(tasks=' + toString(this.tasks) + ', monster=' + this.monster.toString() + ', examDateIso=' + this.examDateIso + ', exams=' + toString(this.exams) + ', collection=' + toString(this.collection) + ')';
@@ -2306,18 +2299,18 @@
     StorageRepository_instance = this;
     this.STORAGE_KEY = 'cramagotchi_state';
     var tmp = this;
-    tmp.fx_1 = Json(VOID, StorageRepository$json$lambda);
+    tmp.gx_1 = Json(VOID, StorageRepository$json$lambda);
   }
-  protoOf(StorageRepository).gx = function () {
+  protoOf(StorageRepository).hx = function () {
     return this.STORAGE_KEY;
   };
   protoOf(StorageRepository).serialize = function (state) {
-    return this.fx_1.yk(Companion_getInstance_3().hv(), state);
+    return this.gx_1.yk(Companion_getInstance_3().hv(), state);
   };
   protoOf(StorageRepository).deserialize = function (jsonStr) {
     var tmp;
     try {
-      tmp = this.fx_1.zk(Companion_getInstance_3().hv(), jsonStr);
+      tmp = this.gx_1.zk(Companion_getInstance_3().hv(), jsonStr);
     } catch ($p) {
       var tmp_0;
       if ($p instanceof Exception) {

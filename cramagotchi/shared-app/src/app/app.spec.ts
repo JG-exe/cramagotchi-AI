@@ -78,13 +78,14 @@ function createMockStore(overrides: Partial<MonsterState> = {}) {
     updateTask: vi.fn(),
     completeTaskWithTime: vi.fn(),
     deleteTask: vi.fn(),
+    isDevouredExpired: vi.fn(() => false),
     setExamDate: vi.fn(),
     addExam: vi.fn(),
     updateExam: vi.fn(),
     removeExam: vi.fn(),
     finishExam: vi.fn(),
     collection: signal<CollectedMonster[]>([
-      { speciesId: 'EGG', hue: 204, collectedAt: 0 },
+      { speciesId: 'GRADUATED_BEAST', hue: 204, collectedAt: 0, sleeping: false },
     ]),
   };
 }
@@ -307,8 +308,8 @@ describe('App (root component)', () => {
     actualInput!.value = '36';
     actualInput!.dispatchEvent(new Event('input'));
 
-    const checkbox = compiled.querySelector<HTMLInputElement>('input[type="checkbox"]');
-    checkbox?.click();
+    const completeBtn = compiled.querySelector<HTMLButtonElement>('[data-testid="task-complete-btn"]');
+    completeBtn?.click();
 
     expect(mockStore.completeTaskWithTime).toHaveBeenCalled();
     const [taskId, minutes] = mockStore.completeTaskWithTime.mock.calls[0];
@@ -656,11 +657,11 @@ describe('App (root component)', () => {
 
   // ── Collectible monster roster gallery ───────────────────
 
-  it('should render one gallery tile per collected monster with its rolled hue', () => {
+  it('should render one gallery tile per retired monster with its hue and frozen pose', () => {
     mockStore = createMockStore();
     mockStore.collection.set([
-      { speciesId: 'EGG', hue: 204, collectedAt: 1 },
-      { speciesId: 'HATCHLING', hue: 12, collectedAt: 2 },
+      { speciesId: 'GRADUATED_BEAST', hue: 204, collectedAt: 1, sleeping: false },
+      { speciesId: 'GRADUATED_BEAST', hue: 12, collectedAt: 2, sleeping: true },
     ]);
     TestBed.overrideProvider(MonsterStoreService, { useValue: mockStore });
 
@@ -672,13 +673,20 @@ describe('App (root component)', () => {
     expect(items.length).toBe(2);
 
     const first = items[0]!;
-    expect(first.getAttribute('data-species')).toBe('EGG');
     // hue lands as a per-instance --stage-fill override on the shared symbols
     expect(first.getAttribute('style')).toContain('hsl(204');
-    expect(first.textContent).toContain('Egg');
+    expect(first.textContent).toContain('Graduated Beast');
+    const faces = first.querySelectorAll('use');
+    // idle pose from the frozen retirement roll
+    expect(Array.from(faces).some(u => u.getAttribute('href')?.includes('cram-face-idle'))).toBe(true);
 
     expect(items[1]!.getAttribute('style')).toContain('hsl(12');
-    expect(items[1]!.textContent).toContain('Hatchling');
+    const sleepingUses = items[1]!.querySelectorAll('use');
+    // sleeping pose from the frozen retirement roll
+    expect(Array.from(sleepingUses).some(u => u.getAttribute('href')?.includes('cram-face-sleeping'))).toBe(true);
+
+    // the label counts retired captures, not a 4-species cap
+    expect(compiled.querySelector('.monster-collection')!.textContent).toContain('retired');
   });
 });
 

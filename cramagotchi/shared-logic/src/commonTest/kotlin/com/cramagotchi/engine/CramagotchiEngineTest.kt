@@ -309,4 +309,58 @@ class CramagotchiEngineTest {
             "After the exam day the countdown turns negative (exam missed)"
         )
     }
+
+    // ── Test 8: Deleting tasks — active and devoured ─────────
+
+    @Test
+    fun testDeleteTaskRemovesActiveTask() {
+        val withTask = CramagotchiEngine.addTask(
+            state = freshState(),
+            title = "Chapter 12",
+            weight = TaskWeight.SNACK,
+            now = baseTime
+        )
+
+        val updated = CramagotchiEngine.deleteTask(withTask, withTask.tasks[0].id)
+
+        assertEquals(0, updated.tasks.size, "Active task must be deleted by id")
+    }
+
+    @Test
+    fun testDeleteTaskRemovesDevouredTask() {
+        val withTask = CramagotchiEngine.addTask(
+            state = freshState(),
+            title = "Chapter 12",
+            weight = TaskWeight.SNACK,
+            now = baseTime
+        )
+        val devoured = CramagotchiEngine.completeTask(
+            withTask,
+            withTask.tasks[0].id,
+            baseTime + 1_000
+        )
+        assertTrue(devoured.tasks[0].completed, "Precondition: task is devoured")
+
+        val updated = CramagotchiEngine.deleteTask(devoured, devoured.tasks[0].id)
+
+        assertEquals(0, updated.tasks.size, "Devoured tasks are user-sweepable storage — must delete")
+        // XP already awarded for the devoured task is kept (no claw-back)
+        assertEquals(devoured.monster.xp, updated.monster.xp, "Deleting a devoured task never removes granted XP")
+    }
+
+    @Test
+    fun testDeleteTaskWithUnknownIdIsANoop() {
+        val withTask = CramagotchiEngine.addTask(
+            state = freshState(),
+            title = "Chapter 12",
+            weight = TaskWeight.SNACK,
+            now = baseTime
+        )
+
+        val updated = CramagotchiEngine.deleteTask(withTask, "does-not-exist")
+
+        assertEquals(1, updated.tasks.size, "Unknown id leaves the task list untouched")
+        assertEquals(withTask.tasks[0].id, updated.tasks[0].id, "Same task, unchanged")
+        assertEquals(withTask.monster, updated.monster, "Monster state untouched by a no-op delete")
+    }
 }

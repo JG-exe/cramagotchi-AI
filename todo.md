@@ -368,3 +368,21 @@ Metric: **V** = done
   Verified: 77 engine tests (10 new in `GraduationTest.kt`), 48/48 `ng test`
   (restore-reconciliation spec `monster-store-restore.spec.ts`), build clean,
   bundles synced, desktop resources + android debug compile clean.
+- V **Gallery rework — only fully evolved monsters collect:** in the collected
+  monsters tab, intermediate species cards are gone. Every monster is minted
+  a hue at creation that sticks through all its evolutions (`MonsterState.hue`,
+  persisted → reloading returns the same coloured growing monster). When the
+  XP bar fills completely (max stage), the creature retires into the gallery
+  permanently — keeping its unique hue and a randomly frozen ambient pose
+  (sleeping or idling, `CollectedMonster.sleeping`, rolled per capture with a
+  √2−1 stir) — and a brand-new monster spawns with its own forever-fixed new
+  hue (golden-ratio stir). Legacy saves migrate on load
+  (`reconcileCollection(state, now, hueRng)`): pre-2.2 species cards drop, a
+  hue-less monster is minted a hue, and a save stuck at max graduates
+  immediately. Roster seeds empty; `unlockCollectible`/
+  `unlockSpeciesForEvolution` removed.
+
+  Verified: 81 engine tests (rewritten `MonsterCollectionTest`,
+  `GraduationTest`; migration incl. duplicate-guard), 60/60 `ng test`
+  (gallery tile pose assertions, restore-reconciliation specs), `ng build`,
+  desktop resources + android debug compile clean.

@@ -12,6 +12,8 @@ Latest release: **v2.1.0** (`main`). Development happens on `dev` and reaches
 
 In case the repo isn't updated, try: [personal github(jg-exe)](https://github.com/JG-exe/cramagotchi-AI)
 
+To try out the web version of the app: [Cramagotchi web view](https://cramagotchi-pages.arch-box.net/)
+
 ## Up & running (optional) 🏃‍➡️
 
 Prerequisites:
