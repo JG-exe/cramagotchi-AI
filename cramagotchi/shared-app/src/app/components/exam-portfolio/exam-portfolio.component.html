@@ -123,6 +123,29 @@
                   </div>
                 }
               </div>
+              <div class="field-exam-time-wrap">
+                <mat-form-field
+                  appearance="outline"
+                  class="field-exam-time"
+                  [class.alert-field]="editTimeError() !== null"
+                  [appInvalidFlash]="editTimeInvalidCount()"
+                >
+                  <mat-label>Time (opt.)</mat-label>
+                  <input
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="HH:mm"
+                    name="editExamTime"
+                    matInput
+                    [value]="editExamTime()"
+                    (input)="onEditExamTimeInput($any($event.target).value)"
+                    data-testid="exam-edit-time"
+                  />
+                </mat-form-field>
+                @if (editTimeError()) {
+                  <p class="form-error" data-testid="exam-edit-time-error">{{ editTimeError() }}</p>
+                }
+              </div>
               <app-sliding-toggle
                 data-testid="exam-edit-kind"
                 left="Deadline"
@@ -162,7 +185,7 @@
                   [style.--subject-hue]="subjectHue(exam.subjectTag)"
                 >{{ exam.subjectTag }}</span>
               }
-              <span class="exam-chip-date">{{ formatExamDateDisplay(exam.dateIso) }}</span>
+              <span class="exam-chip-date">{{ formatExamDateDisplay(exam.dateIso) }}@if (formatExamTimeDisplay(exam.timeIso)) {<span class="exam-chip-time">· {{ formatExamTimeDisplay(exam.timeIso) }}</span>}</span>
               @if (exam.kind !== 'EXAM') {
                 <button
                   type="button"
@@ -304,6 +327,29 @@
           aria-hidden="true"
           (change)="onPickedAddDate(pickerAdd.value, dateAddField)"
         />
+      </div>
+      <div class="field-exam-time-wrap">
+        <mat-form-field
+          appearance="outline"
+          class="field-exam-time"
+          [class.alert-field]="examTimeError() !== null"
+          [appInvalidFlash]="examTimeInvalidCount()"
+        >
+          <mat-label>Time (opt.)</mat-label>
+          <input
+            type="text"
+            inputmode="numeric"
+            placeholder="HH:mm"
+            name="examTime"
+            matInput
+            [value]="examTimeInput()"
+            (input)="onExamTimeInput($any($event.target).value)"
+            data-testid="exam-input-time"
+          />
+        </mat-form-field>
+        @if (examTimeError()) {
+          <p class="form-error" data-testid="exam-time-error">{{ examTimeError() }}</p>
+        }
       </div>
       <div class="exam-add-actions">
         <app-sliding-toggle

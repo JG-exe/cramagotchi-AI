@@ -36,6 +36,8 @@ export interface ExamRef {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  /** Optional time of day, `HH:mm` (24h). Null/absent = all-day item. */
+  timeIso?: string | null;
   kind?: ExamKind;
 }
 
@@ -225,20 +227,25 @@ export class MonsterStoreService {
       Engine.finishExam(this.kmpState(), examId, Date.now(), Math.random())
     );
     this.persistToStorage();
+    // celebrate: the monster jumps when a deadline is finished in advance
+    this.celebrateTick.update(t => t + 1);
   }
 
+  /** Ticks whenever a dated item is finished early — the sanctuary plays the jump. */
+  readonly celebrateTick = signal(0);
+
   /** Add an exam or deadline (subject label optional); deadline is the default kind. */
-  addExam(subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+  addExam(subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE', timeIso?: string | null): void {
     const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
-    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now(), kmpKind));
+    this.kmpState.set(Engine.addExam(this.kmpState(), subjectTag, dateIso, Date.now(), kmpKind, timeIso ?? undefined));
     this.persistToStorage();
   }
 
-  /** Edit an exam/deadline in place: subject, date and kind. */
-  updateExam(examId: string, subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE'): void {
+  /** Edit an exam/deadline in place: subject, date, optional time and kind. */
+  updateExam(examId: string, subjectTag: string | null, dateIso: string, kind: ExamKind = 'DEADLINE', timeIso?: string | null): void {
     if (!dateIso) return;
     const kmpKind = kind === 'EXAM' ? Model.ExamKind.EXAM : Model.ExamKind.DEADLINE;
-    this.kmpState.set(Engine.updateExam(this.kmpState(), examId, subjectTag, dateIso, kmpKind));
+    this.kmpState.set(Engine.updateExam(this.kmpState(), examId, subjectTag, dateIso, kmpKind, timeIso ?? undefined));
     this.persistToStorage();
   }
 
@@ -362,6 +369,7 @@ type KmpExam = {
   id: string;
   subjectTag?: string | null;
   dateIso: string;
+  timeIso?: string | null;
   kind?: { name: string } | string;
 };
 
@@ -371,6 +379,7 @@ function toExamRef(e: KmpExam): ExamRef {
     id: e.id,
     subjectTag: e.subjectTag ?? undefined,
     dateIso: e.dateIso,
+    timeIso: e.timeIso ?? null,
     kind: (kindName === 'EXAM' ? 'EXAM' : 'DEADLINE') as ExamKind,
   };
 }

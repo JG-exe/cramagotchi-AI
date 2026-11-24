@@ -175,6 +175,7 @@
       [class.stage-hatchling]="store.monster().stage === 'HATCHLING'"
       [class.stage-scholar]="store.monster().stage === 'SCHOLAR'"
       [class.stage-graduated_beast]="store.monster().stage === 'GRADUATED_BEAST'"
+      [class.is-celebrating]="celebrating()"
     >
       <svg
         class="monster-svg"

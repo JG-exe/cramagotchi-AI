@@ -321,12 +321,14 @@ object CramagotchiEngine {
         subjectTag: String?,
         dateIso: String,
         now: Double,
-        kind: ExamKind = ExamKind.DEADLINE
+        kind: ExamKind = ExamKind.DEADLINE,
+        timeIso: String? = null
     ): AppState {
         val exam = Exam(
             id = nextExamId(state),
             subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
             dateIso = dateIso,
+            timeIso = timeIso?.trim()?.takeIf { it.isNotEmpty() },
             kind = kind
         )
         return state.copy(exams = state.exams + exam)
@@ -338,17 +340,19 @@ object CramagotchiEngine {
     }
 
     /**
-     * Edit an existing exam/deadline in place: subject tag, date and kind.
-     * Unknown ids are a no-op. A blank subject clears it; the date is
-     * stored verbatim (the UI validates the `YYYY-MM-DD` shape, and the
-     * countdown already tolerates an unparseable date by skipping it).
+     * Edit an existing exam/deadline in place: subject tag, date, optional
+     * time and kind. Unknown ids are a no-op. A blank subject clears it; the
+     * date is stored verbatim (the UI validates the `YYYY-MM-DD` shape, and
+     * the countdown already tolerates an unparseable date by skipping it);
+     * a blank time clears the optional time-of-day.
      */
     fun updateExam(
         state: AppState,
         examId: String,
         subjectTag: String?,
         dateIso: String,
-        kind: ExamKind = ExamKind.DEADLINE
+        kind: ExamKind = ExamKind.DEADLINE,
+        timeIso: String? = null
     ): AppState {
         val index = state.exams.indexOfFirst { it.id == examId }
         if (index == -1) return state
@@ -356,6 +360,7 @@ object CramagotchiEngine {
         updated[index] = updated[index].copy(
             subjectTag = subjectTag?.trim()?.takeIf { it.isNotEmpty() },
             dateIso = dateIso,
+            timeIso = timeIso?.trim()?.takeIf { it.isNotEmpty() },
             kind = kind
         )
         return state.copy(exams = updated)

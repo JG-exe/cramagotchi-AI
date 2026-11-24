@@ -22,9 +22,9 @@ export declare namespace com.cramagotchi.engine {
         examCountdownDays(state: com.cramagotchi.model.AppState, now: number): Nullable<number>;
         nearestExamDays(state: com.cramagotchi.model.AppState, now: number): Nullable<number>;
         nearestUpcomingExam(state: com.cramagotchi.model.AppState, now: number): Nullable<com.cramagotchi.model.Exam>;
-        addExam(state: com.cramagotchi.model.AppState, subjectTag: Nullable<string>, dateIso: string, now: number, kind?: com.cramagotchi.model.ExamKind): com.cramagotchi.model.AppState;
+        addExam(state: com.cramagotchi.model.AppState, subjectTag: Nullable<string>, dateIso: string, now: number, kind?: com.cramagotchi.model.ExamKind, timeIso?: Nullable<string>): com.cramagotchi.model.AppState;
         removeExam(state: com.cramagotchi.model.AppState, examId: string): com.cramagotchi.model.AppState;
-        updateExam(state: com.cramagotchi.model.AppState, examId: string, subjectTag: Nullable<string>, dateIso: string, kind?: com.cramagotchi.model.ExamKind): com.cramagotchi.model.AppState;
+        updateExam(state: com.cramagotchi.model.AppState, examId: string, subjectTag: Nullable<string>, dateIso: string, kind?: com.cramagotchi.model.ExamKind, timeIso?: Nullable<string>): com.cramagotchi.model.AppState;
         get BASE_FINISH_XP(): number;
         earlyFinishXp(daysRemaining: number): number;
         finishExam(state: com.cramagotchi.model.AppState, examId: string, now: number, hueRng?: number): com.cramagotchi.model.AppState;
@@ -130,12 +130,13 @@ export declare namespace com.cramagotchi.model {
         };
     }
     class Exam {
-        constructor(id: string, subjectTag: Nullable<string> | undefined, dateIso: string, kind?: com.cramagotchi.model.ExamKind);
+        constructor(id: string, subjectTag: Nullable<string> | undefined, dateIso: string, timeIso?: Nullable<string>, kind?: com.cramagotchi.model.ExamKind);
         get id(): string;
         get subjectTag(): Nullable<string>;
         get dateIso(): string;
+        get timeIso(): Nullable<string>;
         get kind(): com.cramagotchi.model.ExamKind;
-        copy(id?: string, subjectTag?: Nullable<string>, dateIso?: string, kind?: com.cramagotchi.model.ExamKind): com.cramagotchi.model.Exam;
+        copy(id?: string, subjectTag?: Nullable<string>, dateIso?: string, timeIso?: Nullable<string>, kind?: com.cramagotchi.model.ExamKind): com.cramagotchi.model.Exam;
         toString(): string;
         hashCode(): number;
         equals(other: Nullable<any>): boolean;
