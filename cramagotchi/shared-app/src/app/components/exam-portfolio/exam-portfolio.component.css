@@ -225,9 +225,7 @@
   width: 100%;
 }
 
-.mat-mdc-text-field-wrapper {
-  background: var(--color-surface);
-}
+/* (field chrome comes from the global soft-input treatment in styles.css) */
 
 /* Segmented Deadline/Exam importance toggle now lives in the shared
    SlidingToggleComponent — one track, one thumb gliding between options. */

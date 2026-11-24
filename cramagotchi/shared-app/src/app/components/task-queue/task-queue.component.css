@@ -78,18 +78,10 @@
   width: 100%;
 }
 
-/* Rounded, soft-style form fields — closer to the reference soft-input look */
+/* Form fields are styled globally (styles.css): soft-input recessed look
+   with inset depth shadows — one source of truth for web/desktop/android. */
 .mat-mdc-form-field {
   width: 100%;
-}
-
-.mat-mdc-form-field .mdc-notched-outline {
-  border-radius: var(--radius-md);
-}
-
-.mat-mdc-text-field-wrapper {
-  background: var(--color-surface-recessed);
-  border-radius: var(--radius-md);
 }
 
 /* Soft input styling for any plain <input> used inside forms */
@@ -328,14 +320,12 @@
   border-radius: var(--radius-sm);
 }
 
-/* Rounded form fields inside inline edit as well */
-.task-edit-form .mat-mdc-form-field .mdc-notched-outline {
-  border-radius: var(--radius-md);
-}
-
+/* Inline edit fields keep the same global soft-input treatment; only the
+   recessed depth-shadow is softened back to the surface so the editor
+   reads as "active" rather than "hole" */
 .task-edit-form .mat-mdc-text-field-wrapper {
   background: var(--color-surface);
-  border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-espresso-dark, #2C221E) 4%, transparent);
 }
 
 .task-edit-row {

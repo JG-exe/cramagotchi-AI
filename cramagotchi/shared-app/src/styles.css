@@ -48,6 +48,45 @@ optgroup {
   font-family: var(--font-sans);
 }
 
+/* ── Soft-input form fields (reference: design/cramagotchi_live_style_preview)
+   Every Material field reads as the reference .soft-input: recessed warm
+   surface, no visible chrome border, md radius — plus inset shadows that
+   sink the field deeper than the card. Focus lifts it back to the surface
+   with the sage ring, exactly like the preview. */
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__trailing,
+.mat-mdc-form-field .mdc-notched-outline__notch {
+  border-color: transparent;
+}
+
+.mat-mdc-form-field .mdc-notched-outline {
+  border-radius: var(--radius-md);
+}
+
+.mat-mdc-text-field-wrapper {
+  background: var(--color-surface-recessed);
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-inset-recessed);
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.mat-mdc-text-field-wrapper input::placeholder {
+  color: color-mix(in srgb, var(--color-espresso-muted) 72%, transparent);
+}
+
+.mat-mdc-form-field.mat-focused .mat-mdc-text-field-wrapper,
+.mat-mdc-text-field-wrapper.mdc-text-field--focused {
+  background: var(--color-surface);
+  border-color: color-mix(in srgb, var(--color-sage-base) 55%, transparent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-sage-base) 14%, transparent),
+    inset 0 1px 2px color-mix(in srgb, var(--color-espresso-dark) 4%, transparent);
+}
+
 /* Inline SVG button icons (pencil, close, check) — used instead of glyphs
    so the JavaFX WebView (no symbol font) renders them identically */
 .btn-icon {

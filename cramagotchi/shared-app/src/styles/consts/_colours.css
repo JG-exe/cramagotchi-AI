@@ -34,6 +34,12 @@
     --shadow-diffuse-sm: 0 4px 14px -2px color-mix(in srgb, var(--color-espresso-dark) 6%, transparent);
     --shadow-diffuse-md: 0 12px 32px -6px color-mix(in srgb, var(--color-espresso-dark) 9%, transparent);
 
+    /* Recessed field depth: inset warm shadows that sink inputs below the
+       card level (soft-input reference) */
+    --shadow-inset-recessed:
+      inset 0 2px 5px color-mix(in srgb, var(--color-espresso-dark) 7%, transparent),
+      inset 0 1px 2px color-mix(in srgb, var(--color-espresso-dark) 5%, transparent);
+
     /* Computed Subject Tag Pill Tokens (14% tint, text darkened with espresso) */
     --tag-sage-bg: color-mix(in srgb, var(--color-sage-base) 14%, var(--color-surface-elevated));
     --tag-sage-fg: color-mix(in srgb, var(--color-sage-base) 70%, var(--color-espresso-dark));
